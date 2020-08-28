@@ -1,0 +1,73 @@
+@use 'Globals';
+
+@mixin init-verify($base-font-size) {
+  #Verify {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: $base-font-size * 12;
+    max-height: initial;
+    height: 100%;
+    margin: auto;
+    padding-top: $base-font-size;
+    width: 100%;
+    @media screen and (min-width: Globals.$min-res) {
+      h1,
+      h2,
+      p,
+      .welcome {
+        width: $base-font-size * 7.5;
+      }
+    }
+    @media screen and (min-width: Globals.$small-res) {
+      h1,
+      h2,
+      p,
+      .welcome {
+        width: $base-font-size * 18.125;
+      }
+    }
+    * {
+      z-index: 1;
+    }
+    h1,
+    h2 {
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: $base-font-size * 0.25;
+    }
+    p {
+      text-align: justify;
+      text-align-last: center;
+    }
+    .thumb-vertical {
+      z-index: 998;
+    }
+    .welcome {
+      background-image: url('../images/lobby-welcome.png');
+      height: $base-font-size * 4;
+      margin-bottom: $base-font-size * 0.25;
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-radius: 0px;
+      background-color: transparent;
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-verify(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-verify(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-verify(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-verify(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-verify(Globals.$initial-font-size * 2.5);
+}

@@ -1,0 +1,232 @@
+@use 'Globals';
+
+@keyframes slide-down {
+  0% {
+    transform: translate(0, -60px);
+  }
+  30% {
+    transform: translate(0, -60px);
+  }
+  100% {
+    transform: rotateX(0);
+  }
+}
+@mixin init-navbar($base-font-size) {
+  .dark {
+    #Navbar-Full {
+      background-color: Globals.$gray-1;
+    }
+    .links.inner {
+      background-color: Globals.$gray-1;
+    }
+    .links.list {
+      background: #151515;
+    }
+  }
+  .light {
+    #Navbar-Full {
+      background-color: Globals.$light-1;
+    }
+    .links.inner {
+      background-color: Globals.$light-1;
+    }
+    .links.list {
+      background: #e7e7e7;
+    }
+  }
+  @media screen and (min-width: Globals.$min-res) {
+    #Navbar-Mobile {
+      display: block;
+    }
+    #Navbar {
+      display: none;
+    }
+    .links.list {
+      display: flex;
+    }
+  }
+  @media screen and (min-width: Globals.$small-res) {
+    #Navbar-Mobile {
+      display: none;
+    }
+    #Navbar {
+      display: flex;
+    }
+    .links.list {
+      display: none;
+    }
+  }
+  #Navbar-Full {
+    flex-direction: row;
+    height: $base-font-size;
+    animation: slide-down 2s 1;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+  }
+  #Navbar {
+    flex-direction: row;
+    justify-content: center;
+    .logo {
+      background: url('../images/navbar-logo.png');
+      flex: 0 1 15%;
+      min-width: $base-font-size * 2;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      height: $base-font-size;
+      margin-left: $base-font-size * 0.5;
+      margin-right: $base-font-size * 0.5;
+    }
+    .outer {
+      flex: 0 1 100%;
+      padding: 0 $base-font-size * 0.05;
+      background-color: Globals.$gold-1;
+      display: flex;
+      flex-direction: row;
+      height: $base-font-size * 0.55;
+      margin-right: $base-font-size * 0.5;
+    }
+    .inner {
+      flex: 1 0 100%;
+      margin: auto;
+      height: $base-font-size * 0.5;
+      display: flex;
+      flex-direction: row;
+      div {
+        justify-content: center;
+        height: 100%;
+        margin: auto;
+        display: flex;
+        a {
+          height: $base-font-size * 0.3;
+          font-size: $base-font-size * 0.29;
+          font-weight: 500;
+          margin: auto $base-font-size * 0.25;
+          text-decoration: none;
+        }
+      }
+      div:last-of-type {
+        flex: 0 0 $base-font-size * 4;
+        margin: 0;
+        color: Globals.$gray-1;
+        background-color: Globals.$gold-1;
+        a {
+          width: $base-font-size * 2;
+          text-align: center;
+          color: white;
+          margin: auto $base-font-size * 0.1;
+          font-weight: 600;
+        }
+        button {
+          width: $base-font-size * 0.5;
+          background-color: transparent;
+          margin: auto 0;
+          justify-content: center;
+          float: right;
+          height: $base-font-size * 0.3;
+          border-radius: 0px;
+          svg {
+            height: $base-font-size * 0.3;
+            width: $base-font-size * 0.3;
+            color: white;
+            transition: color 1s;
+          }
+        }
+        button:hover,button:focus {
+          svg {
+            color: Globals.$gray-1;
+          }
+        }
+      }
+    }
+  }
+  #Navbar-Mobile {
+    .logo {
+      background: url('../images/navbar-logo.png');
+      float: left;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+      height: $base-font-size;
+      width: $base-font-size * 5;
+      margin-left: $base-font-size * 0.5;
+      margin-right: $base-font-size * 0.5;
+    }
+
+    button {
+      width: $base-font-size;
+      background-color: transparent;
+      margin-bottom: 0px;
+      justify-content: center;
+      float: right;
+      height: $base-font-size;
+      border-radius: 0px;
+      svg {
+        color: Globals.$gold-1;
+      }
+    }
+  }
+  .links.list {
+    transition: transform 0.5s;
+    top: $base-font-size;
+    bottom: 0;
+    right: 0;
+    width: $base-font-size * 7;
+    position: fixed;
+    z-index: 1000;
+    flex-direction: column;
+
+    .links.container {
+      display: flex;
+      flex-direction: column;
+    }
+    a,
+    button {
+      background-color: transparent;
+      flex: 0 0 $base-font-size;
+      font-size: $base-font-size * 0.3;
+      font-weight: 500;
+      padding-top: $base-font-size * 0.3;
+      padding-left: $base-font-size * 0.35;
+      padding-right: $base-font-size * 0.25;
+      text-decoration: none;
+    }
+    a:last-of-type {
+      margin-top: $base-font-size * 0.5;
+    }
+    button {
+      color: Globals.$gold-1;
+      padding-top: 0;
+      margin-bottom: 0;
+      display: block;
+      vertical-align: top;
+      text-align: left;
+      border-radius: 0px;
+      transition: color 1s;
+    }
+    button:hover {
+      cursor: pointer;
+      color: Globals.$green-1;
+    }
+    button:last-of-type {
+      font-weight: 700;
+    }
+  }
+}
+
+@media screen and (min-width: Globals.$min-res) {
+  @include init-navbar(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-navbar(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-navbar(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-navbar(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-navbar(Globals.$initial-font-size * 2.5);
+}

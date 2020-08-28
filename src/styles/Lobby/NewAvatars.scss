@@ -1,0 +1,59 @@
+@use '../Globals';
+
+@mixin init-new-avatars($base-font-size) {
+  #New-Avatars {
+    display: flex;
+    flex: 0 1 $base-font-size * 2.5 !important;
+    flex-direction: column;
+    h3 {
+      border-radius: $base-font-size * 0.125 $base-font-size * 0.125 0 0;
+      align-items: center;
+      background-color: Globals.$green-1;
+      color: white;
+      display: flex;
+      flex-direction: row;
+      flex: 0 0 $base-font-size * 0.6;
+      justify-content: center;
+      p {
+        font-weight: 300;
+        flex: 0 1 100%;
+        font-size: $base-font-size * 0.3;
+        height: $base-font-size * 0.5;
+        line-height: $base-font-size * 0.5;
+        margin: 0 $base-font-size * 0.1;
+        text-align: center;
+        white-space: nowrap;
+      }
+    }
+    .ave-container {
+      display: flex;
+      flex: 1 1 50%;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 0 $base-font-size * 0.4;
+      .avatar {
+        flex: 0 1 28%;
+        height: 80%;
+        background-size: contain;
+        background-position: bottom;
+        background-repeat: no-repeat;
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-new-avatars(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-new-avatars(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-new-avatars(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-new-avatars(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-new-avatars(Globals.$initial-font-size * 2.5);
+}

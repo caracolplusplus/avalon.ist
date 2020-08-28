@@ -1,0 +1,175 @@
+@use '../Globals';
+
+@mixin init-game-list($base-font-size) {
+  .dark {
+    #Game-List {
+      .game-list-settings {
+        background: rgba(0, 0, 0, 0.5);
+        button {
+          color: white;
+          background-color: Globals.$gray-1;
+        }
+      }
+      .game {
+        background: rgba(0, 0, 0, 0.3);
+        p {
+          color: white;
+        }
+      }
+    }
+  }
+  .light {
+    #Game-List {
+      .game-list-settings {
+        background: rgba(0, 0, 0, 0.05);
+        button {
+          color: Globals.$gray-1;
+          background-color: Globals.$light-1;
+        }
+      }
+      .game {
+        background: rgba(255, 255, 255, 0.2);
+        p {
+          color: Globals.$gray-1;
+        }
+      }
+    }
+  }
+  #Game-List {
+    display: flex;
+    flex-direction: column;
+    h3 {
+      border-radius: $base-font-size * 0.125 $base-font-size * 0.125 0 0;
+      align-items: center;
+      background-color: transparent;
+      display: flex;
+      flex-direction: row;
+      flex: 0 0 $base-font-size * 1;
+      justify-content: center;
+      p {
+        font-weight: 600;
+        flex: 0 1 $base-font-size * 5;
+        font-size: $base-font-size * 0.3;
+        height: $base-font-size * 0.5;
+        line-height: $base-font-size * 0.5;
+        margin: 0 $base-font-size * 0.1;
+        text-align: center;
+        white-space: nowrap;
+      }
+    }
+    .game-list-settings {
+      display: flex;
+      flex-direction: row-reverse;
+      button {
+        display: block;
+        flex: 0 0 40%;
+        margin: 0px;
+        border-radius: 0px;
+        font-size: $base-font-size * 0.3;
+        align-items: center;
+        transition: background-color 0.5s;
+      }
+      button:hover {
+        color: white;
+        background-color: Globals.$green-1;
+      }
+      button:first-of-type {
+        flex: 0 0 50%;
+      }
+    }
+    .game {
+      animation: wake 1s 1;
+      display: block;
+      padding: $base-font-size * 0.25 $base-font-size * 0.3;
+      padding-right: 0;
+      text-transform: uppercase;
+      text-decoration: none;
+      h3 {
+        border-radius: $base-font-size * 0.125 $base-font-size * 0.125 0 0;
+        align-items: left;
+        background-color: transparent;
+        display: block;
+        flex-direction: row;
+        flex: 0 0 $base-font-size * 0.8;
+        justify-content: center;
+        p {
+          opacity: 1;
+          font-weight: 600;
+          display: inline-block;
+          font-size: $base-font-size * 0.3;
+          height: $base-font-size * 0.5;
+          line-height: $base-font-size * 0.5;
+          margin: 0;
+          color: Globals.$gold-1;
+          text-align: center;
+          white-space: nowrap;
+        }
+        p:last-of-type {
+          width: 50%;
+          color: white;
+          float: right;
+          padding-left: $base-font-size * 0.5;
+          padding-right: $base-font-size * 0.3;
+          clip-path: polygon(
+            0 0,
+            100% 0,
+            100% 100%,
+            0 100%,
+            $base-font-size * 0.25 50%
+          );
+        }
+        .waiting, .in-progress {
+          background-color: Globals.$green-1;
+        }
+        .finished, .paused, .frozen {
+          background-color: Globals.$spy-dark;
+        }
+      }
+      .tracker {
+        opacity: 1;
+        display: block;
+        margin-top: $base-font-size * 0.1;
+        margin-bottom: $base-font-size * 0.1;
+        height: $base-font-size * 0.3;
+        width: 100%;
+        .mission {
+          border-radius: $base-font-size * 2.5;
+          display: inline-block;
+          background-color: Globals.$mission-gray;
+          margin-right: $base-font-size * 0.05;
+          height: $base-font-size * 0.3;
+          width: $base-font-size * 0.3;
+        }
+        .mission.true {
+          background-color: Globals.$mission-blue;
+        }
+        .mission.false {
+          background-color: Globals.$mission-red;
+        }
+      }
+      p {
+        font-size: $base-font-size * 0.3;
+        opacity: 0.6;
+      }
+      .title {
+        margin-right: $base-font-size * 0.15;
+        font-weight: 600;
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-game-list(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-game-list(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-game-list(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-game-list(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-game-list(Globals.$initial-font-size * 2.5);
+}

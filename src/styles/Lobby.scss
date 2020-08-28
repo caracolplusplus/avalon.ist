@@ -1,0 +1,104 @@
+@use 'Globals';
+
+@mixin init-lobby($base-font-size) {
+  .dark {
+    .row {
+      background-color: Globals.$gray-3;
+    }
+  }
+  .light {
+    .row {
+      background-color: Globals.$light-2;
+    }
+  }
+  #Lobby {
+    height: 100%;
+    margin: auto;
+    padding-top: $base-font-size;
+    width: 100%;
+    .thumb-vertical {
+      z-index: 0 !important;
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      margin-right: $base-font-size * 0.1;
+      .row {
+        flex: 0 1 100%;
+        margin-bottom: $base-font-size * 0.1;
+        width: 100%;
+      }
+      .row:last-of-type {
+        margin-bottom: 0px;
+      }
+    }
+    .column:last-of-type {
+      margin-right: 0;
+    }
+    .column:first-of-type {
+      .row {
+        flex: 0 1 14%;
+      }
+      .row:last-of-type {
+        flex: 1 0 40%;
+      }
+    }
+    @media screen and (min-width: Globals.$min-res) {
+      flex-direction: column;
+      padding-bottom: 0;
+      padding-left: 0;
+      .column {
+        .row {
+          border-radius: 0px;
+        }
+      }
+      .column:first-of-type {
+        display: none;
+      }
+    }
+    @media screen and (min-width: Globals.$small-res*0.9) {
+      flex-direction: row;
+      padding-bottom: $base-font-size * 0.5;
+      padding-left: $base-font-size * 0.5;
+      padding-right: $base-font-size * 0.5;
+      .column {
+        .row {
+          border-radius: $base-font-size * 0.125;
+        }
+      }
+      .column:first-of-type,
+      .column:last-of-type {
+        display: flex;
+        flex: 0 0 20%;
+        min-width: $base-font-size * 5;
+      }
+      .column:last-of-type {
+        min-width: $base-font-size * 6;
+      }
+      #Welcome {
+        background-image: url('../images/lobby-welcome.png');
+        width: 100%;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 0px;
+        background-color: transparent;
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-lobby(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-lobby(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-lobby(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-lobby(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-lobby(Globals.$initial-font-size * 2.5);
+}

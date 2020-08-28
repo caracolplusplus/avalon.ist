@@ -1,0 +1,236 @@
+@use '../Globals';
+
+@mixin init-table($base-font-size) {
+  .dark {
+    .mission-tracker {
+      .rounds-container {
+        .round {
+          background-color: white;
+        }
+      }
+    }
+    .table-info {
+      background-color: Globals.$gray-3;
+      .message {
+        color: white;
+      }
+    }
+    .table-buttons {
+      button {
+        background-color: Globals.$gray-3;
+      }
+    }
+  }
+  .light {
+    .mission-tracker {
+      .rounds-container {
+        .round {
+          background-color: Globals.$gray-1;
+        }
+      }
+    }
+    .table-info {
+      background-color: Globals.$lemon;
+      .message {
+        color: Globals.$gray-1;
+      }
+    }
+    .table-buttons {
+      button {
+        background-color: Globals.$lemon;
+        p {
+          color: Globals.$gray-1;
+        }
+      }
+    }
+  }
+  #Table {
+    display: flex;
+    flex-direction: column;
+    .table-row {
+      flex: 0 1 100%;
+    }
+    .table-buttons {
+      display: flex;
+      position: absolute;
+      height: 0;
+      width: 100%;
+      opacity: 1;
+      z-index: 5;
+      button:last-of-type {
+        margin-left: auto;
+        order: 2;
+      }
+      button {
+        flex: 0 0 $base-font-size * 1.5;
+        transition: 0.5s;
+        p {
+          font-weight: 600;
+          font-size: $base-font-size * 0.29;
+          transition: 0.5s;
+        }
+      }
+      button:hover,
+      button:focus {
+        background-color: Globals.$green-1;
+        p {
+          color: white;
+        }
+      }
+    }
+    .table-info {
+      margin-top: $base-font-size * 0.6;
+      display: flex;
+      flex: 0 0 $base-font-size;
+      border-radius: $base-font-size * 0.175;
+      justify-content: center;
+      flex-direction: row !important;
+      z-index: 6;
+      .message {
+        flex: 0 1 auto !important;
+        height: 1em;
+        margin: auto 0;
+        margin-right: $base-font-size * 0.3;
+        font-weight: 500;
+        font-size: $base-font-size * 0.29;
+      }
+      .button-cont {
+        display: flex;
+        flex: 0 0 $base-font-size * 2;
+        margin-left: $base-font-size * 0.1;
+        button {
+          margin: auto 0;
+          height: $base-font-size * 0.5;
+          p {
+            font-size: $base-font-size * 0.29;
+          }
+        }
+        .confirm {
+          border: $base-font-size * 0.05 solid Globals.$green-1;
+          background-color: #d0fc9a;
+          p {
+            color: Globals.$green-1;
+          }
+        }
+        .cancel {
+          border: $base-font-size * 0.05 solid Globals.$hot-red;
+          background-color: #ffd3cf;
+          p {
+            color: Globals.$hot-red;
+          }
+        }
+        .neutral {
+          border: $base-font-size * 0.05 solid Globals.$gold-1;
+          background-color: #ffe9a6;
+          p {
+            color: Globals.$gold-1;
+          }
+        }
+        .disabled {
+          cursor: default;
+          border: $base-font-size * 0.05 solid gray;
+          background-color: Globals.$light-1;
+          p {
+            color: gray;
+          }
+        }
+      }
+    }
+  }
+  .table-display {
+    margin: 0 auto;
+    margin-top: $base-font-size * 0.5;
+    position: relative;
+    flex-direction: row;
+    max-width: 100%;
+    display: flex;
+    justify-content: center;
+    .table-column {
+      flex: 1 0 calc(100% / 6);
+      display: flex;
+      flex-direction: column;
+      .table-prow {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        flex: 0 1 100%;
+        .table-seat {
+          position: relative;
+          overflow: visible;
+          display: flex;
+          flex: 0 1 100%;
+        }
+        .table-center {
+          height: 0px;
+          width: 0px;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          .mission-tracker {
+            animation: wake 2s 1;
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            transform: translate(-50%, -50%);
+            .mission-container,
+            .rounds-container {
+              display: flex;
+              flex-direction: row;
+              margin-top: $base-font-size * 0.05;
+              .mission {
+                width: $base-font-size * 0.8;
+                height: $base-font-size * 0.5;
+                margin: $base-font-size * 0.025;
+                background-color: Globals.$mission-gray;
+                border-radius: $base-font-size * 0.1;
+                display: flex;
+                p {
+                  text-align: center;
+                  font-weight: 600;
+                  margin: auto;
+                }
+              }
+              .mission.true {
+                background-color: Globals.$mission-blue;
+              }
+              .mission.false {
+                background-color: Globals.$mission-red;
+              }
+              .round {
+                height: $base-font-size * 0.3;
+                width: $base-font-size * 0.3;
+                opacity: 0.2;
+                margin: auto;
+                border-radius: $base-font-size * 10;
+              }
+              .round.true {
+                opacity: 0.8;
+              }
+            }
+          }
+        }
+      }
+      .table-prow:nth-of-type(2) {
+        flex: 0 0 20%;
+      }
+    }
+    .table-column:nth-of-type(2) {
+      flex: 0 1 100%;
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-table(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-table(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-table(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-table(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-table(Globals.$initial-font-size * 2.5);
+}

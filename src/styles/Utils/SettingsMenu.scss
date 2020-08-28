@@ -1,0 +1,89 @@
+@use '../Globals';
+
+@mixin init-game-list($base-font-size) {
+  .settings-form {
+    position: fixed;
+    top: $base-font-size;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    form {
+      margin: auto;
+      background-color: white;
+      width: $base-font-size * 12.5;
+      border-radius: $base-font-size * 0.125;
+      padding: $base-font-size * 0.375 $base-font-size * 0.75;
+      color: black;
+      .title {
+        font-weight: 600;
+        font-size: $base-font-size * 0.375;
+        text-align: center;
+        margin-bottom: $base-font-size * 0.25;
+      }
+      .subtitle {
+        font-weight: 500;
+        font-size: $base-font-size * 0.375;
+        text-align: left;
+        margin-bottom: $base-font-size * 0.25;
+        margin-top: $base-font-size * 0.25;
+      }
+      .input-container {
+        display: flex;
+        height: $base-font-size * 0.625;
+        flex-direction: row;
+        .handle {
+          flex: 0 1 100%;
+          margin: auto 0;
+          display: inline-block;
+          text-align: left;
+          font-weight: 300;
+          height: 1em;
+        }
+        .list {
+          display: inline-block;
+          float: right;
+        }
+      }
+      .buttons {
+        margin-top: $base-font-size * 0.3;
+        float: right;
+        width: 50%;
+        display: flex;
+        flex-direction: row;
+        button {
+          margin-left: auto;
+          flex: 0 0 49%;
+          svg {
+            margin: auto;
+            color: white;
+          }
+        }
+        .bt-cancel {
+          background-color: Globals.$spy-light;
+        }
+        .bt-accept {
+          background-color: Globals.$green-1;
+        }
+      }
+    }
+  }
+}
+
+@media screen and (min-width: Globals.$min-res) {
+  @include init-game-list(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-game-list(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-game-list(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-game-list(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-game-list(Globals.$initial-font-size * 2.5);
+}

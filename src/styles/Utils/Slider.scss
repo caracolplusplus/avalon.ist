@@ -1,0 +1,69 @@
+@use '../Globals';
+
+@mixin slider($base-font-size, $scale) {
+  .switch {
+    flex: 0 0 $base-font-size * 0.7;
+    position: relative;
+    display: inline-block;
+    width: $base-font-size * 0.7;
+    height: $base-font-size * 0.4;
+    margin: auto 0;
+    margin-right: $base-font-size * 0.1;
+  }
+
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: Globals.$light-2;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+    border-radius: $base-font-size * 0.9;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: '';
+    height: $base-font-size * 0.3;
+    width: $base-font-size * 0.3;
+    left: $base-font-size * 0.05;
+    bottom: $base-font-size * 0.05;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: Globals.$green-1;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX($base-font-size * 0.3);
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include slider(Globals.$initial-font-size * 0.9, 0.15);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include slider(Globals.$initial-font-size, 0.25);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include slider(Globals.$initial-font-size * 1.2, 0.4);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include slider(Globals.$initial-font-size * 1.4, 0.6);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include slider(Globals.$initial-font-size * 2.5, 1);
+}

@@ -1,0 +1,66 @@
+@use '../Globals';
+
+@mixin init-tabs($base-font-size) {
+  .dark {
+    .tag {
+      background-color: Globals.$gray-3;
+    }
+    .tag:hover, .tag:focus {
+      background-color: black;
+    }
+  }
+  .light {
+    .tag {
+      background-color: Globals.$light-2;
+      p {
+        color: Globals.$gray-1;
+      }
+    }
+    .tag:hover, .tag:focus {
+      background-color: white;
+    }
+  }
+  #Tabs {
+    display: flex;
+    flex-direction: column;
+    .tab-row {
+      display: flex;
+      flex-direction: row;
+      flex: 0 0 $base-font-size * 0.625;
+      .tag {
+        border-radius: $base-font-size * 0.125 $base-font-size * 0.125 0 0;
+        flex: 0 1 $base-font-size * 2.1;
+        margin-right: $base-font-size * 0.05;
+        margin-bottom: 0px;
+        transition: background-color 0.5s;
+        p {
+          font-size: $base-font-size * 0.22;
+        }
+      }
+      .tag.true {
+        background-color: Globals.$green-1;
+        p {
+          color: white;
+        }
+      }
+    }
+    h3 {
+      display: none;
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-tabs(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-tabs(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-tabs(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-tabs(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-tabs(Globals.$initial-font-size * 2.5);
+}

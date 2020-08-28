@@ -1,0 +1,91 @@
+@use 'Globals';
+
+@mixin init-game($base-font-size) {
+  .dark {
+    .row {
+      background-color: Globals.$gray-3;
+    }
+  }
+  .light {
+    .row {
+      background-color: Globals.$light-2;
+    }
+  }
+  #Game {
+    height: 100%;
+    margin: auto;
+    padding-top: $base-font-size;
+    width: 100%;
+    flex-direction: column;
+    .column {
+      display: flex;
+      flex-direction: row;
+      margin-bottom: $base-font-size * 0.1;
+      .tab {
+        margin-right: $base-font-size * 0.1;
+        flex-direction: column;
+        flex: 1 1 100%;
+        height: 100%;
+        .row {
+          flex: 0 1 100%;
+          height: 100%;
+        }
+      }
+      .tab:last-of-type {
+        margin-right: 0;
+      }
+    }
+    .column:last-of-type {
+      margin-bottom: 0;
+    }
+    .thumb-vertical {
+      z-index: 998;
+    }
+    @media screen and (min-width: Globals.$min-res) {
+      padding-bottom: 0;
+      padding-left: 0;
+      .tab {
+        display: none;
+      }
+      .tab:first-of-type {
+        display: flex;
+        margin-right: 0;
+      }
+    }
+    @media screen and (min-width: Globals.$small-res*0.9) {
+      padding-bottom: $base-font-size * 0.5;
+      padding-left: $base-font-size * 0.5;
+      padding-right: $base-font-size * 0.5;
+    }
+    @media screen and (min-width: Globals.$small-res*1.2) {
+      .tab:first-of-type, .tab:nth-of-type(2) {
+        display: flex;
+        margin-right: $base-font-size * 0.1;
+      }
+      .tab:last-of-type {
+        display: flex;
+        margin-right: 0;
+      }
+    }
+  }
+}
+
+@media screen and (min-width: Globals.$min-res) {
+  @include init-game(Globals.$initial-font-size * 0.9);
+}
+
+@media screen and (min-width: Globals.$small-res) {
+  @include init-game(Globals.$initial-font-size);
+}
+
+@media screen and (min-width: Globals.$large-res) {
+  @include init-game(Globals.$initial-font-size * 1.2);
+}
+
+@media screen and (min-width: Globals.$max-res) {
+  @include init-game(Globals.$initial-font-size * 1.4);
+}
+
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-game(Globals.$initial-font-size * 2.5);
+}

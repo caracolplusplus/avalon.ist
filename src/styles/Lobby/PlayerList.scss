@@ -1,0 +1,126 @@
+@use '../Globals';
+
+@mixin init-player-list($base-font-size) {
+  .dark {
+    #Player-List {
+      .tab-title {
+        background: rgba(255, 255, 255, 0.03);
+        .arrow {
+          color: white;
+        }
+      }
+      .player {
+        a {
+          color: white;
+        }
+      }
+    }
+  }
+  .light {
+    #Player-List {
+      .tab-title {
+        background: rgba(0, 0, 0, 0.05);
+        .arrow {
+          color: Globals.$gray-1;
+        }
+      }
+      .player {
+        a {
+          color: Globals.$gray-1;
+        }
+      }
+    }
+  }
+  #Player-List {
+    display: flex;
+    flex-direction: column;
+    h3 {
+      border-radius: $base-font-size * 0.125 $base-font-size * 0.125 0 0;
+      align-items: center;
+      background-color: Globals.$green-1;
+      color: white;
+      display: flex;
+      flex-direction: row;
+      flex: 0 0 $base-font-size * 0.6;
+      justify-content: center;
+      p {
+        font-weight: 300;
+        flex: 0 1 $base-font-size * 5;
+        font-size: $base-font-size * 0.3;
+        height: $base-font-size * 0.5;
+        line-height: $base-font-size * 0.5;
+        margin: 0 $base-font-size * 0.1;
+        text-align: center;
+        white-space: nowrap;
+      }
+    }
+    .tab-title {
+      display: flex;
+      flex-direction: row;
+      padding-left: $base-font-size * 0.2;
+      button {
+        flex: 0 0 $base-font-size * 0.4;
+        height: $base-font-size * 0.4;
+        margin: auto 0;
+        margin-right: $base-font-size * 0.2;
+        border-radius: 0;
+        background-color: transparent;
+        justify-content: center;
+        .arrow {
+          border: solid;
+          border-width: 0 $base-font-size * 0.05 $base-font-size * 0.05 0;
+          display: inline-block;
+          padding: $base-font-size * 0.075;
+        }
+        .up {
+          transform: rotate(-135deg)
+            translate($base-font-size * -0.05, $base-font-size * -0.05);
+        }
+        .down {
+          transform: rotate(45deg)
+            translate($base-font-size * -0.025, $base-font-size * -0.025);
+        }
+      }
+      span {
+        line-height: $base-font-size * 0.625;
+      }
+    }
+    .player {
+      display: flex;
+      flex-direction: row;
+      height: $base-font-size * 0.625;
+      padding: 0 $base-font-size * 0.5;
+      a {
+        margin: auto;
+        margin-right: $base-font-size * 0.15;
+        flex: 0 0 $base-font-size * 3;
+        text-decoration: none;
+        line-height: $base-font-size * 0.625;
+      }
+      .player-elo {
+        flex: 0 1 100%;
+        text-align: right;
+        line-height: $base-font-size * 0.625;
+        margin: auto;
+      }
+    }
+    .the-whole-tab {
+      animation: wake 1s 1;
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-player-list(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-player-list(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-player-list(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-player-list(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-player-list(Globals.$initial-font-size * 2.5);
+}

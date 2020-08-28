@@ -1,0 +1,38 @@
+@use '../Globals';
+
+@mixin init-notes($base-font-size) {
+  #Notes {
+    background-color: Globals.$green-1;
+    textarea {
+      color: white;
+      font-weight: 600;
+      background-color: transparent;
+      overflow: hidden;
+      resize: none;
+      border: 0;
+      font-size: $base-font-size * 0.333;
+      width: 100%;
+      padding: $base-font-size * 0.25 !important;
+      text-decoration: none;
+      &::placeholder {
+        color: white;
+        opacity: 0.5;
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-notes(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-notes(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-notes(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-notes(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-notes(Globals.$initial-font-size * 2.5);
+}

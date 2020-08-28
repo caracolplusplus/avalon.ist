@@ -1,0 +1,148 @@
+@use 'Globals';
+
+@keyframes resize {
+  0% {
+    background-size: 200%;
+  }
+  60% {
+    background-size: 210%;
+  }
+  100% {
+    background-size: 200%;
+  }
+}
+@keyframes flip {
+  0% {
+    transform: rotateY(90deg);
+  }
+  20% {
+    transform: rotateY(90deg);
+  }
+  100% {
+    transform: rotateY(0);
+  }
+}
+@keyframes glow {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+@mixin init-login($base-font-size) {
+  #Background {
+    animation: resize 3s infinite;
+    background-attachment: local;
+    background-image: url('../images/login-smoke.png');
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  #Login,
+  #Signup {
+    form {
+      align-items: center;
+      animation: flip 1s 1;
+      display: flex;
+      flex: 1 1 100%;
+      flex-direction: column;
+      margin-bottom: auto;
+      margin-top: auto;
+      @media screen and (min-width: Globals.$min-res) {
+        h1,
+        h2,
+        p {
+          width: $base-font-size * 7.5;
+        }
+      }
+      @media screen and (min-width: Globals.$small-res) {
+        h1,
+        h2,
+        p {
+          width: $base-font-size * 18.125;
+        }
+      }
+      * {
+        z-index: 1;
+      }
+      h1,
+      h2 {
+        text-align: center;
+      }
+      h2 {
+        margin-bottom: $base-font-size * 0.25;
+      }
+      p {
+        text-align: justify;
+        text-align-last: center;
+        &.last {
+          margin-bottom: $base-font-size * 0.5;
+        }
+      }
+      .logo-big {
+        background: url('../images/login-logo.png');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        height: $base-font-size * 4;
+        margin-bottom: $base-font-size * 0.5;
+        margin-top: $base-font-size * 0.5;
+        width: $base-font-size * 4;
+      }
+      .glow {
+        $length: $base-font-size * 8;
+        animation: glow 3s infinite;
+        background: url('../images/login-glow.png');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        height: 0px;
+        margin-bottom: -$length;
+        padding-bottom: $length;
+        position: relative;
+        transform: translate(0, -$length * 0.321);
+        width: $length;
+        z-index: 0;
+      }
+      .after-glow {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+      }
+      .input {
+        width: $base-font-size * 7.5;
+      }
+      button {
+        margin-bottom: $base-font-size * 0.375;
+        width: $base-font-size * 7.5;
+        p {
+          margin-bottom: 0;
+        }
+      }
+      .error {
+        color: Globals.$hot-red;
+        font-weight: 900;
+        margin-bottom: $base-font-size * 0.2;
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-login(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-login(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-login(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-login(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-login(Globals.$initial-font-size * 2.5);
+}

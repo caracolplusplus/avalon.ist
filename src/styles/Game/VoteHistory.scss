@@ -1,0 +1,138 @@
+@use '../Globals';
+
+@mixin init-vh($base-font-size) {
+  .dark {
+    #Vote-History {
+      .vh-row {
+        color: white;
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .vh-row.mission {
+        background-color: Globals.$gold-1;
+      }
+      .vh-row.mission.true {
+        background-color: Globals.$res-dark;
+      }
+      .vh-row.mission.false {
+        background-color: Globals.$spy-dark;
+      }
+      .vh-vote.undefined {
+        background-color: #847062;
+      }
+      .vh-vote.false {
+        background-color: #6a493a;
+      }
+      .vh-vote.true {
+        background-color: #6f774e;
+      }
+      .leader {
+        border: 2px solid #dcc6b8;
+      }
+      svg {
+        color: #111;
+      }
+    }
+  }
+  .light {
+    #Vote-History {
+      .vh-row {
+        color: Globals.$gray-1;
+        background: rgba(0, 0, 0, 0.08);
+      }
+      .vh-row.mission {
+        background-color: Globals.$gold-1;
+      }
+      .vh-row.mission.true {
+        background-color: Globals.$res-light;
+      }
+      .vh-row.mission.false {
+        background-color: Globals.$spy-light;
+      }
+      .vh-vote.undefined {
+        background-color: #c9bdb6;
+      }
+      .vh-vote.false {
+        background-color: #c09782;
+      }
+      .vh-vote.true {
+        background-color: #a4b55f;
+      }
+      .leader {
+        border: 2px solid #2a2523;
+      }
+      svg {
+        color: #1c1717;
+      }
+    }
+  }
+  #Vote-History {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    min-width: 600px;
+    .vh-cont {
+      animation: wake 1s 1;
+      margin: auto;
+      width: 95%;
+      background-color: transparent;
+      table-layout: fixed;
+      svg {
+        position: relative;
+        $svg-size: 1.1em;
+        height: $svg-size;
+        width: $svg-size;
+        margin-left: 50%;
+        transform: translate(-50%, 0%);
+      }
+      th {
+        text-align: center !important;
+        width: 100%;
+      }
+      .vh-row {
+        font-weight: 500;
+        height: 1.7em;
+        padding: 0 0.5em;
+        text-align: left;
+        overflow: hidden;
+      }
+      .vh-row.title {
+        font-weight: 700;
+      }
+      .vh-row.mission {
+        color: black;
+        font-weight: 600;
+      }
+      .lotl {
+        text-align: center;
+      }
+      .vh-row.votes {
+        padding: 0px;
+        background-color: transparent;
+        .vh-vote {
+          position: relative;
+          height: 1.7em;
+          padding: 10px;
+          text-align: center;
+        }
+        .vh-vote:last-of-type {
+          margin-right: 0;
+        }
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-vh(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-vh(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-vh(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-vh(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-vh(Globals.$initial-font-size * 2.5);
+}

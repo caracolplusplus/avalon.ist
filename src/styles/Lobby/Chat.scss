@@ -1,0 +1,131 @@
+@use '../Globals';
+
+@mixin init-chat($base-font-size) {
+  .dark {
+    #Chat {
+      .message {
+        .username {
+          color: white;
+        }
+      }
+      .chat-input {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      input,
+      button {
+        color: white;
+      }
+    }
+  }
+  .light {
+    #Chat {
+      .message {
+        .username {
+          color: Globals.$gray-1;
+        }
+      }
+      .chat-input {
+        background: rgba(0, 0, 0, 0.05);
+        input,
+        button {
+          color: Globals.$gray-1;
+        }
+      }
+    }
+  }
+  #Chat {
+    display: flex;
+    flex-direction: column;
+    .message {
+      animation: wake 0.25s 1;
+      flex: 0 0 100%;
+      padding: 0 $base-font-size * 0.25;
+      padding-right: $base-font-size * 0.4;
+
+      display: flex;
+      .hour {
+        flex: 0 0 $base-font-size * 0.8;
+        width: $base-font-size * 0.8;
+        font-size: $base-font-size * 0.25;
+        padding-top: $base-font-size * 0.1;
+        margin-right: $base-font-size * 0.2;
+        text-align: right;
+      }
+      .text {
+        line-height: $base-font-size * 0.5;
+        .username {
+          margin-right: $base-font-size * 0.15;
+          text-decoration: none;
+        }
+        .content {
+          word-break: break-word;
+        }
+      }
+
+      &.highlighted {
+        color: Globals.$gold-1;
+        .content {
+          font-weight: 500;
+        }
+      }
+      &.negative {
+        color: Globals.$mission-red;
+        .content {
+          font-weight: 600;
+        }
+      }
+      &.positive {
+        color: Globals.$mission-blue;
+        .content {
+          font-weight: 600;
+        }
+      }
+      &:first-of-type {
+        margin-top: $base-font-size * 0.25;
+      }
+      &:last-of-type {
+        margin-bottom: $base-font-size * 0.25;
+      }
+    }
+    .chat-input {
+      display: flex;
+      flex: 0 0 $base-font-size * 0.8;
+      flex-direction: row;
+      justify-content: center;
+      input,
+      button {
+        height: $base-font-size * 0.8;
+        background-color: transparent;
+        border: 0;
+        margin: 0;
+      }
+      input {
+        font-size: $base-font-size * 0.3;
+        flex: 1 0 50%;
+        padding: 0 $base-font-size * 0.2;
+      }
+      button {
+        flex: 0 0 $base-font-size * 0.8;
+        svg {
+          height: $base-font-size * 0.3;
+          width: $base-font-size * 0.3;
+        }
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-chat(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-chat(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-chat(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-chat(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-chat(Globals.$initial-font-size * 2.5);
+}

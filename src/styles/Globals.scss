@@ -1,0 +1,320 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,300;0,400;0,500;0,700;0,800;1,100;1,300;1,400;1,500;1,700;1,800&display=swap');
+
+$montserrat: 'Montserrat', sans-serif;
+$gray-1: #0d0d0d;
+$gray-2: #4f4f4f;
+$gray-3: #101010;
+$gold-1: #a37d18;
+$gold-2: #EFC601;
+$gold-3: #877032;
+$lemon: #e3dfb9;
+$green-1: #586d3a;
+$res-dark: #6f9298;
+$res-light: #639399;
+$res-highlight: #28D8D8;
+$spy-dark: #9e522b;
+$spy-light: #ab4d23;
+$spy-highlight: #FD5C5D;
+$hot-red: #d0021b;
+$light-1: #eee;
+$light-2: #dfdfdf;
+$light-3: #aaa;
+$mission-blue: #2f689f;
+$mission-red: #8d4b4c;
+$mission-gray: #808080;
+$dark: false;
+$min-res: 0em;
+$lobby-res: 25em;
+$small-res: 46.875em;
+$large-res: 93.75em;
+$max-res: 125em;
+$insane-res: 187.5em;
+$initial-font-size: 2.5rem;
+
+* {
+  box-sizing: border-box;
+  font-family: $montserrat;
+  margin: 0;
+  padding: 0;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: none;
+}
+.full {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+.section {
+  align-items: center;
+  display: flex;
+  flex: 1 1 100%;
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+@mixin init-global($base-font-size) {
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    .tooltip-text {
+      visibility: hidden;
+      font-size: $base-font-size * 0.3;
+      font-weight: 400;
+      color: white;
+      background-color: $green-1;
+      text-align: center;
+      padding: $base-font-size*0.075 $base-font-size*0.175;
+      border-radius: $base-font-size*0.125;
+
+      /* Position the tooltip text - see examples below! */
+      position: absolute;
+      white-space: nowrap;
+      z-index: 3000;
+      bottom: 100%;
+      left: 50%;
+      transform: translate(-50%, 10%);
+      opacity: 0;
+      transition: opacity 0s;
+      transition-delay: 1s;
+      pointer-events: none;
+    }
+    .tooltip-text::after {
+      content: ' ';
+      position: absolute;
+      top: 100%; /* At the bottom of the tooltip */
+      left: 50%;
+      margin-left: $base-font-size*-0.125;
+      border-width: $base-font-size * 0.125;
+      border-style: solid;
+      border-color: $green-1 transparent transparent transparent;
+    }
+  }
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+  .dark {
+    background-color: $gray-1;
+    color: white;
+    h1 {
+      font-size: $base-font-size;
+      font-weight: 800;
+    }
+    h2 {
+      font-size: $base-font-size * 0.5;
+      font-weight: 100;
+    }
+    p {
+      font-size: $base-font-size * 0.333;
+      font-weight: 300;
+    }
+    a {
+      color: $gold-1;
+      font-size: $base-font-size * 0.333;
+      font-weight: 500;
+      transition: color 1s;
+    }
+    a:hover {
+      color: $green-1;
+    }
+    button {
+      align-items: center;
+      background-color: $gold-1;
+      border-radius: $base-font-size * 0.125;
+      border-width: 0;
+      display: flex;
+      flex-direction: row;
+      font-weight: 700;
+      height: $base-font-size * 0.625;
+      margin-bottom: $base-font-size * 0.125;
+      width: 100%;
+      p {
+        color: white;
+        display: inline;
+        flex: 1;
+        font-size: $base-font-size * 0.333;
+        font-weight: 700;
+        vertical-align: middle;
+      }
+    }
+    button:hover {
+      cursor: pointer;
+    }
+    .input {
+      background-color: white;
+      border-radius: $base-font-size * 0.125;
+      display: flex;
+      flex-direction: row;
+      height: $base-font-size * 0.625;
+      margin-bottom: $base-font-size * 0.125;
+      svg {
+        align-items: center;
+        color: $gray-2;
+        display: flex;
+        justify-content: center;
+        width: $base-font-size * 0.625;
+        height: $base-font-size * 0.625;
+        transform: scale(0.5);
+      }
+      input {
+        background-color: transparent;
+        border: 0;
+        color: $gray-2;
+        flex: 1;
+        font-size: $base-font-size * 0.25;
+        font-weight: 700;
+        position: relative;
+      }
+    }
+    .track-vertical {
+      position: fixed;
+      background-color: transparent;
+      height: 100%;
+      padding: $base-font-size * 0.075;
+      right: 0;
+      width: $base-font-size * 0.3 !important;
+    }
+    .track-horizontal {
+      background-color: transparent;
+      height: $base-font-size * 0.3 !important;
+      padding: $base-font-size * 0.075;
+      bottom: 0;
+      width: 100%;
+    }
+    .thumb-vertical,
+    .thumb-horizontal {
+      background-color: white !important;
+      border-radius: $base-font-size * 0.25;
+      opacity: 0.25 !important;
+      z-index: 1000;
+    }
+  }
+  .light {
+    background-color: $light-1;
+    color: $gray-1;
+    h1 {
+      font-size: $base-font-size;
+      font-weight: 800;
+    }
+    h2 {
+      font-size: $base-font-size * 0.5;
+      font-weight: 100;
+    }
+    p {
+      font-size: $base-font-size * 0.333;
+      font-weight: 300;
+    }
+    a {
+      color: $gold-1;
+      font-size: $base-font-size * 0.333;
+      font-weight: 500;
+      transition: color 1s;
+    }
+    a:hover {
+      color: $green-1;
+    }
+    button {
+      align-items: center;
+      background-color: $gold-1;
+      border-radius: $base-font-size * 0.125;
+      border-width: 0;
+      display: flex;
+      flex-direction: row;
+      font-weight: 700;
+      height: $base-font-size * 0.625;
+      justify-content: center;
+      margin-bottom: $base-font-size * 0.125;
+      width: 100%;
+      p {
+        color: white;
+        display: inline;
+        flex: 1;
+        font-size: $base-font-size * 0.333;
+        font-weight: 700;
+        vertical-align: middle;
+      }
+    }
+    button:hover {
+      cursor: pointer;
+    }
+    .input {
+      background-color: white;
+      border-radius: $base-font-size * 0.125;
+      display: flex;
+      flex-direction: row;
+      height: $base-font-size * 0.625;
+      margin-bottom: $base-font-size * 0.125;
+      svg {
+        align-items: center;
+        color: $gray-2;
+        display: flex;
+        justify-content: center;
+        width: $base-font-size * 0.625;
+        height: $base-font-size * 0.625;
+        transform: scale(0.5);
+      }
+      input {
+        background-color: transparent;
+        border: 0;
+        color: $gray-2;
+        flex: 1;
+        font-size: $base-font-size * 0.25;
+        font-weight: 700;
+        position: relative;
+      }
+    }
+    .track-vertical {
+      background-color: transparent;
+      height: 100%;
+      padding: $base-font-size * 0.075;
+      right: 0;
+      width: $base-font-size * 0.3 !important;
+    }
+    .track-horizontal {
+      background-color: transparent;
+      height: $base-font-size * 0.3 !important;
+      padding: $base-font-size * 0.075;
+      top: 0;
+      width: 100%;
+    }
+    .thumb-vertical,
+    .thumb-horizontal {
+      background-color: $gray-1 !important;
+      border-radius: $base-font-size * 0.25;
+      opacity: 0.1 !important;
+      z-index: 1000;
+    }
+  }
+}
+@media screen and (min-width: $min-res) {
+  @include init-global($initial-font-size * 0.9);
+  .tooltip-text {
+    display: none;
+  }
+}
+@media screen and (min-width: $small-res) {
+  @include init-global($initial-font-size);
+  .tooltip-text {
+    display: initial;
+  }
+}
+@media screen and (min-width: $large-res) {
+  @include init-global($initial-font-size * 1.2);
+}
+@media screen and (min-width: $max-res) {
+  @include init-global($initial-font-size * 1.4);
+}
+@media screen and (min-width: $insane-res) {
+  @include init-global($initial-font-size * 2.5);
+}

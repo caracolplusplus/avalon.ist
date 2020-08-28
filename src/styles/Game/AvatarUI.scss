@@ -1,0 +1,269 @@
+@use '../Globals';
+
+@mixin init-avatar-ui($base-font-size, $scale) {
+  .dark {
+    .ave-vote-bubble.true {
+      background-image: url('../../images/green-bubble-dark.png');
+    }
+    .ave-vote-bubble.false {
+      background-image: url('../../images/red-bubble-dark.png');
+    }
+    #ave-background.res {
+      background-color: Globals.$res-dark;
+    }
+    #ave-background.spy {
+      background-color: Globals.$spy-dark;
+    }
+    .ave-buttons {
+      button {
+        background-color: Globals.$light-1;
+        svg {
+          color: Globals.$gray-1;
+        }
+      }
+    }
+    .ave-role.true {
+      background-color: Globals.$res-dark;
+    }
+    .ave-role.false {
+      background-color: Globals.$spy-dark;
+    }
+  }
+  .light {
+    .ave-vote-bubble.true {
+      background-image: url('../../images/green-bubble-light.png');
+    }
+    .ave-vote-bubble.false {
+      background-image: url('../../images/red-bubble-light.png');
+    }
+    #ave-background.res {
+      background-color: Globals.$res-light;
+    }
+    #ave-background.spy {
+      background-color: Globals.$spy-light;
+    }
+    .ave-buttons {
+      button {
+        background-color: Globals.$gray-1;
+        svg {
+          color: Globals.$light-1;
+        }
+      }
+    }
+    .ave-role.true {
+      background-color: Globals.$res-light;
+    }
+    .ave-role.false {
+      background-color: Globals.$spy-light;
+    }
+  }
+  @keyframes flag-slide {
+    0% {
+      transform: translate(-50%, -50%) scaleX(0);
+    }
+    100% {
+      transform: translate(-50%, -50%) scaleX(1);
+    }
+  }
+  @keyframes wake {
+    0% {
+      opacity: 0;
+    }
+    20% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  #Avatar-UI {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    transform: translate(-50%, -50%);
+    align-items: center;
+    transition: top 0.25s, left 0.25s;
+    animation: wake 0.8s 1;
+    #ave-graphics {
+      position: relative;
+      $ave-dimensions: 286px * $scale;
+      max-height: $ave-dimensions;
+      max-width: $ave-dimensions;
+      transition: height 1s, width 1s;
+      #ave-background {
+        transform: translate(-50%, -50%);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        $size: 105%;
+        width: $size;
+        height: $size;
+        border-radius: $base-font-size * 0.125;
+        transition: background-color 0.2s;
+      }
+      #ave-background.picked {
+        background-color: Globals.$gold-2 !important;
+      }
+      .ave-res,
+      .ave-spy {
+        transform: translate(-50%, -50%);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        background-size: contain;
+        background-position: center bottom;
+        background-repeat: no-repeat;
+        &.pickable {
+          cursor: pointer;
+        }
+      }
+      .ave-shield {
+        animation: wake 2s 1;
+        transform: translate(-50%, -50%);
+        position: absolute;
+        top: 70%;
+        left: 25%;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        $size: 50%;
+        width: $size;
+        height: $size;
+        pointer-events: none;
+      }
+      .ave-flag {
+        transform: translate(-50%, -50%);
+        position: absolute;
+        animation: flag-slide 0.5s 1;
+        top: 75%;
+        left: 100%;
+        background: url('../../images/flag.png');
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        $size: 25%;
+        width: $size;
+        height: $size * 1.62;
+        pointer-events: none;
+      }
+      .ave-vote-bubble {
+        transform: translate(-50%, -50%);
+        top: 28%;
+        left: 102%;
+        position: absolute;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        $size: 40%;
+        width: $size;
+        height: $size;
+        pointer-events: none;
+      }
+      .ave-buttons {
+        display: flex;
+        position: absolute;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        right: 10%;
+        animation: wake 0.5s 1;
+        flex-direction: column;
+        z-index: 300;
+        pointer-events: none;
+        button {
+          margin-bottom: 1px;
+          border-radius: 20%;
+          height: 25%;
+          width: 25%;
+          min-height: 16px;
+          min-width: 16px;
+          pointer-events: auto;
+          svg {
+            position: relative;
+            height: 60%;
+            width: 60%;
+            margin: auto;
+          }
+        }
+      }
+    }
+    .ave-username {
+      font-weight: 500;
+      margin-top: 0.2em;
+      text-align: center;
+      overflow: hidden !important;
+      white-space: nowrap;
+    }
+    .ave-role {
+      font-weight: 700;
+      color: white;
+      margin-top: 0.15em;
+      text-align: center;
+      border-radius: 0.2em;
+      padding: 0.15em 0.4em;
+    }
+    .ave-shield-display {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      background: url('../../images/shield.png');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: top 0.6s, left 0.6s, transform 0.15s;
+    }
+  }
+  .hl-picker {
+    animation: fade-in-buttons 0.5s 1;
+    background: rgba(0, 0, 0, 0.8);
+    position: fixed;
+    top: $base-font-size;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 400;
+    .hl-stuff {
+      transform: scale($scale * 4.5);
+      p {
+        font-weight: 600;
+        font-size: 15px;
+        color: white;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      button {
+        margin-top: 5px;
+        width: 220px;
+        height: 20px;
+        border-radius: 5px;
+        margin-bottom: 0;
+        background-color: Globals.$green-1;
+        svg {
+          margin: auto;
+          color: white;
+        }
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-avatar-ui(Globals.$initial-font-size * 0.9, 0.15);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-avatar-ui(Globals.$initial-font-size, 0.25);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-avatar-ui(Globals.$initial-font-size * 1.2, 0.4);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-avatar-ui(Globals.$initial-font-size * 1.4, 0.6);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-avatar-ui(Globals.$initial-font-size * 2.5, 1);
+}
