@@ -59,8 +59,6 @@ const mapState = (state: rootType) => {
 // App
 
 class App extends Component<appProps, appState> {
-  dispatchCount: number = 1;
-
   constructor(props: appProps) {
     super(props);
     this.state = initialState;
@@ -81,11 +79,9 @@ class App extends Component<appProps, appState> {
   }
 
   componentDidUpdate(prevProps: appProps) {
-    if (prevProps.online !== this.props.online && this.dispatchCount < 1) {
+    if (prevProps.online !== this.props.online) {
       this.updateState();
     }
-
-    this.dispatchCount = 0;
   }
 
   updateState() {

@@ -44,6 +44,7 @@ class Game extends Component<RouteComponentProps<GameProps>, GameState> {
       frozen: undefined,
       stage: undefined,
       cause: undefined,
+      assassination: -1,
       // Game UI Info
       tabs: 2,
       scale: 1,

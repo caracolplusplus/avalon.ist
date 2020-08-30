@@ -96,7 +96,6 @@ class PlayerList extends Component<{}, PlayerListState> {
   componentDidMount() {
     socket
       .on("clientsOnlineResponse", this.parseClientsOnline)
-      .emit("clientsOnlineRequest");
   }
 
   componentWillUnmount() {

@@ -129,8 +129,6 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   triggerRequest() {
-    console.log(this.props.code);
-
     socket.emit(this.eventNames[4], {
       roomNumber: this.props.code,
     });

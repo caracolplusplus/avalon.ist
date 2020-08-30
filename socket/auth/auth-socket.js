@@ -19,19 +19,27 @@ module.exports = function (io, socket) {
 				.then((user) => {
 					const username = user.get('username');
 
+					socket.user = user;
+					socket.emit('gameUpdate');
+					socket.emit('roomListUpdate');
+
 					if (!clientsOnline.hasOwnProperty(username)) {
 						clientsOnline[username] = 1;
+
+						GeneralChat.joinLeaveLobby(username, true);
+						io.to(GEN_CHAT).emit('generalChatUpdate');
 					} else {
+						if (clientsOnline[username] <= 0) {
+							GeneralChat.joinLeaveLobby(username, true);
+							io.to(GEN_CHAT).emit('generalChatUpdate');
+						} else {
+							socket.emit('generalChatUpdate');
+						}
+
 						clientsOnline[username]++;
 					}
 
 					clientsOnlineRequest();
-					GeneralChat.joinLeaveLobby(username, true);
-
-					socket.user = input;
-					socket.emit('gameUpdate');
-					socket.emit('roomListUpdate');
-					io.to(GEN_CHAT).emit('generalChatUpdate');
 				})
 				.catch((err) => {
 					console.log(err);
@@ -40,33 +48,26 @@ module.exports = function (io, socket) {
 	};
 
 	const parseUnlink = () => {
+		const user = socket.user;
 		socket.leave(GEN_CHAT);
 
-		if (socket.user) {
-			const query = new Parse.Query('_User');
+		if (user) {
+			const username = user.get('username');
 
-			query
-				.get(socket.user.objectId, {
-					useMasterKey: true,
-				})
-				.then((user) => {
-					const username = user.get('username');
+			if (!clientsOnline.hasOwnProperty(username)) {
+				clientsOnline[username] = 0;
+			} else {
+				clientsOnline[username]--;
 
-					if (!clientsOnline.hasOwnProperty(username)) {
-						clientsOnline[username] = 0;
-					} else {
-						clientsOnline[username]--;
-					}
-
-					clientsOnlineRequest();
+				if (clientsOnline[username] <= 0) {
 					GeneralChat.joinLeaveLobby(username, false);
-
-					socket.user = null;
 					io.to(GEN_CHAT).emit('generalChatUpdate');
-				})
-				.catch((err) => {
-					console.log(err);
-				});
+				}
+			}
+
+			clientsOnlineRequest();
+
+			socket.user = null;
 		}
 	};
 

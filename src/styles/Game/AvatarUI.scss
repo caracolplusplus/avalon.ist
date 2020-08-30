@@ -104,8 +104,8 @@
       #ave-background.picked {
         background-color: Globals.$gold-2 !important;
       }
-      .ave-res,
-      .ave-spy {
+      .ave {
+        transition: 0.5s;
         transform: translate(-50%, -50%);
         position: absolute;
         top: 50%;
@@ -117,6 +117,10 @@
         background-repeat: no-repeat;
         &.pickable {
           cursor: pointer;
+        }
+        &.killed {
+          transform: rotate(90deg) translate(-35%, 20%);
+          filter: grayscale(60%);
         }
       }
       .ave-shield {
@@ -132,6 +136,20 @@
         width: $size;
         height: $size;
         pointer-events: none;
+      }
+      .ave-sword {
+        animation: wake 1s 1;
+        position: absolute;
+        background: url('../../images/sword.png');
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        top: -10%;
+        left: 50%;
+        transform: translate(-50%, 0%);
+        $size: 80%;
+        width: $size;
+        height: $size;
       }
       .ave-flag {
         transform: translate(-50%, -50%);

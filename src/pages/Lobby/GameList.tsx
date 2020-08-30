@@ -149,6 +149,7 @@ class GameList extends Component<{}, GameListState> {
     socket.on("roomListResponse", this.parseRoomList);
 
     socket.emit("roomListJoin");
+    this.triggerRequest();
   }
 
   componentWillUnmount() {

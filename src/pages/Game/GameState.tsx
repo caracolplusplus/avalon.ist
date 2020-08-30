@@ -10,6 +10,7 @@ interface GameState {
   frozen: boolean | undefined;
   stage: string | undefined;
   cause: number | undefined;
+  assassination: number;
   // Game UI Info
   tabs: number;
   scale: number;

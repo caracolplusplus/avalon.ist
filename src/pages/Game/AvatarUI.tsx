@@ -1,61 +1,57 @@
 // Import External Components
 
-import React, { Component, createRef } from 'react'
-import {
-  faStamp,
-  faPen,
-  faPaintBrush,
-  faCheck,
-} from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { SketchPicker, ColorResult, RGBColor } from 'react-color'
+import React, { Component, createRef } from 'react';
+import { faStamp, faPen, faPaintBrush, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { SketchPicker, ColorResult, RGBColor } from 'react-color';
 
 // Import Internal Components
 
-import Table from './Table'
+import Table from './Table';
 
 // Import Styles
 
-import '../../styles/Game/AvatarUI.scss'
+import '../../styles/Game/AvatarUI.scss';
 
 // Class Definition
 
 interface AvatarUIProps {
-  spyUrl: string
-  resUrl: string
-  username: string
-  onMission: boolean
-  leader: boolean
-  isRes: boolean
-  isPickable: boolean
-  role: string
-  vote: number
-  table: Table
+  spyUrl: string;
+  resUrl: string;
+  username: string;
+  onMission: boolean;
+  leader: boolean;
+  isRes: boolean;
+  isPickable: boolean;
+  role: string;
+  vote: number;
+  table: Table;
+  killed: boolean;
 }
 
 class AvatarUI extends Component<
   AvatarUIProps,
   {
-    shieldPosition: [number, number]
-    shieldScale: number
-    shieldShow: boolean
-    avatarInitialPosition: [number, number]
-    avatarPosition: [number, number]
-    avatarShow: boolean
-    avatarSize: number
-    currentBackground: number
-    currentHighlight: RGBColor
-    renderPicker: boolean
-    renderButtons: boolean
-    picked: boolean
-    width: number
+    shieldPosition: [number, number];
+    shieldScale: number;
+    shieldShow: boolean;
+    avatarInitialPosition: [number, number];
+    avatarPosition: [number, number];
+    avatarShow: boolean;
+    avatarSize: number;
+    currentBackground: number;
+    currentHighlight: RGBColor;
+    renderPicker: boolean;
+    renderButtons: boolean;
+    picked: boolean;
+    width: number;
   }
 > {
-  background = ['none', 'res', 'spy']
-  shieldLocation = createRef<HTMLDivElement>()
+  background = ['none', 'res', 'spy'];
+  shieldLocation = createRef<HTMLDivElement>();
 
   constructor(props: AvatarUIProps) {
-    super(props)
+    super(props);
     this.state = {
       shieldPosition: [0, 0],
       shieldShow: false,
@@ -75,20 +71,20 @@ class AvatarUI extends Component<
       renderButtons: false,
       picked: false,
       width: 0,
-    }
-    this.handleHighlight = this.handleHighlight.bind(this)
+    };
+    this.handleHighlight = this.handleHighlight.bind(this);
   }
 
   componentDidUpdate(prevProps: AvatarUIProps) {
     if (prevProps.isPickable !== this.props.isPickable) {
       this.setState({
-        picked: false
-      })
+        picked: false,
+      });
     }
   }
 
   handleHighlight(color: ColorResult) {
-    this.setState({ currentHighlight: color.rgb })
+    this.setState({ currentHighlight: color.rgb });
   }
 
   render() {
@@ -123,28 +119,25 @@ class AvatarUI extends Component<
             />
             <div
               className={
-                (this.props.isRes ? 'ave-res' : 'ave-spy') +
-                ' tooltip ' +
+                'ave tooltip ' +
+                (this.props.killed ? 'killed ' : '') +
                 (this.props.isPickable ? 'pickable' : 'not-pickable')
               }
               style={{
-                backgroundImage:
-                  'url(' +
-                  (this.props.isRes ? this.props.resUrl : this.props.spyUrl) +
-                  ')',
+                backgroundImage: 'url(' + (this.props.isRes ? this.props.resUrl : this.props.spyUrl) + ')',
               }}
-              onClick={() => 
-                this.setState({
-                  picked: this.props.isPickable && !this.state.picked,
-                }, this.props.table.countSelected)
+              onClick={() =>
+                this.setState(
+                  {
+                    picked: this.props.isPickable && !this.state.picked,
+                  },
+                  this.props.table.countSelected
+                )
               }
             >
-              {this.props.isPickable ? (
-                <span className="tooltip-text">
-                  Click on this player to pick them
-                </span>
-              ) : null}
+              {this.props.isPickable ? <span className="tooltip-text">Click on this player to pick them</span> : null}
             </div>
+            {this.props.killed ? <div className="ave-sword" /> : null }
             {this.props.onMission ? (
               <div className="ave-shield" ref={this.shieldLocation}>
                 {this.state.shieldShow ? (
@@ -160,9 +153,7 @@ class AvatarUI extends Component<
               </div>
             ) : null}
             {this.props.leader ? <div className="ave-flag" /> : null}
-            {this.props.vote > -1 ? (
-              <div className={'ave-vote-bubble ' + (this.props.vote === 1)} />
-            ) : null}
+            {this.props.vote > -1 ? <div className={'ave-vote-bubble ' + (this.props.vote === 1)} /> : null}
             {this.state.renderButtons ? (
               <div className="ave-buttons">
                 <button
@@ -173,15 +164,11 @@ class AvatarUI extends Component<
                   }
                   className="tooltip"
                 >
-                  <span className="tooltip-text">
-                    Mark this player's allegiance
-                  </span>
+                  <span className="tooltip-text">Mark this player's allegiance</span>
                   <FontAwesomeIcon icon={faStamp} />
                 </button>
                 <button className="tooltip">
-                  <span className="tooltip-text">
-                    Highlight this player's chat messages
-                  </span>
+                  <span className="tooltip-text">Highlight this player's chat messages</span>
                   <FontAwesomeIcon icon={faPen} />
                 </button>
                 <button
@@ -192,9 +179,7 @@ class AvatarUI extends Component<
                   }
                   className="tooltip"
                 >
-                  <span className="tooltip-text">
-                    Change this player's highlight color
-                  </span>
+                  <span className="tooltip-text">Change this player's highlight color</span>
                   <FontAwesomeIcon icon={faPaintBrush} />
                 </button>
               </div>
@@ -212,10 +197,7 @@ class AvatarUI extends Component<
           <p
             className={'ave-role ' + this.props.isRes}
             style={{
-              opacity:
-                this.props.role !== 'Spy?' && this.props.role !== 'Resistance?'
-                  ? '1'
-                  : '0',
+              opacity: this.props.role !== 'Spy?' && this.props.role !== 'Resistance?' ? '1' : '0',
               fontSize: Math.max(this.state.width * 0.008, 8) + 'px',
             }}
           >
@@ -226,10 +208,7 @@ class AvatarUI extends Component<
           <div className="hl-picker">
             <div className="hl-stuff">
               <p>CHANGE HIGHLIGHT COLOR</p>
-              <SketchPicker
-                color={this.state.currentHighlight}
-                onChange={this.handleHighlight}
-              />
+              <SketchPicker color={this.state.currentHighlight} onChange={this.handleHighlight} />
               <button
                 onClick={() =>
                   this.setState({
@@ -243,8 +222,8 @@ class AvatarUI extends Component<
           </div>
         ) : null}
       </>
-    )
+    );
   }
 }
 
-export default AvatarUI
+export default AvatarUI;

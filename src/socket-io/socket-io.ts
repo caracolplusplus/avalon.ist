@@ -1,6 +1,5 @@
-import socketIO from "socket.io-client";
+import socketIO from 'socket.io-client';
 
-const end = "http://127.0.0.1:1337";
-const ws = socketIO(end);
+const s = socketIO();
 
-export default ws;
+export default s;

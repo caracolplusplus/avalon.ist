@@ -207,8 +207,7 @@ class Actions {
     if (fails === 0) {
       this.chatClass.afterMission(this.mission, fails, true);
       return true;
-    } else if (fails === 1 && this.mission === 3 && this.players > 6) {
-      // Mission 3 corresponds to 4 in game
+    } else if (fails === 1 && this.mission === 4 && this.players > 6) {
       this.chatClass.afterMission(this.mission, fails, true);
       return true;
     }

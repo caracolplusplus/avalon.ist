@@ -27,6 +27,7 @@ interface AvatarUIProps {
   role: string;
   vote: number;
   table: Table;
+  killed: boolean;
 }
 
 interface TableProps {
@@ -178,6 +179,7 @@ class Table extends Component<
       const isRes = res.includes(knowledge[i]);
       const isPickable = imPicking || imKilling || imCarding;
       const onMission = game.picks.includes(i);
+      const killed = game.assassination === i;
 
       const e: AvatarUIProps = {
         spyUrl,
@@ -190,6 +192,7 @@ class Table extends Component<
         isPickable,
         onMission,
         table: this,
+        killed,
       };
 
       const l = Math.floor(players.length / 2);
