@@ -89,7 +89,8 @@ module.exports = function (io, socket) {
 					username: username,
 					players: game.players,
 					seat: seat,
-					imRes: ['Resistance', 'Percival'].includes(game.roles[seat]),
+					imRes: ['Resistance', 'Percival'].includes(game.roles[seat]), 
+					// Don't include Merlin, this is for disallowing fail button on missions
 					// Game State Info
 					started: game.started,
 					ended: actions.ended,
