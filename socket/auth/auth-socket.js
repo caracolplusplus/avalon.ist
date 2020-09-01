@@ -7,68 +7,70 @@ module.exports = function (io, socket) {
 	const GEN_CHAT = 'GeneralChat';
 
 	const parseLink = (input) => {
-		socket.join(GEN_CHAT);
+		const afterJoin = () => {
+			if (input) {
+				const query = new Parse.Query('_User');
 
-		if (input) {
-			const query = new Parse.Query('_User');
+				query
+					.get(input.objectId, {
+						useMasterKey: true,
+					})
+					.then((user) => {
+						const username = user.get('username');
 
-			query
-				.get(input.objectId, {
-					useMasterKey: true,
-				})
-				.then((user) => {
-					const username = user.get('username');
+						socket.user = user;
+						socket.emit('gameUpdate');
+						socket.emit('roomListUpdate');
 
-					socket.user = user;
-					socket.emit('gameUpdate');
-					socket.emit('roomListUpdate');
+						if (!clientsOnline.hasOwnProperty(username)) {
+							clientsOnline[username] = 1;
+						} else {
+							clientsOnline[username]++;
+						}
 
-					if (!clientsOnline.hasOwnProperty(username)) {
-						clientsOnline[username] = 1;
-
-						GeneralChat.joinLeaveLobby(username, true);
-						io.to(GEN_CHAT).emit('generalChatUpdate');
-					} else {
-						if (clientsOnline[username] <= 0) {
+						if (clientsOnline[username] === 1) {
 							GeneralChat.joinLeaveLobby(username, true);
 							io.to(GEN_CHAT).emit('generalChatUpdate');
 						} else {
 							socket.emit('generalChatUpdate');
 						}
 
-						clientsOnline[username]++;
-					}
+						clientsOnlineRequest();
+					})
+					.catch((err) => {
+						console.log(err);
+					});
+			}
+		};
 
-					clientsOnlineRequest();
-				})
-				.catch((err) => {
-					console.log(err);
-				});
-		}
+		socket.join(GEN_CHAT, afterJoin);
 	};
 
 	const parseUnlink = () => {
-		const user = socket.user;
-		socket.leave(GEN_CHAT);
+		const afterLeave = () => {
+			const user = socket.user;
 
-		if (user) {
-			const username = user.get('username');
+			if (user) {
+				const username = user.get('username');
 
-			if (!clientsOnline.hasOwnProperty(username)) {
-				clientsOnline[username] = 0;
-			} else {
-				clientsOnline[username]--;
+				if (!clientsOnline.hasOwnProperty(username)) {
+					console.log('Invalid Request');
+				} else {
+					clientsOnline[username]--;
+				}
 
-				if (clientsOnline[username] <= 0) {
+				if (clientsOnline[username] === 0) {
 					GeneralChat.joinLeaveLobby(username, false);
 					io.to(GEN_CHAT).emit('generalChatUpdate');
 				}
+
+				clientsOnlineRequest();
+
+				socket.user = null;
 			}
+		};
 
-			clientsOnlineRequest();
-
-			socket.user = null;
-		}
+		socket.leave(GEN_CHAT, afterLeave);
 	};
 
 	const clientsOnlineRequest = () => {
@@ -81,8 +83,13 @@ module.exports = function (io, socket) {
 		io.emit('clientsOnlineResponse', usersOnline);
 	};
 
+	const authStateChange = () => {
+		socket.emit('connectionStarted');
+	};
+
 	socket
 		.emit('connectionStarted')
+		.on('authStateChange', authStateChange)
 		.on('parseLink', parseLink)
 		.on('parseUnlink', parseUnlink)
 		.on('disconnect', parseUnlink)

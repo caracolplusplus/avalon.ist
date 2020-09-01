@@ -58,14 +58,7 @@ const ChatMessage = (props: ChatMessageProps) => {
 
 class Chat extends Component<ChatProps, ChatState> {
   scrollbars = createRef<AvalonScrollbars>();
-  eventNames: string[] = [
-    'generalChatUpdate',
-    'generalChatResponse',
-    'generalChatJoin',
-    'generalChatLeave',
-    'generalChatRequest',
-    'messageToGeneral',
-  ];
+  eventNames: string[] = ['generalChatUpdate', 'generalChatResponse', 'generalChatRequest', 'messageToGeneral'];
 
   constructor(props: ChatProps) {
     super(props);
@@ -96,7 +89,7 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   componentDidUpdate(prevProps: ChatProps) {
-    if (prevProps.code !== this.props.code && this.props.code && this.props.code > -1) {
+    if (prevProps.code !== this.props.code && this.props.code !== undefined && this.props.code > -1) {
       this.toGameChat();
       this.startChat();
     }
@@ -106,14 +99,7 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   toGameChat() {
-    this.eventNames = [
-      'gameChatUpdate',
-      'gameChatResponse' + this.props.code,
-      'gameChatJoin',
-      'gameChatLeave',
-      'gameChatRequest',
-      'messageToGame',
-    ];
+    this.eventNames = ['gameChatUpdate', 'gameChatResponse' + this.props.code, 'gameChatRequest', 'messageToGame'];
   }
 
   startChat() {
@@ -129,7 +115,7 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   triggerRequest() {
-    socket.emit(this.eventNames[4], {
+    socket.emit(this.eventNames[2], {
       roomNumber: this.props.code,
     });
   }
@@ -148,7 +134,8 @@ class Chat extends Component<ChatProps, ChatState> {
     event.preventDefault();
 
     if (this.state.content === '') return;
-    socket.emit(this.eventNames[5], {
+
+    socket.emit(this.eventNames[3], {
       content: this.state.content,
       roomNumber: this.props.code,
     });

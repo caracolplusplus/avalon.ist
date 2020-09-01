@@ -22,49 +22,54 @@ module.exports = function (io, socket) {
 		// Data
 		// > roomNumber
 
-		socket.join(GAME_NAME + data.roomNumber);
-		socket.join(GAME_CHAT + data.roomNumber);
-		socket.emit('gameUpdate');
+		const initialUpdate = () => socket.emit('gameUpdate');
 
-		const user = socket.user;
+		const afterJoin = () => {
+			const user = socket.user;
 
-		if (user) {
-			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			if (user) {
+				const username = user.get('username');
+				const handler = new RoomHandler(data.roomNumber);
 
-			try {
-				const room = handler.getRoom();
-				room.chat.onEnter(username, true);
+				try {
+					const room = handler.getRoom();
+					room.chat.onEnter(username, true);
 
-				io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-			} catch (err) {
-				console.log(err);
+					io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
+				} catch (err) {
+					console.log(err);
+				}
 			}
-		}
+		};
+
+		socket.join(GAME_NAME + data.roomNumber, initialUpdate);
+		socket.join(GAME_CHAT + data.roomNumber, afterJoin);
 	};
 
 	const roomLeave = (data) => {
 		// Data
 		// > roomNumber
 
-		socket.leave(GAME_NAME + data.roomNumber);
-		socket.leave(GAME_CHAT + data.roomNumber);
+		const afterLeave = () => {
+			const user = socket.user;
 
-		const user = socket.user;
+			if (user) {
+				const username = user.get('username');
+				const handler = new RoomHandler(data.roomNumber);
 
-		if (user) {
-			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+				try {
+					const room = handler.getRoom();
+					room.chat.onEnter(username, false);
 
-			try {
-				const room = handler.getRoom();
-				room.chat.onEnter(username, false);
-
-				io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-			} catch (err) {
-				console.log(err);
+					io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
+				} catch (err) {
+					console.log(err);
+				}
 			}
-		}
+		};
+
+		socket.leave(GAME_NAME + data.roomNumber);
+		socket.leave(GAME_CHAT + data.roomNumber, afterLeave);
 	};
 
 	const gameRequest = (data) => {
@@ -89,7 +94,7 @@ module.exports = function (io, socket) {
 					username: username,
 					players: game.players,
 					seat: seat,
-					imRes: ['Resistance', 'Percival'].includes(game.roles[seat]), 
+					imRes: ['Resistance', 'Percival'].includes(game.roles[seat]),
 					// Don't include Merlin, this is for disallowing fail button on missions
 					// Game State Info
 					started: game.started,

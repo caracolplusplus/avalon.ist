@@ -16,7 +16,6 @@ import UnverifiedOnly from './components/routes/UnverifiedOnly';
 // Redux
 
 import { setUsername, setOnline } from './redux/actions';
-import { rootType } from './redux/reducers';
 
 // Pages
 
@@ -31,7 +30,6 @@ import NoMatch from './pages/NoMatch';
 // Types
 
 interface appProps {
-  online: boolean;
   dispatch: Dispatch;
 }
 
@@ -49,11 +47,6 @@ const initialState: appState = {
   loading: true,
   width: 0,
   height: 0,
-};
-
-const mapState = (state: rootType) => {
-  const { online } = state;
-  return { online };
 };
 
 // App
@@ -76,12 +69,6 @@ class App extends Component<appProps, appState> {
     window.removeEventListener('resize', this.updateDimensions);
 
     socket.disconnect();
-  }
-
-  componentDidUpdate(prevProps: appProps) {
-    if (prevProps.online !== this.props.online) {
-      this.updateState();
-    }
   }
 
   updateState() {
@@ -139,4 +126,4 @@ class App extends Component<appProps, appState> {
   }
 }
 
-export default connect(mapState, null)(App);
+export default connect(null, null)(App);

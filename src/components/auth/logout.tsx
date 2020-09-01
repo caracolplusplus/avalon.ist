@@ -1,14 +1,13 @@
-import Parse from "../../parse/parse";
-import store from "../../redux/store";
-import { setOnline } from "../../redux/actions";
+import Parse from '../../parse/parse';
+import socket from '../../socket-io/socket-io';
 
 export async function logout() {
 	Parse.User.logOut().then(
 		() => {
-			store.dispatch(setOnline(false));
+			socket.emit('authStateChange');
 		},
 		(error) => {
-			console.log("error", error);
+			console.log('error', error);
 		}
 	);
 }

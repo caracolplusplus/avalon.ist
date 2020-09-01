@@ -14,7 +14,7 @@ import store from './redux/store';
 ReactDOM.render(
 	<React.StrictMode>
 		<Provider store={store}>
-			<App online={true} dispatch={useDispatch} />
+			<App dispatch={useDispatch} />
 		</Provider>
 	</React.StrictMode>,
 	document.getElementById('root')

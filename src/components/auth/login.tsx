@@ -1,6 +1,5 @@
 import Parse from "../../parse/parse";
-import store from "../../redux/store";
-import { setOnline } from "../../redux/actions";
+import socket from "../../socket-io/socket-io";
 
 export async function login(
 	username: string,
@@ -10,7 +9,7 @@ export async function login(
 	try {
 		await Parse.User.logIn(username, password);
 		Parse.Cloud.run("setUsersAcls", {});
-		store.dispatch(setOnline(true));
+		socket.emit("authStateChange");
 	} catch (error) {
 		onerror(error.message);
 	}

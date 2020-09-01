@@ -5,26 +5,32 @@ Parse.serverURL = process.env.SERVER_URL || 'http://localhost:1337/parse';
 
 const GlobalEnvironment = Parse.Object.extend('Globals');
 
-const GlobalQuery = new Parse.Query(GlobalEnvironment);
-GlobalQuery.equalTo('env', 'Main');
+const query = new Parse.Query(GlobalEnvironment);
+query.equalTo('env', 'Main');
 
-GlobalQuery.first({
-	useMasterKey: true,
-})
-	.then(() => {
-		console.log('Global Environment Already Exists.');
-		// Do nothing as Globals exists in the database
+query
+	.find({
+		useMasterKey: true,
+	})
+	.then((environmentList) => {
+		if (environmentList.length === 0) {
+			const mainEnvironment = new GlobalEnvironment();
+
+			mainEnvironment.set('env', 'Main');
+			mainEnvironment.set('games', 1);
+
+			mainEnvironment.save(
+				{},
+				{
+					useMasterKey: true,
+				}
+			);
+		} else {
+			console.log("Global Environment already exists!");
+		}
 	})
 	.catch((err) => {
-		console.log("Global Environment Doesn't Exist");
-		const globals = new GlobalEnvironment();
-
-		globals.set('env', 'Main');
-		globals.set('games', 0);
-
-		globals.save();
+		console.log(err);
 	});
-
-console.log(Parse.Config.current())
 
 module.exports = Parse;
