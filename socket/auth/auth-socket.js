@@ -7,6 +7,15 @@ module.exports = function (io, socket) {
 	const GEN_CHAT = 'GeneralChat';
 
 	const parseLink = (input) => {
+		const sendJoinMessage = (username) => {
+			if (clientsOnline[username].length === 1) {
+				GeneralChat.joinLeaveLobby(username, true);
+				io.to(GEN_CHAT).emit('generalChatUpdate');
+			} else {
+				socket.emit('generalChatUpdate');
+			}
+		};
+
 		const afterJoin = () => {
 			if (input) {
 				const query = new Parse.Query('_User');
@@ -18,7 +27,7 @@ module.exports = function (io, socket) {
 					.then((user) => {
 						const username = user.get('username');
 
-						console.log(username + " has connected!");
+						console.log(username + ' has connected!');
 
 						socket.user = user;
 						socket.emit('gameUpdate');
@@ -26,15 +35,10 @@ module.exports = function (io, socket) {
 
 						if (!clientsOnline.hasOwnProperty(username)) {
 							clientsOnline[username] = [socket.id];
-						} else {
-							if (!clientsOnline[username].includes(socket.id)) clientsOnline[username].push(socket.id);
-						}
-
-						if (clientsOnline[username].length === 1) {
-							GeneralChat.joinLeaveLobby(username, true);
-							io.to(GEN_CHAT).emit('generalChatUpdate');
-						} else {
-							socket.emit('generalChatUpdate');
+							sendJoinMessage(username);
+						} else if (!clientsOnline[username].includes(socket.id)) {
+							clientsOnline[username].push(socket.id);
+							sendJoinMessage(username);
 						}
 
 						clientsOnlineRequest();
@@ -55,7 +59,7 @@ module.exports = function (io, socket) {
 			if (user) {
 				const username = user.get('username');
 
-				console.log(username + " has disconnected!");
+				console.log(username + ' has disconnected!');
 
 				if (!clientsOnline.hasOwnProperty(username)) {
 					console.log('Invalid Request');
