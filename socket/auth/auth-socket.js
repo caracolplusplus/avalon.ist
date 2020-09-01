@@ -18,17 +18,19 @@ module.exports = function (io, socket) {
 					.then((user) => {
 						const username = user.get('username');
 
+						console.log(username + " has connected!");
+
 						socket.user = user;
 						socket.emit('gameUpdate');
 						socket.emit('roomListUpdate');
 
 						if (!clientsOnline.hasOwnProperty(username)) {
-							clientsOnline[username] = 1;
+							clientsOnline[username] = [socket.id];
 						} else {
-							clientsOnline[username]++;
+							if (!clientsOnline[username].includes(socket.id)) clientsOnline[username].push(socket.id);
 						}
 
-						if (clientsOnline[username] === 1) {
+						if (clientsOnline[username].length === 1) {
 							GeneralChat.joinLeaveLobby(username, true);
 							io.to(GEN_CHAT).emit('generalChatUpdate');
 						} else {
@@ -53,13 +55,15 @@ module.exports = function (io, socket) {
 			if (user) {
 				const username = user.get('username');
 
+				console.log(username + " has disconnected!");
+
 				if (!clientsOnline.hasOwnProperty(username)) {
 					console.log('Invalid Request');
 				} else {
-					clientsOnline[username]--;
+					clientsOnline[username].splice(clientsOnline[username].indexOf(socket.id), 1);
 				}
 
-				if (clientsOnline[username] === 0) {
+				if (clientsOnline[username].length === 0) {
 					GeneralChat.joinLeaveLobby(username, false);
 					io.to(GEN_CHAT).emit('generalChatUpdate');
 				}
