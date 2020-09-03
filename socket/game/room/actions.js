@@ -11,6 +11,8 @@ const playerMatrix = [
 
 class Actions {
   constructor(roomName, players, hasAssassin, hasCard, gameClass, missionClass, chatClass) {
+    const leader = Math.floor(Math.random() * players);
+
     // Holds Game Current State
     this.roomName = roomName;
     // Mission Vote Handlers
@@ -19,9 +21,10 @@ class Actions {
     this.votesMission = [];
     this.voted = [];
     // Power Positions
+    this.leader = leader;
+    this.hammer = -1;
     this.assassination = -1;
-    this.leader = -1;
-    this.card = hasCard ? players - 1 : -1;
+    this.card = hasCard ? (leader + players) % players : -1;
     // Mission Count
     this.mission = 0;
     this.round = 0;
@@ -67,6 +70,8 @@ class Actions {
     this.votesMission = newVotesMission;
 
     this.leader = (this.leader + 1) % this.players;
+    if (this.round === 0) this.hammer = (this.leader + 4) % this.players; 
+
     this.missionClass.addLeader(this.mission + 1, this.leader);
 
     this.stage = 'PICKING';

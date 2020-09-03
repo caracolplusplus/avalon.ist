@@ -1,33 +1,19 @@
 // Import External Components
 
 import React, { Component, createRef } from 'react';
-import { faStamp, faPen, faPaintBrush, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faStamp, faPen, faPaintBrush, faCheck, faGavel, faAddressCard } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SketchPicker, ColorResult, RGBColor } from 'react-color';
 
 // Import Internal Components
 
-import Table from './Table';
+import AvatarUIProps from './AvatarUIProps';
 
 // Import Styles
 
 import '../../styles/Game/AvatarUI.scss';
 
 // Class Definition
-
-interface AvatarUIProps {
-  spyUrl: string;
-  resUrl: string;
-  username: string;
-  onMission: boolean;
-  leader: boolean;
-  isRes: boolean;
-  isPickable: boolean;
-  role: string;
-  vote: number;
-  table: Table;
-  killed: boolean;
-}
 
 class AvatarUI extends Component<
   AvatarUIProps,
@@ -105,6 +91,7 @@ class AvatarUI extends Component<
             style={{
               width: this.state.avatarSize + 'px',
               height: this.state.avatarSize + 'px',
+              opacity: this.props.afk ? '0.5' : '1',
               maxHeight: Math.max(this.state.width * 0.06, 45) + 'px',
               maxWidth: Math.max(this.state.width * 0.06, 45) + 'px',
             }}
@@ -137,7 +124,7 @@ class AvatarUI extends Component<
             >
               {this.props.isPickable ? <span className="tooltip-text">Click on this player to pick them</span> : null}
             </div>
-            {this.props.killed ? <div className="ave-sword" /> : null }
+            {this.props.killed ? <div className="ave-sword" /> : null}
             {this.props.onMission ? (
               <div className="ave-shield" ref={this.shieldLocation}>
                 {this.state.shieldShow ? (
@@ -186,13 +173,14 @@ class AvatarUI extends Component<
             ) : null}
           </div>
           <p
-            className="ave-username"
+            className={'ave-username ' + (this.props.isMe ? 'me' : '')}
             style={{
               width: Math.max(this.state.width * 0.15, 40) + 'px',
               fontSize: Math.max(this.state.width * 0.01, 10) + 'px',
             }}
           >
-            {this.props.username}
+            {this.props.card ? <FontAwesomeIcon icon={faAddressCard} /> : null}{' '}
+            {this.props.hammer ? <FontAwesomeIcon icon={faGavel} /> : null} {this.props.username}
           </p>
           <p
             className={'ave-role ' + this.props.isRes}

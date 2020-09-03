@@ -359,15 +359,15 @@ class StatusBar extends Component<StatusBarProps, StatusBarState> {
       },
     };
 
-    if (this.props.started === false) {
+    if (!this.props.started) {
       message = this.onWaiting(message);
-    } else if (this.props.frozen === false) {
-      if (this.props.ended === false) {
+    } else if (!this.props.frozen) {
+      if (!this.props.ended) {
         message = this.inProgress(message);
-      } else if (this.props.ended === true) {
+      } else {
         message = this.onFinish(message);
       }
-    } else if (this.props.frozen === true) {
+    } else {
       message = this.onFreeze(message);
     }
 
@@ -391,7 +391,7 @@ class StatusBar extends Component<StatusBarProps, StatusBarState> {
             <Button {...message.buttonThree} />{' '}
           </div>
         ) : null}
-        {this.state.showForm ? (
+        {!this.props.started && this.state.showForm ? (
           this.props.seat === 0 ? (
             <GameForm
               ref={this.formRef}

@@ -1,23 +1,23 @@
 // External
 
-import React, { Component, createRef } from "react";
-import { RouteComponentProps } from "react-router";
+import React, { Component, createRef } from 'react';
+import { RouteComponentProps } from 'react-router';
 
 // Internal
 
 // import GameForm from './Lobby/GameForm'
 
-import socket from "../socket-io/socket-io";
-import AvalonScrollbars from "../components/utils/AvalonScrollbars";
+import socket from '../socket-io/socket-io';
+import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 
-import Navbar from "./Navbar";
-import Tabs from "./Game/Tabs";
-import Table from "./Game/Table";
-import GameState from "./Game/GameState";
+import Navbar from './Navbar';
+import Tabs from './Game/Tabs';
+import Table from './Game/Table';
+import GameState from './Game/GameState';
 
 // Styles
 
-import "../styles/Game.scss";
+import '../styles/Game.scss';
 
 // Declaration
 
@@ -34,8 +34,9 @@ class Game extends Component<RouteComponentProps<GameProps>, GameState> {
     super(props);
     this.state = {
       // Player Info
-      username: "Oken",
+      username: 'Oken',
       players: [],
+      clients: [],
       seat: -1,
       imRes: false,
       // Game State Info
@@ -57,6 +58,7 @@ class Game extends Component<RouteComponentProps<GameProps>, GameState> {
       privateKnowledge: [],
       // Game Power Positions
       leader: -1,
+      hammer: -1,
       card: -1,
       assassin: false,
       // Game Mission Info
@@ -82,36 +84,38 @@ class Game extends Component<RouteComponentProps<GameProps>, GameState> {
         card: false,
       },
     };
+    this.joinRoom = this.joinRoom.bind(this);
     this.triggerRequest = this.triggerRequest.bind(this);
     this.parseGame = this.parseGame.bind(this);
     this.setTableHeight = this.setTableHeight.bind(this);
   }
 
   componentDidMount() {
-    socket.on("gameUpdate", this.triggerRequest);
-    socket.on("gameResponse", this.parseGame);
+    socket.on('gameUpdate', this.triggerRequest);
+    socket.on('gameResponse', this.parseGame);
 
-    socket.emit("roomJoin", {
+    socket.on('rejoinGame', this.joinRoom);
+
+    this.joinRoom();
+  }
+
+  joinRoom() {
+    socket.emit('roomJoin', {
       roomNumber: this.props.match.params.id,
     });
   }
 
   componentWillUnmount() {
-    socket.off("gameUpdate", this.triggerRequest);
-    socket.off("gameResponse", this.parseGame);
+    socket.off('gameUpdate', this.triggerRequest);
+    socket.off('gameResponse', this.parseGame);
 
-    socket.emit("joinLeaveGame", {
-      roomNumber: this.state.code,
-      canSit: false,
-    });
-
-    socket.emit("roomLeave", {
+    socket.emit('roomLeave', {
       roomNumber: this.props.match.params.id,
     });
   }
 
   triggerRequest() {
-    socket.emit("gameRequest", {
+    socket.emit('gameRequest', {
       roomNumber: this.props.match.params.id,
     });
   }
@@ -138,22 +142,15 @@ class Game extends Component<RouteComponentProps<GameProps>, GameState> {
     const tabs = [];
 
     for (let i = 0; i < this.state.tabs; i++) {
-      tabs.push(<Tabs key={"Tab" + i} game={this.state} />);
+      tabs.push(<Tabs key={'Tab' + i} game={this.state} />);
     }
 
     return (
       <div id="Background-2" className="dark full">
         <Navbar username="" />
         <AvalonScrollbars>
-          <div
-            id="Game"
-            style={{ minHeight: this.initialHeight + "px" }}
-            className="section"
-          >
-            <div
-              className="column section"
-              style={{ flex: "0 0 " + (40 + this.state.scale * 20) + "%" }}
-            >
+          <div id="Game" style={{ minHeight: this.initialHeight + 'px' }} className="section">
+            <div className="column section" style={{ flex: '0 0 ' + (40 + this.state.scale * 20) + '%' }}>
               <Table ref={this.tableRef} game={this.state} />
             </div>
             <div className="column section">{tabs}</div>

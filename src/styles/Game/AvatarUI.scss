@@ -213,6 +213,9 @@
       text-align: center;
       overflow: hidden !important;
       white-space: nowrap;
+      &.me {
+        font-weight: 700;
+      }
     }
     .ave-role {
       font-weight: 700;

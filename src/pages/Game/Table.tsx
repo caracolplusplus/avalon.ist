@@ -5,6 +5,7 @@ import { Redirect } from 'react-router-dom';
 
 // Import Internal Components
 
+import AvatarUIProps from './AvatarUIProps';
 import StatusBar from './StatusBar';
 import GameState from './GameState';
 import AvatarUI from './AvatarUI';
@@ -15,20 +16,6 @@ import Button from '../../components/utils/Button';
 import '../../styles/Game/Table.scss';
 
 // Class Definition
-
-interface AvatarUIProps {
-  spyUrl: string;
-  resUrl: string;
-  username: string;
-  onMission: boolean;
-  leader: boolean;
-  isRes: boolean;
-  isPickable: boolean;
-  role: string;
-  vote: number;
-  table: Table;
-  killed: boolean;
-}
 
 interface TableProps {
   game: GameState;
@@ -176,10 +163,13 @@ class Table extends Component<
       const role = knowledge[i];
       const vote = imVoting ? -1 : game.votesRound[i];
       const leader = game.leader === i || (game.started === false && i === 0);
+      const hammer = game.hammer === i;
+      const card = game.card === i;
       const isRes = res.includes(knowledge[i]);
       const isPickable = imPicking || imKilling || imCarding;
       const onMission = game.picks.includes(i);
       const killed = game.assassination === i;
+      const afk = !game.clients.includes(username);
 
       const e: AvatarUIProps = {
         spyUrl,
@@ -188,11 +178,15 @@ class Table extends Component<
         role,
         vote,
         leader,
+        hammer,
+        card,
         isRes,
         isPickable,
         onMission,
         table: this,
         killed,
+        afk,
+        isMe: game.seat === i,
       };
 
       const l = Math.floor(players.length / 2);

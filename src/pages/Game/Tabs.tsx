@@ -56,7 +56,7 @@ class Tabs extends Component<TabContainerProps, TabContainerState> {
       <Chat code={this.props.game.code} key="gameChat"/>,
       <Notes notes="" dispatch={useDispatch} />,
       <VoteHistory game={this.props.game} />,
-      <PlayerList />,
+      <PlayerList game={true} players={this.props.game.players} clients={this.props.game.clients}/>,
     ];
 
     return (

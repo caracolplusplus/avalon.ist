@@ -2,6 +2,7 @@ interface GameState {
   // Player Info
   username: string | null;
   players: string[];
+  clients: string[];
   seat: number;
   imRes: boolean;
   // Game State Info
@@ -23,6 +24,7 @@ interface GameState {
   privateKnowledge: string[];
   // Game Power Positions
   leader: number;
+  hammer: number;
   card: number;
   assassin: boolean;
   // Game Mission Info

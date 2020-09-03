@@ -5,6 +5,7 @@ class Game {
     this.host = '';
     // Players and Roles
     this.players = players;
+    this.clients = {};
     this.roles = roles;
     this.roleSettings = {
       // Res

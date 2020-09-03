@@ -1,21 +1,21 @@
 // External
 
-import React, { Component } from "react";
+import React, { Component } from 'react';
 
 // Internal
 
-import AvalonScrollbars from "../components/utils/AvalonScrollbars";
+import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 
-import Navbar from "./Navbar";
-import Announcements from "./Lobby/Announcements";
-import NewAvatars from "./Lobby/NewAvatars";
-import PlayerList from "./Lobby/PlayerList";
-import Chat from "./Lobby/Chat";
-import GameList from "./Lobby/GameList";
+import Navbar from './Navbar';
+import Announcements from './Lobby/Announcements';
+import NewAvatars from './Lobby/NewAvatars';
+import PlayerList from './Lobby/PlayerList';
+import Chat from './Lobby/Chat';
+import GameList from './Lobby/GameList';
 
 // Styles
 
-import "../styles/Lobby.scss";
+import '../styles/Lobby.scss';
 
 // Declaration
 
@@ -24,19 +24,15 @@ class Lobby extends Component {
 
   render() {
     return (
-      <div id="Background-2" className="light full">
+      <div id="Background-2" className={'full light'}>
         <Navbar username="" />
         <AvalonScrollbars>
-          <div
-            id="Lobby"
-            className="section"
-            style={{ minHeight: this.initialHeight + "px" }}
-          >
+          <div id="Lobby" className="section" style={{ minHeight: this.initialHeight + 'px' }}>
             <div className="column section">
               <div id="Welcome" className="row" />
               <Announcements />
               <NewAvatars />
-              <PlayerList />
+              <PlayerList game={false} players={[]} clients={[]} />
             </div>
             <div className="column section">
               <Chat />

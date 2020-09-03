@@ -62,6 +62,7 @@ module.exports = function (io, socket) {
 
 				const seat = game.players.indexOf(username);
 				const results = game.started ? missions.missionResults : [];
+				let spectators = 0;
 				let gameState = -1;
 
 				if (!game.started) {
@@ -80,12 +81,18 @@ module.exports = function (io, socket) {
 					}
 				}
 
+				for (cli in game.clients) {
+					const currentClient = game.clients[cli];
+
+					if (currentClient.sockets.length > 0 || game.players.includes(cli)) spectators++;
+				}
+
 				let response = {
 					results: [results[0], results[1], results[2], results[3], results[4]],
 					avatars: [],
 					host: game.host,
 					mode: 'UNRATED',
-					spectators: 0,
+					spectators: spectators - game.players.length,
 					gameState: gameState,
 				};
 
