@@ -80,6 +80,9 @@
           font-weight: 600;
         }
       }
+      &.spectator {
+        opacity: 0.5;
+      }
       &:first-of-type {
         margin-top: $base-font-size * 0.25;
       }

@@ -24,6 +24,7 @@ interface TabProps {
 
 interface TabContainerProps {
   game: GameState;
+  initialTab: number;
 }
 
 interface TabContainerState {
@@ -34,7 +35,7 @@ class Tabs extends Component<TabContainerProps, TabContainerState> {
   constructor(props: TabContainerProps) {
     super(props);
     this.state = {
-      tab: 1,
+      tab: props.initialTab,
     };
     this.Tab = this.Tab.bind(this);
   }
@@ -53,7 +54,7 @@ class Tabs extends Component<TabContainerProps, TabContainerState> {
   render() {
     const routes = [
       <Chat key="genChat"/>,
-      <Chat code={this.props.game.code} key="gameChat"/>,
+      <Chat code={this.props.game.code} players={this.props.game.players} key="gameChat"/>,
       <Notes notes="" dispatch={useDispatch} />,
       <VoteHistory game={this.props.game} />,
       <PlayerList game={true} players={this.props.game.players} clients={this.props.game.clients}/>,

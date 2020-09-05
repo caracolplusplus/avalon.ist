@@ -140,9 +140,10 @@ class Game extends Component<RouteComponentProps<GameProps>, GameState> {
 
   render() {
     const tabs = [];
+    const initialTabArray = [1, 3, 2];
 
     for (let i = 0; i < this.state.tabs; i++) {
-      tabs.push(<Tabs key={'Tab' + i} game={this.state} />);
+      tabs.push(<Tabs key={'Tab' + i} game={this.state} initialTab={initialTabArray[i]}/>);
     }
 
     return (

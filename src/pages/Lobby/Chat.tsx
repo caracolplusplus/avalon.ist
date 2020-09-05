@@ -27,34 +27,13 @@ interface ChatMessageProps {
 
 interface ChatProps {
   code?: number;
+  players?: string[];
 }
 
 interface ChatState {
   messages: ChatMessageProps[];
   content: string;
 }
-
-const ChatMessage = (props: ChatMessageProps) => {
-  const messageDate = new Date(props.timestamp);
-  const typeClass = ['client ', 'server ', 'broadcast '][props.type];
-  const characterClass = ['negative', 'neutral', 'positive', 'highlighted'][props.character + 1];
-
-  return (
-    <div className={'message ' + typeClass + characterClass}>
-      <span className="hour">
-        {('0' + messageDate.getHours()).slice(-2) + ':' + ('0' + messageDate.getMinutes()).slice(-2)}
-      </span>
-      <p className="text">
-        {props.type < 1 ? (
-          <Link className="username" to={'/profile/' + props.author}>
-            {props.author}:
-          </Link>
-        ) : null}
-        <span className="content">{props.content}</span>
-      </p>
-    </div>
-  );
-};
 
 class Chat extends Component<ChatProps, ChatState> {
   scrollbars = createRef<AvalonScrollbars>();
@@ -73,6 +52,7 @@ class Chat extends Component<ChatProps, ChatState> {
     this.parseChat = this.parseChat.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.ChatMessage = this.ChatMessage.bind(this);
   }
 
   componentDidMount() {
@@ -143,12 +123,41 @@ class Chat extends Component<ChatProps, ChatState> {
     this.setState({ content: '' });
   }
 
+  ChatMessage(props: ChatMessageProps) {
+    const messageDate = new Date(props.timestamp);
+    const typeClass = ['client ', 'server ', 'broadcast '][props.type];
+    const characterClass = ['negative ', 'neutral ', 'positive ', 'highlighted '][props.character + 1];
+
+    const isSpectating =
+      this.props.code !== undefined &&
+      this.props.players !== undefined &&
+      this.props.code > -1 &&
+      !this.props.players.includes(props.author) &&
+      typeClass === 'client ';
+
+    return (
+      <div className={'message ' + typeClass + characterClass + (isSpectating ? 'spectator' : '')}>
+        <span className="hour">
+          {('0' + messageDate.getHours()).slice(-2) + ':' + ('0' + messageDate.getMinutes()).slice(-2)}
+        </span>
+        <p className="text">
+          {props.type < 1 ? (
+            <Link className="username" to={'/profile/' + props.author}>
+              {props.author}:
+            </Link>
+          ) : null}
+          <span className="content">{props.content}</span>
+        </p>
+      </div>
+    );
+  }
+
   render() {
     return (
       <div id="Chat" className="row">
         <AvalonScrollbars ref={this.scrollbars}>
           {this.state.messages.map((m, i) => (
-            <ChatMessage {...m} key={'message' + i} />
+            <this.ChatMessage {...m} key={'message' + i} />
           ))}
         </AvalonScrollbars>
         <form className="message-input" onSubmit={this.handleSubmit}>

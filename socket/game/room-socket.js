@@ -48,6 +48,9 @@ module.exports = function (io, socket) {
 
 				io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
 			}
+
+			socket.off('disconnect', socket.onLeave);
+			delete socket.onLeave;
 		} catch (err) {
 			console.log(err);
 		}
@@ -89,6 +92,8 @@ module.exports = function (io, socket) {
 					const game = room.game;
 					const chat = room.chat;
 
+					socket.onLeave = () => roomLeavePost(user, data);
+
 					const sendJoinMessage = () => {
 						if (game.clients[username].sockets.length === 1) {
 							chat.onEnter(username, true);
@@ -115,7 +120,7 @@ module.exports = function (io, socket) {
 						sendJoinMessage();
 					}
 
-					socket.on('disconnect', () => roomLeavePost(user, data));
+					socket.on('disconnect', socket.onLeave);
 				} catch (err) {
 					console.log(err);
 				}
