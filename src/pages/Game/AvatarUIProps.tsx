@@ -12,7 +12,7 @@ interface AvatarUIProps {
   isPickable: boolean;
   role: string;
   vote: number;
-  table: Table;
+  table: Table | null;
   killed: boolean;
   afk: boolean;
   isMe: boolean;

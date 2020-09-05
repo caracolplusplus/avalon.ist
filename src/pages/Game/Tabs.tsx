@@ -31,7 +31,7 @@ interface TabContainerState {
   tab: number;
 }
 
-class Tabs extends Component<TabContainerProps, TabContainerState> {
+class Tabs extends React.PureComponent<TabContainerProps, TabContainerState> {
   constructor(props: TabContainerProps) {
     super(props);
     this.state = {

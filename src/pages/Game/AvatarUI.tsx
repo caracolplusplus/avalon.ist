@@ -15,7 +15,7 @@ import '../../styles/Game/AvatarUI.scss';
 
 // Class Definition
 
-class AvatarUI extends Component<
+class AvatarUI extends React.PureComponent<
   AvatarUIProps,
   {
     shieldPosition: [number, number];
@@ -73,6 +73,33 @@ class AvatarUI extends Component<
     this.setState({ currentHighlight: color.rgb });
   }
 
+  renderButtonsTrue = () => this.setState({ renderButtons: true });
+
+  renderButtonsFalse = () => this.setState({ renderButtons: false });
+
+  pickPlayer = () =>
+    this.setState(
+      {
+        picked: this.props.isPickable && !this.state.picked,
+      },
+      this.props.table.countSelected
+    );
+
+  setBackgroundColor = () =>
+    this.setState({
+      currentBackground: (this.state.currentBackground + 1) % 3,
+    });
+
+  showColorPicker = () =>
+    this.setState({
+      renderPicker: !this.state.renderPicker,
+    });
+
+  hideColorPicker = () =>
+    this.setState({
+      renderPicker: !this.state.renderPicker,
+    });
+
   render() {
     return (
       <>
@@ -83,8 +110,8 @@ class AvatarUI extends Component<
             left: this.state.avatarPosition[1] + 'px',
             display: this.state.avatarShow ? undefined : 'none',
           }}
-          onMouseOver={() => this.setState({ renderButtons: true })}
-          onMouseLeave={() => this.setState({ renderButtons: false })}
+          onMouseOver={this.renderButtonsTrue}
+          onMouseLeave={this.renderButtonsFalse}
         >
           <div
             id="ave-graphics"
@@ -113,14 +140,7 @@ class AvatarUI extends Component<
               style={{
                 backgroundImage: 'url(' + (this.props.isRes ? this.props.resUrl : this.props.spyUrl) + ')',
               }}
-              onClick={() =>
-                this.setState(
-                  {
-                    picked: this.props.isPickable && !this.state.picked,
-                  },
-                  this.props.table.countSelected
-                )
-              }
+              onClick={this.pickPlayer}
             >
               {this.props.isPickable ? <span className="tooltip-text">Click on this player to pick them</span> : null}
             </div>
@@ -143,14 +163,7 @@ class AvatarUI extends Component<
             {this.props.vote > -1 ? <div className={'ave-vote-bubble ' + (this.props.vote === 1)} /> : null}
             {this.state.renderButtons ? (
               <div className="ave-buttons">
-                <button
-                  onClick={() =>
-                    this.setState({
-                      currentBackground: (this.state.currentBackground + 1) % 3,
-                    })
-                  }
-                  className="tooltip"
-                >
+                <button onClick={this.setBackgroundColor} className="tooltip">
                   <span className="tooltip-text">Mark this player's allegiance</span>
                   <FontAwesomeIcon icon={faStamp} />
                 </button>
@@ -158,14 +171,7 @@ class AvatarUI extends Component<
                   <span className="tooltip-text">Highlight this player's chat messages</span>
                   <FontAwesomeIcon icon={faPen} />
                 </button>
-                <button
-                  onClick={() =>
-                    this.setState({
-                      renderPicker: !this.state.renderPicker,
-                    })
-                  }
-                  className="tooltip"
-                >
+                <button onClick={this.showColorPicker} className="tooltip">
                   <span className="tooltip-text">Change this player's highlight color</span>
                   <FontAwesomeIcon icon={faPaintBrush} />
                 </button>
@@ -197,13 +203,7 @@ class AvatarUI extends Component<
             <div className="hl-stuff">
               <p>CHANGE HIGHLIGHT COLOR</p>
               <SketchPicker color={this.state.currentHighlight} onChange={this.handleHighlight} />
-              <button
-                onClick={() =>
-                  this.setState({
-                    renderPicker: !this.state.renderPicker,
-                  })
-                }
-              >
+              <button onClick={this.hideColorPicker}>
                 <FontAwesomeIcon icon={faCheck} />
               </button>
             </div>

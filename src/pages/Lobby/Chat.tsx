@@ -35,7 +35,8 @@ interface ChatState {
   content: string;
 }
 
-class Chat extends Component<ChatProps, ChatState> {
+class Chat extends React.PureComponent<ChatProps, ChatState> {
+  webWorker: any = null;
   scrollbars = createRef<AvalonScrollbars>();
   eventNames: string[] = ['generalChatUpdate', 'generalChatResponse', 'generalChatRequest', 'messageToGeneral'];
 
@@ -157,7 +158,7 @@ class Chat extends Component<ChatProps, ChatState> {
       <div id="Chat" className="row">
         <AvalonScrollbars ref={this.scrollbars}>
           {this.state.messages.map((m, i) => (
-            <this.ChatMessage {...m} key={'message' + i} />
+            <this.ChatMessage {...m} key={"message" + i} />
           ))}
         </AvalonScrollbars>
         <form className="message-input" onSubmit={this.handleSubmit}>

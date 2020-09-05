@@ -25,7 +25,7 @@ interface GameProps {
   id: string;
 }
 
-class Game extends Component<RouteComponentProps<GameProps>, GameState> {
+class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState> {
   initialHeight = Math.max(window.innerHeight, 540);
   resizeCount = 1;
   tableRef = createRef<Table>();

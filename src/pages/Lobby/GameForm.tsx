@@ -41,7 +41,7 @@ interface GameFormState {
   playerRoom: number;
 }
 
-class GameForm extends Component<GameFormProps, GameFormState> {
+class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
   constructor(props: GameFormProps) {
     super(props);
     this.state = {

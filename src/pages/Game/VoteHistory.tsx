@@ -25,7 +25,7 @@ interface VoteHistoryState {
   rowHeight: number;
 }
 
-class VoteHistory extends Component<VoteHistoryProps, VoteHistoryState> {
+class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState> {
   constructor(props: VoteHistoryProps) {
     super(props);
     this.state = {

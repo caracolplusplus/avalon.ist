@@ -46,7 +46,7 @@ interface StatusBarState {
   showForm: boolean;
 }
 
-class StatusBar extends Component<StatusBarProps, StatusBarState> {
+class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   formRef = createRef<GameForm>();
 
   constructor(props: StatusBarProps) {

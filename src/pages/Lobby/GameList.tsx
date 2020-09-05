@@ -47,7 +47,7 @@ const Avatar = (props: AvatarProps) => {
   );
 };
 
-class GameLink extends Component<GameLinkProps, GameLinkState> {
+class GameLink extends React.PureComponent<GameLinkProps, GameLinkState> {
   gameStateClass = ["waiting", "in-progress", "finished", "paused", "frozen"];
   gameState = ["Waiting", "In Progress", "Finished", "Paused", "Frozen"];
 
@@ -133,7 +133,7 @@ class GameLink extends Component<GameLinkProps, GameLinkState> {
 
 // Class
 
-class GameList extends Component<{}, GameListState> {
+class GameList extends React.PureComponent<{}, GameListState> {
   constructor(props: {}) {
     super(props);
     this.state = {

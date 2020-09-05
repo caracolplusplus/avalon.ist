@@ -27,7 +27,7 @@ const mapState = (state: rootType) => {
   return { notes };
 };
 
-class Notes extends Component<NoteProps, {}> {
+class Notes extends React.PureComponent<NoteProps, {}> {
   textarea = createRef<HTMLTextAreaElement>();
 
   constructor(props: NoteProps) {

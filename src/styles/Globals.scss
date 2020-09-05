@@ -5,16 +5,16 @@ $gray-1: #0d0d0d;
 $gray-2: #4f4f4f;
 $gray-3: #101010;
 $gold-1: #a37d18;
-$gold-2: #EFC601;
+$gold-2: #efc601;
 $gold-3: #877032;
 $lemon: #e3dfb9;
 $green-1: #586d3a;
 $res-dark: #6f9298;
 $res-light: #639399;
-$res-highlight: #28D8D8;
+$res-highlight: #28d8d8;
 $spy-dark: #9e522b;
 $spy-light: #ab4d23;
-$spy-highlight: #FD5C5D;
+$spy-highlight: #fd5c5d;
 $hot-red: #d0021b;
 $light-1: #eee;
 $light-2: #dfdfdf;
@@ -63,6 +63,17 @@ button:focus {
   position: relative;
   width: 100%;
 }
+@keyframes wake-late {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 @mixin init-global($base-font-size) {
   .tooltip {
     position: relative;
@@ -74,8 +85,8 @@ button:focus {
       color: white;
       background-color: $green-1;
       text-align: center;
-      padding: $base-font-size*0.075 $base-font-size*0.175;
-      border-radius: $base-font-size*0.125;
+      padding: $base-font-size * 0.075 $base-font-size * 0.175;
+      border-radius: $base-font-size * 0.125;
 
       /* Position the tooltip text - see examples below! */
       position: absolute;
@@ -94,7 +105,7 @@ button:focus {
       position: absolute;
       top: 100%; /* At the bottom of the tooltip */
       left: 50%;
-      margin-left: $base-font-size*-0.125;
+      margin-left: $base-font-size * -0.125;
       border-width: $base-font-size * 0.125;
       border-style: solid;
       border-color: $green-1 transparent transparent transparent;

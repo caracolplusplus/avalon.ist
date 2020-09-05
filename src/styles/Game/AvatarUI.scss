@@ -83,7 +83,9 @@
     transform: translate(-50%, -50%);
     align-items: center;
     transition: top 0.25s, left 0.25s;
+    transition-delay: 0.2s;
     animation: wake 0.8s 1;
+    animation-delay: 0.2s;
     #ave-graphics {
       position: relative;
       $ave-dimensions: 286px * $scale;
@@ -125,6 +127,7 @@
       }
       .ave-shield {
         animation: wake 2s 1;
+        animation-delay: 0.3s;
         transform: translate(-50%, -50%);
         position: absolute;
         top: 70%;
@@ -139,6 +142,7 @@
       }
       .ave-sword {
         animation: wake 1s 1;
+        animation-delay: 0.05s;
         position: absolute;
         background: url('../../images/sword.png');
         background-size: contain;
@@ -234,6 +238,7 @@
       background-position: center;
       background-repeat: no-repeat;
       transition: top 0.6s, left 0.6s, transform 0.15s;
+      transition-delay: 0.08s;
     }
   }
   .hl-picker {
