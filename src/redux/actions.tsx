@@ -3,10 +3,17 @@
 export const ADD_NOTES = "ADD_NOTES";
 export const SET_USERNAME = "SET_USERNAME";
 export const SET_ONLINE = "SET_ONLINE";
+export const SET_GAME_TAB_HIGHLIGHT = "SET_HIGHLIGHT";
 
 interface AddNotesAction {
   type: typeof ADD_NOTES;
   text: string;
+}
+
+interface SetGameTabHighlight {
+  type: typeof SET_GAME_TAB_HIGHLIGHT;
+  value: boolean;
+  index: number;
 }
 
 interface SetUsernameAction {
@@ -19,7 +26,7 @@ interface SetOnlineAction {
   value: boolean;
 }
 
-export type ActionTypes = AddNotesAction | SetUsernameAction | SetOnlineAction;
+export type ActionTypes = AddNotesAction | SetGameTabHighlight | SetUsernameAction | SetOnlineAction;
 
 // Actions
 
@@ -28,6 +35,14 @@ export function addNotes(text: string): ActionTypes {
     type: ADD_NOTES,
     text,
   };
+}
+
+export function setGameTabHighlight(value: boolean, index: number): ActionTypes {
+  return {
+    type: SET_GAME_TAB_HIGHLIGHT,
+    value,
+    index
+  }
 }
 
 export function setUsername(text: string): ActionTypes {

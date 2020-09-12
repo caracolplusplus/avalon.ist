@@ -9,11 +9,15 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.8);
     display: flex;
-    flex-direction: column;
+    .view {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      align-items: center;
+    }
     form {
-      margin: auto;
+      margin: auto 0;
       background-color: white;
-      width: $base-font-size * 12.5;
       border-radius: $base-font-size * 0.125;
       padding: $base-font-size * 0.375 $base-font-size * 0.75;
       color: black;
@@ -73,9 +77,20 @@
 }
 
 @media screen and (min-width: Globals.$min-res) {
+  .settings-form {
+    form {
+      width: 90%;
+    }
+  }
   @include init-game-list(Globals.$initial-font-size * 0.9);
 }
 @media screen and (min-width: Globals.$small-res) {
+  .settings-form {
+    form {
+      width: 40%;
+    }
+  }
+
   @include init-game-list(Globals.$initial-font-size);
 }
 @media screen and (min-width: Globals.$large-res) {

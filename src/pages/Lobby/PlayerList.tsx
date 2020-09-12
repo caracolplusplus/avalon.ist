@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 // Internal
@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import socket from '../../socket-io/socket-io';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
-// Import Styles
+// Styles
 
 import '../../styles/Lobby/PlayerList.scss';
 
@@ -32,7 +32,7 @@ interface PlayerTabState {
 }
 
 interface PlayerListProps {
-  game: boolean;
+  code?: number;
   players: string[];
   clients: string[];
 }
@@ -57,7 +57,7 @@ const Player = (props: PlayerProps) => {
   );
 };
 
-class PlayerTab extends Component<PlayerTabProps, PlayerTabState> {
+class PlayerTab extends React.PureComponent<PlayerTabProps, PlayerTabState> {
   constructor(props: PlayerTabProps) {
     super(props);
     this.state = {
@@ -93,7 +93,7 @@ class PlayerTab extends Component<PlayerTabProps, PlayerTabState> {
   }
 }
 
-class PlayerList extends Component<PlayerListProps, PlayerListState> {
+class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
   constructor(props: PlayerListProps) {
     super(props);
     this.state = {
@@ -102,7 +102,7 @@ class PlayerList extends Component<PlayerListProps, PlayerListState> {
       arePlayers: [],
       arePlaying: [],
       areSpectating: [],
-      loaded: true,
+      loaded: false,
     };
     this.parseClientsOnline = this.parseClientsOnline.bind(this);
   }
@@ -158,7 +158,7 @@ class PlayerList extends Component<PlayerListProps, PlayerListState> {
 
       const name = c.username;
 
-      if (this.props.game && this.props.clients.includes(name)) {
+      if (this.props.code !== undefined && this.props.clients.includes(name)) {
         if (this.props.players.includes(name)) {
           arePlaying.push(c);
         } else {
@@ -184,6 +184,7 @@ class PlayerList extends Component<PlayerListProps, PlayerListState> {
       arePlayers,
       arePlaying,
       areSpectating,
+      loaded: true,
     });
   }
 
@@ -193,9 +194,9 @@ class PlayerList extends Component<PlayerListProps, PlayerListState> {
         <h3>
           <p>PLAYER LIST</p>
         </h3>
-        {this.state.loaded ? (
+        {this.state.loaded && (this.props.code === undefined || this.props.code > -1) ? (
           <AvalonScrollbars>
-            {this.props.game ? (
+            {this.props.code !== undefined ? (
               <>
                 <PlayerTab title="In Game" players={this.state.arePlaying} />
                 <PlayerTab title="Spectating" players={this.state.areSpectating} />

@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from 'react';
+import React from 'react';
 
 // Internal
 
@@ -19,7 +19,7 @@ import '../styles/Lobby.scss';
 
 // Declaration
 
-class Lobby extends Component {
+class Lobby extends React.PureComponent {
   initialHeight = Math.max(window.innerHeight, 630);
 
   render() {
@@ -32,10 +32,10 @@ class Lobby extends Component {
               <div id="Welcome" className="row" />
               <Announcements />
               <NewAvatars />
-              <PlayerList game={false} players={[]} clients={[]} />
+              <PlayerList players={[]} clients={[]} />
             </div>
             <div className="column section">
-              <Chat />
+              <Chat players={[]} />
             </div>
             <div className="column section">
               <GameList />

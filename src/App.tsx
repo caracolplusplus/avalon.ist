@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from 'react';
+import React from 'react';
 import { Route, BrowserRouter as Router, Switch } from 'react-router-dom';
 import { Dispatch } from 'redux';
 import { connect } from 'react-redux';
@@ -51,7 +51,7 @@ const initialState: appState = {
 
 // App
 
-class App extends Component<appProps, appState> {
+class App extends React.PureComponent<appProps, appState> {
   constructor(props: appProps) {
     super(props);
     this.state = initialState;

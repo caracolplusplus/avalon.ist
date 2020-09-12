@@ -1,14 +1,14 @@
-// Import External Components
+// External
 
-import React, { Component } from 'react'
+import React from 'react'
 
-// Import Styles
+// Styles
 
 import '../styles/Globals.scss'
 
-// Class Definition
+// Declaration
 
-class NoMatch extends Component {
+class NoMatch extends React.PureComponent {
 	render() {
 		return <p>404. Page not found.</p>
 	}

@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from "react";
+import React from "react";
 
 // Internal
 
@@ -14,7 +14,7 @@ import "../styles/Verify.scss";
 
 // Declaration
 
-class Verify extends Component {
+class Verify extends React.PureComponent {
   initialHeight = window.innerHeight;
 
   render() {

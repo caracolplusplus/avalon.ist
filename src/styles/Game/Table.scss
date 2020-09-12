@@ -83,13 +83,13 @@
       display: flex;
       flex: 0 0 $base-font-size;
       border-radius: $base-font-size * 0.175;
+      padding: 5px;
       justify-content: center;
+      align-items: center;
       flex-direction: row !important;
       z-index: 6;
       .message {
         flex: 0 1 auto !important;
-        height: 1em;
-        margin: auto 0;
         margin-right: $base-font-size * 0.3;
         font-weight: 500;
         font-size: $base-font-size * 0.29;

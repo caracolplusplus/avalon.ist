@@ -1,6 +1,6 @@
 // External
 
-import React, { Component, ChangeEvent, createRef } from "react";
+import React, { ChangeEvent, createRef } from "react";
 import { Dispatch } from "redux";
 import { connect } from "react-redux";
 

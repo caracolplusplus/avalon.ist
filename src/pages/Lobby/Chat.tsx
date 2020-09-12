@@ -1,6 +1,6 @@
 // External
 
-import React, { Component, ChangeEvent, FormEvent, createRef } from 'react';
+import React, { ChangeEvent, FormEvent, createRef } from 'react';
 import { Link } from 'react-router-dom';
 
 // Internal
@@ -15,7 +15,7 @@ import '../../styles/Lobby/Chat.scss';
 
 // Declaration
 
-interface ChatMessageProps {
+interface ChatSnapshot {
   public: boolean;
   content: string;
   author: string;
@@ -27,16 +27,15 @@ interface ChatMessageProps {
 
 interface ChatProps {
   code?: number;
-  players?: string[];
+  players: string[];
 }
 
 interface ChatState {
-  messages: ChatMessageProps[];
+  messages: ChatSnapshot[];
   content: string;
 }
 
 class Chat extends React.PureComponent<ChatProps, ChatState> {
-  webWorker: any = null;
   scrollbars = createRef<AvalonScrollbars>();
   eventNames: string[] = ['generalChatUpdate', 'generalChatResponse', 'generalChatRequest', 'messageToGeneral'];
 
@@ -53,7 +52,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.parseChat = this.parseChat.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.ChatMessage = this.ChatMessage.bind(this);
+    this.chatMessage = this.chatMessage.bind(this);
   }
 
   componentDidMount() {
@@ -96,13 +95,13 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   }
 
   triggerRequest() {
-    socket.emit(this.eventNames[2], {
-      roomNumber: this.props.code,
-    });
+    socket.emit(this.eventNames[2]);
   }
 
-  parseChat(messages: ChatMessageProps[]) {
-    this.setState({ messages });
+  parseChat(messages: ChatSnapshot[]) {
+    this.setState({
+      messages,
+    });
   }
 
   handleChange(event: ChangeEvent<HTMLInputElement>) {
@@ -124,30 +123,29 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.setState({ content: '' });
   }
 
-  ChatMessage(props: ChatMessageProps) {
-    const messageDate = new Date(props.timestamp);
-    const typeClass = ['client ', 'server ', 'broadcast '][props.type];
-    const characterClass = ['negative ', 'neutral ', 'positive ', 'highlighted '][props.character + 1];
+  chatMessage(snap: ChatSnapshot) {
+    const classType = ['client ', 'server ', 'broadcast '][snap.type];
+    const classCharacter = ['negative ', 'neutral ', 'positive ', 'highlighted '][snap.character + 1];
+    const classSpectator =
+      !this.props.players.includes(snap.author) && this.props.code !== undefined && snap.type === 0 ? 'spectator' : '';
 
-    const isSpectating =
-      this.props.code !== undefined &&
-      this.props.players !== undefined &&
-      this.props.code > -1 &&
-      !this.props.players.includes(props.author) &&
-      typeClass === 'client ';
+    const messageClass = classType + classCharacter + classSpectator;
+    const messageAuthor = snap.type < 1 ? snap.author : undefined;
+    const messageContent = snap.content;
+
+    const messageDate = new Date(snap.timestamp);
+    const messageHour = ('0' + messageDate.getHours()).slice(-2) + ':' + ('0' + messageDate.getMinutes()).slice(-2);
 
     return (
-      <div className={'message ' + typeClass + characterClass + (isSpectating ? 'spectator' : '')}>
-        <span className="hour">
-          {('0' + messageDate.getHours()).slice(-2) + ':' + ('0' + messageDate.getMinutes()).slice(-2)}
-        </span>
+      <div className={'message ' + messageClass}>
+        <span className="hour">{messageHour}</span>
         <p className="text">
-          {props.type < 1 ? (
-            <Link className="username" to={'/profile/' + props.author}>
-              {props.author}:
+          {messageAuthor ? (
+            <Link className="username" to={'/profile/' + messageAuthor}>
+              {messageAuthor}:
             </Link>
           ) : null}
-          <span className="content">{props.content}</span>
+          <span className="content">{messageContent}</span>
         </p>
       </div>
     );
@@ -156,11 +154,15 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   render() {
     return (
       <div id="Chat" className="row">
-        <AvalonScrollbars ref={this.scrollbars}>
-          {this.state.messages.map((m, i) => (
-            <this.ChatMessage {...m} key={"message" + i} />
-          ))}
-        </AvalonScrollbars>
+        {this.state.messages.length && (this.props.code === undefined || this.props.code > -1) ? (
+          <AvalonScrollbars ref={this.scrollbars} key={'real'}>
+            {this.state.messages.map((s, i) => (
+              <this.chatMessage {...s} key={'message' + i} />
+            ))}
+          </AvalonScrollbars>
+        ) : (
+          <AvalonScrollbars ref={this.scrollbars} key={'fake'} />
+        )}
         <form className="message-input" onSubmit={this.handleSubmit}>
           <ChatInput onChange={this.handleChange} value={this.state.content} />
         </form>

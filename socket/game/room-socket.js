@@ -20,64 +20,56 @@ module.exports = function (io, socket) {
 		});
 	};
 
-	const roomLeavePost = (user, data) => {
-		const username = user.get('username');
-		const handler = new RoomHandler(data.roomNumber);
+	const afterLeave = () => {
+		const user = socket.user;
 
-		try {
-			const room = handler.getRoom();
-			const game = room.game;
-			const chat = room.chat;
+		if (user) {
+			const username = user.get('username');
+			const handler = new RoomHandler(socket.room);
 
-			if (!game.clients.hasOwnProperty(username)) {
-				console.log('Invalid Request');
-			} else if (game.clients[username].sockets.includes(socket.id)) {
-				const socketIndex = game.clients[username].sockets.indexOf(socket.id);
-				game.clients[username].sockets.splice(socketIndex, 1);
-			}
+			try {
+				const room = handler.getRoom();
+				const game = room.game;
+				const chat = room.chat;
 
-			if (game.clients[username].sockets.length === 0) {
-				chat.onEnter(username, false);
-				io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-				io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
-
-				if (!game.started) {
-					game.switchSeatOnGame(username, false);
-					game.setRolesOnGame(game.roleSettings, game.maxPlayers);
+				if (!game.clients.hasOwnProperty(username)) {
+					console.log('Invalid Request');
+				} else if (game.clients[username].sockets.includes(socket.id)) {
+					const socketIndex = game.clients[username].sockets.indexOf(socket.id);
+					game.clients[username].sockets.splice(socketIndex, 1);
 				}
 
-				io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-			}
+				if (game.clients[username].sockets.length === 0) {
+					chat.onEnter(username, false);
 
-			socket.off('disconnect', socket.onLeave);
-			delete socket.onLeave;
-		} catch (err) {
-			console.log(err);
+					if (!game.started) {
+						game.switchSeatOnGame(username, false);
+						game.setRolesOnGame(game.roleSettings, game.maxPlayers);
+					}
+
+					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+				}
+
+				socket.off('disconnect', afterLeave);
+
+				delete socket.room;
+			} catch (err) {
+				console.log(err);
+			}
 		}
 	};
 
-	const roomLeave = (data) => {
-		// Data
-		// > roomNumber
-		const afterLeave = () => {
-			const user = socket.user;
-
-			if (user) {
-				roomLeavePost(user, data);
-			}
-		};
-
-		socket.leave(GAME_NAME + data.roomNumber);
-		socket.leave(GAME_CHAT + data.roomNumber, afterLeave);
+	const roomLeave = () => {
+		socket.leave(GAME_NAME + socket.room);
+		socket.leave(GAME_CHAT + socket.room, afterLeave);
 	};
 
-	const roomJoin = (data) => {
-		// Data
-		// > roomNumber
-
+	const roomJoin = (r) => {
 		const initialUpdate = () => {
 			socket.emit('gameUpdate');
-			socket.join(GAME_CHAT + data.roomNumber, afterJoin);
+			socket.join(GAME_CHAT + r, afterJoin);
 		};
 
 		const afterJoin = () => {
@@ -85,34 +77,34 @@ module.exports = function (io, socket) {
 
 			if (user) {
 				const username = user.get('username');
-				const handler = new RoomHandler(data.roomNumber);
+				const handler = new RoomHandler(r);
 
 				try {
 					const room = handler.getRoom();
 					const game = room.game;
 					const chat = room.chat;
 
-					socket.onLeave = () => roomLeavePost(user, data);
+					socket.room = r;
 
 					const sendJoinMessage = () => {
 						if (game.clients[username].sockets.length === 1) {
 							chat.onEnter(username, true);
-							io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-							io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
-							io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
+							io.to(GAME_CHAT + r).emit('gameChatUpdate');
+							io.to(GAME_NAME + r).emit('gameUpdate');
+							io.to(LINK_NAME + r).emit('roomLinkUpdate' + r);
 						} else {
 							socket.emit('gameChatUpdate');
 						}
 					};
 
 					if (!game.clients.hasOwnProperty(username)) {
-						const id = ClientsOnline[username].profile.user;
-						const profile = new Profile(id);
+						const profile = new Profile(username);
 
 						game.clients[username] = {
 							profile: profile,
 							sockets: [socket.id],
 						};
+
 						sendJoinMessage();
 					} else if (!game.clients[username].sockets.includes(socket.id)) {
 						game.clients[username].sockets.push(socket.id);
@@ -120,24 +112,22 @@ module.exports = function (io, socket) {
 						sendJoinMessage();
 					}
 
-					socket.on('disconnect', socket.onLeave);
+					socket.on('disconnect', afterLeave);
 				} catch (err) {
 					console.log(err);
 				}
 			}
 		};
 
-		socket.join(GAME_NAME + data.roomNumber, initialUpdate);
+		socket.join(GAME_NAME + r, initialUpdate);
 	};
 
-	const gameRequest = (data) => {
-		// Data
-		// > roomNumber
+	const gameRequest = () => {
 		const user = socket.user;
 
 		if (user) {
 			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			const handler = new RoomHandler(socket.room);
 
 			try {
 				const room = handler.getRoom();
@@ -279,13 +269,12 @@ module.exports = function (io, socket) {
 
 	const joinLeaveGame = (data) => {
 		// Data
-		// > roomNumber
 		// > canSit
 		const user = socket.user;
 
 		if (user) {
 			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			const handler = new RoomHandler(socket.room);
 
 			try {
 				const room = handler.getRoom();
@@ -299,22 +288,22 @@ module.exports = function (io, socket) {
 				console.log(err);
 			}
 
-			io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-			io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
+			io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+			io.to(GAME_NAME + socket.room).emit('gameUpdate');
+			io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
 			return true;
 		}
 	};
 
 	const editGame = (data) => {
 		// Data
-		// > roomNumber
 		// > roleSettings
 		// > maxPlayers
 		const user = socket.user;
 
 		if (user) {
 			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			const handler = new RoomHandler(socket.room);
 
 			try {
 				const room = handler.getRoom();
@@ -327,26 +316,24 @@ module.exports = function (io, socket) {
 				console.log(err);
 			}
 
-			io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-			io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
+			io.to(GAME_NAME + socket.room).emit('gameUpdate');
+			io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
 			return true;
 		}
 	};
 
-	const startGame = (data) => {
-		// Data
-		// > roomNumber
+	const startGame = () => {
 		const user = socket.user;
 
 		if (user) {
 			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			const handler = new RoomHandler(socket.room);
 
 			try {
 				if (handler.initGame(username)) {
-					io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-					io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-					io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
+					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
 					return true;
 				}
 				return false;
@@ -358,30 +345,25 @@ module.exports = function (io, socket) {
 
 	const pickTeam = (data) => {
 		// Data
-		// > roomNumber
 		// > team
 		const user = socket.user;
 
 		if (user) {
 			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			const handler = new RoomHandler(socket.room);
 
 			try {
-				let room = handler.getRoom();
-
-				let game = room.game;
-				let actions = room.actions;
-				let missions = room.missions;
+				const room = handler.getRoom();
+				const game = room.game;
+				const actions = room.actions;
 
 				const playerIndex = game.players.indexOf(username);
 
-				if (playerIndex > -1 && playerIndex === actions.leader) {
-					if (actions.pickTeam(data.team)) {
-						io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-						io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-						io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
-						return true;
-					}
+				if (playerIndex > -1 && actions.pickTeam(playerIndex, data.team)) {
+					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					return true;
 				}
 				return false;
 			} catch (err) {
@@ -392,31 +374,26 @@ module.exports = function (io, socket) {
 
 	const voteForMission = (data) => {
 		// Data
-		// > roomNumber
 		// > vote
 		const user = socket.user;
 
 		if (user) {
 			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			const handler = new RoomHandler(socket.room);
 
 			try {
-				let room = handler.getRoom();
-
-				let game = room.game;
-				let actions = room.actions;
-				let missions = room.missions;
+				const room = handler.getRoom();
+				const game = room.game;
+				const actions = room.actions;
 
 				const playerIndex = game.players.indexOf(username);
 
-				if (playerIndex > -1) {
-					if (actions.voteForMission(playerIndex, data.vote)) {
-						if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
-						io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-						io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-						io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
-						return true;
-					}
+				if (playerIndex > -1 && actions.voteForMission(playerIndex, data.vote)) {
+					if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
+					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					return true;
 				}
 				return false;
 			} catch (err) {
@@ -427,33 +404,56 @@ module.exports = function (io, socket) {
 
 	const voteForSuccess = (data) => {
 		// Data
-		// > roomNumber
 		// > vote
 		const user = socket.user;
 
 		if (user) {
 			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			const handler = new RoomHandler(socket.room);
 
 			try {
-				let room = handler.getRoom();
-
-				let game = room.game;
-				let actions = room.actions;
-				let missions = room.missions;
+				const room = handler.getRoom();
+				const game = room.game;
+				const actions = room.actions;
 
 				const playerIndex = game.players.indexOf(username);
-				const imRes = ['Resistance', 'Percival'].includes(game.roles[playerIndex]);
-				const resVoteIsFail = imRes && data.vote === 0;
 
-				if (playerIndex > -1 && actions.voted.includes(playerIndex) && !resVoteIsFail) {
-					if (actions.voteForSuccess(playerIndex, data.vote)) {
-						if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
-						io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-						io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-						io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
-						return true;
-					}
+				if (playerIndex > -1 && actions.voteForSuccess(playerIndex, data.vote)) {
+					if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
+					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					return true;
+				}
+
+				return false;
+			} catch (err) {
+				console.log(err);
+			}
+		}
+	};
+
+	const cardPlayer = (data) => {
+		// Data
+		// > carded
+		const user = socket.user;
+
+		if (user) {
+			const username = user.get('username');
+			const handler = new RoomHandler(socket.room);
+
+			try {
+				const room = handler.getRoom();
+				const game = room.game;
+				const actions = room.actions;
+
+				const playerIndex = game.players.indexOf(username);
+
+				if (playerIndex > -1 && actions.cardPlayer(playerIndex, data.carded)) {
+					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					return true;
 				}
 				return false;
 			} catch (err) {
@@ -464,74 +464,26 @@ module.exports = function (io, socket) {
 
 	const shootPlayer = (data) => {
 		// Data
-		// > roomNumber
 		// > shot
 		const user = socket.user;
 
 		if (user) {
 			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
+			const handler = new RoomHandler(socket.room);
 
 			try {
-				let room = handler.getRoom();
-
-				let game = room.game;
-				let actions = room.actions;
-				let missions = room.missions;
+				const room = handler.getRoom();
+				const game = room.game;
+				const actions = room.actions;
 
 				const playerIndex = game.players.indexOf(username);
 
-				if (
-					playerIndex > -1 &&
-					game.roles[playerIndex] === 'Assassin' &&
-					typeof game.roles[data.shot] !== 'undefined'
-				) {
-					if (actions.shootPlayer(data.shot)) {
-						if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
-						io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-						io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-						io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
-						return true;
-					}
-				}
-				return false;
-			} catch (err) {
-				console.log(err);
-			}
-		}
-	};
-
-	const cardPlayer = (data) => {
-		// Data
-		// > roomNumber
-		// > carded
-		const user = socket.user;
-
-		if (user) {
-			const username = user.get('username');
-			const handler = new RoomHandler(data.roomNumber);
-
-			try {
-				let room = handler.getRoom();
-
-				let game = room.game;
-				let actions = room.actions;
-				let missions = room.missions;
-
-				const playerIndex = game.players.indexOf(username);
-
-				if (
-					playerIndex > -1 &&
-					actions.card === playerIndex &&
-					data.carded !== playerIndex &&
-					typeof game.roles[data.carded] !== 'undefined'
-				) {
-					if (actions.cardPlayer(playerIndex, data.carded)) {
-						io.to(GAME_CHAT + data.roomNumber).emit('gameChatUpdate');
-						io.to(GAME_NAME + data.roomNumber).emit('gameUpdate');
-						io.to(LINK_NAME + data.roomNumber).emit('roomLinkUpdate' + data.roomNumber);
-						return true;
-					}
+				if (playerIndex > -1 && actions.shootPlayer(playerIndex, data.shot)) {
+					if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
+					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					return true;
 				}
 				return false;
 			} catch (err) {
@@ -551,6 +503,6 @@ module.exports = function (io, socket) {
 		.on('pickTeam', pickTeam)
 		.on('voteForMission', voteForMission)
 		.on('voteForSuccess', voteForSuccess)
-		.on('shootPlayer', shootPlayer)
-		.on('cardPlayer', cardPlayer);
+		.on('cardPlayer', cardPlayer)
+		.on('shootPlayer', shootPlayer);
 };

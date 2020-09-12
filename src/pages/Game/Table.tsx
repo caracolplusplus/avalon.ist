@@ -1,6 +1,6 @@
 // External
 
-import React, { Component, createRef, RefObject } from 'react';
+import React, { createRef, RefObject } from 'react';
 import { Redirect } from 'react-router-dom';
 
 // Internal
@@ -10,13 +10,12 @@ import StatusBar from './StatusBar';
 import GameState from './GameState';
 import AvatarUI from './AvatarUI';
 import Button from '../../components/utils/Button';
-import AvatarUpdate from 'worker-loader!./AvatarUpdate';
 
-// Import Styles
+// Styles
 
 import '../../styles/Game/Table.scss';
 
-// Class Definition
+// Declaration
 
 interface TableProps {
   game: GameState;
@@ -65,47 +64,33 @@ class MissionTracker extends React.PureComponent<{ count: number; results: boole
 class Table extends React.PureComponent<
   TableProps,
   {
-    left: AvatarUIProps[];
-    right: AvatarUIProps[];
-    top: AvatarUIProps[];
-    bot: AvatarUIProps[];
-    width: number;
-    redirect: boolean;
+    avatars: AvatarUIProps[];
     selected: number[];
+    redirect: boolean;
   }
 > {
-  webWorker: any = null;
   tableRef = createRef<HTMLDivElement>();
   centerRef = createRef<HTMLDivElement>();
-  seatRef = new Array(10).fill(createRef<HTMLDivElement>());
-  avatarRef = new Array(10).fill(createRef<AvatarUI>());
+  seatRef: RefObject<HTMLDivElement>[] = [];
+  avatarRef: RefObject<AvatarUI>[] = [];
+
   animationCallback: (...args: any[]) => void = () => {};
-  animationFrame = (
-    window.requestAnimationFrame ||
-    window.mozRequestAnimationFrame ||
-    window.webkitRequestAnimationFrame ||
-    window.msRequestAnimationFrame
-  ).bind(window);
-  animationFrameCancel = (window.cancelAnimationFrame || window.mozCancelAnimationFrame).bind(window);
-  animationStartAvatar: number | null = null;
-  animationStartShield: number | null = null;
+  animationFrame = (window.requestAnimationFrame || window.webkitRequestAnimationFrame).bind(window);
+  animationFrameCancel = window.cancelAnimationFrame.bind(window);
+
+  animationStart: (number | null)[] = [];
   animationState: number[] = [];
   allAnimations: any[] = [];
 
   constructor(props: TableProps) {
     super(props);
     this.state = {
-      left: [],
-      right: [],
-      top: [],
-      bot: [],
-      width: 0,
+      avatars: [],
       redirect: false,
       selected: [],
     };
     this.createSeats = this.createSeats.bind(this);
     this.countSelected = this.countSelected.bind(this);
-    this.resizeTable = this.resizeTable.bind(this);
     this.initAvatars = this.initAvatars.bind(this);
     this.initShields = this.initShields.bind(this);
     this.moveAvatars = this.moveAvatars.bind(this);
@@ -114,20 +99,11 @@ class Table extends React.PureComponent<
   }
 
   componentDidMount() {
-    window.addEventListener('resize', this.resizeTable);
-
-    this.webWorker = new Worker('./AvatarUpdate.tsx');
-
-    this.webWorker.addEventListener('message', (event: any) => {
-      console.log("hello?");
-      const data = event.data;
-
-      this.setState({ left: data.left, right: data.right, top: data.top, bot: data.bot }, this.animationCallback);
-    });
+    window.addEventListener('resize', this.initAvatars);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this.resizeTable);
+    window.removeEventListener('resize', this.initAvatars);
     if (this.allAnimations[0] !== undefined) {
       this.animationFrameCancel(this.allAnimations[0]);
       this.allAnimations[0] = undefined;
@@ -142,11 +118,13 @@ class Table extends React.PureComponent<
 
   componentDidUpdate(prevProps: TableProps) {
     if (prevProps !== this.props) {
+      this.animationCallback = () => {};
+
       if (
         prevProps.game.players.length !== this.props.game.players.length ||
         prevProps.game.started !== this.props.game.started
       )
-        this.animationCallback = this.resizeTable;
+        this.animationCallback = this.initAvatars;
 
       if (prevProps.game.picks.includes(-1) && !this.props.game.picks.includes(-1))
         this.animationCallback = this.initShields;
@@ -156,7 +134,79 @@ class Table extends React.PureComponent<
   }
 
   createSeats() {
-    this.webWorker.postMessage(this.props.game);
+    this.seatRef = [];
+    this.avatarRef = [];
+
+    const game = this.props.game;
+
+    const players = [...game.players];
+    const resistance = ['Resistance?', 'Resistance', 'Percival', 'Merlin?', 'Merlin'];
+
+    // Knowledge
+    const knowledge =
+      game.privateKnowledge.length > 0 && game.ended !== true ? [...game.privateKnowledge] : [...game.publicKnowledge];
+
+    // Pre Conditions
+    const imKilling = game.assassin && game.stage === 'ASSASSINATION';
+    const imPicking = game.seat === game.leader && game.stage === 'PICKING';
+    const imCarding = game.seat === game.card && game.stage === 'CARDING';
+    const imVoting = game.stage === 'VOTING';
+
+    const avatars = players.map(
+      (p, i): AvatarUIProps => {
+        const ave = this.state.avatars[i];
+
+        this.seatRef.push(createRef<HTMLDivElement>());
+        this.avatarRef.push(createRef<AvatarUI>());
+
+        // Avatars
+        const spyUrl = 'https://cdn.discordapp.com/attachments/612734001916018707/736446594936733786/base-spy.png';
+        const resUrl = 'https://cdn.discordapp.com/attachments/688596182758326313/732067339746541628/base-res.png';
+
+        // Data
+        const username = p;
+        const role = knowledge[i];
+        const vote = imVoting ? -1 : game.votesRound[i];
+        const leader = game.leader === i || (game.started === false && i === 0);
+        const hammer = game.hammer === i;
+        const killed = game.assassination === i;
+        const card = game.card === i;
+        const afk = !game.clients.includes(username);
+        const onMission = game.picks.includes(i);
+        const isRes = resistance.includes(knowledge[i]);
+        const isPickable = imPicking || imKilling || imCarding;
+        const isMe = game.seat === i;
+
+        return {
+          spyUrl,
+          resUrl,
+          username,
+          role,
+          vote,
+          leader,
+          hammer,
+          killed,
+          card,
+          afk,
+          onMission,
+          isRes,
+          isPickable,
+          isMe,
+          table: null,
+          // Animation
+          shieldPosition: ave ? ave.shieldPosition : [0, 0],
+          shieldShow: ave ? ave.shieldShow : false,
+          shieldScale: ave ? ave.shieldScale : 1,
+          avatarInitialPosition: ave ? ave.avatarInitialPosition : [0, 0],
+          avatarPosition: ave ? ave.avatarPosition : [0, 0],
+          avatarShow: ave ? ave.avatarShow : false,
+          avatarSize: ave ? ave.avatarSize : 350,
+          tableWidth: ave ? ave.tableWidth : 0,
+        };
+      }
+    );
+
+    this.setState({ avatars }, this.animationCallback);
   }
 
   countSelected() {
@@ -165,16 +215,10 @@ class Table extends React.PureComponent<
     this.avatarRef.forEach((avatar, i) => {
       const a = avatar.current!;
       if (!a) return;
-      if (a.state.picked) selected.push(i);
+      if (a.state.avatarSelected) selected.push(i);
     });
 
     this.setState({ selected });
-  }
-
-  resizeTable() {
-    const rect = this.tableRef.current!.getBoundingClientRect();
-
-    this.setState({ width: Math.min(rect.height * 4.5, rect.width) }, this.initAvatars);
   }
 
   initAvatars() {
@@ -182,15 +226,9 @@ class Table extends React.PureComponent<
       this.animationFrameCancel(this.allAnimations[0]);
       this.allAnimations[0] = undefined;
     }
-    if (this.allAnimations[1] !== undefined) {
-      this.animationFrameCancel(this.allAnimations[1]);
-      this.allAnimations[1] = undefined;
-    }
 
-    this.animationStartAvatar = null;
-    this.animationStartShield = null;
+    this.animationStart[0] = null;
     this.allAnimations[0] = this.animationFrame(this.moveAvatars);
-    this.allAnimations[1] = this.animationFrame(this.moveShields);
   }
 
   initShields() {
@@ -199,57 +237,70 @@ class Table extends React.PureComponent<
       this.allAnimations[1] = undefined;
     }
 
-    this.animationStartShield = null;
+    this.animationStart[1] = null;
     this.allAnimations[1] = this.animationFrame(this.moveShields);
   }
 
   moveAvatars(animationTime: number) {
     let initAnimation: boolean = false;
 
-    if (!this.animationStartAvatar) {
-      this.animationStartAvatar = animationTime;
+    if (!this.animationStart[0]) {
+      this.animationStart[0] = animationTime;
       this.animationState[0] = 0;
       initAnimation = true;
     }
 
-    const initialFrame = 10;
-    const animationProgress = animationTime - this.animationStartAvatar;
+    const initialFrame = 50;
+    const animationProgress = animationTime - this.animationStart[0];
 
     if (initAnimation)
-      this.avatarRef.forEach((avatar, i) => {
-        const a = avatar.current!;
-        if (!a) return;
-        const rect_b = this.seatRef[i].current!.getBoundingClientRect();
-        a.setState({
-          width: this.state.width,
-          avatarShow: false,
-          avatarInitialPosition: [rect_b.height / 2, rect_b.width / 2],
-        });
+      this.setState({
+        avatars: this.state.avatars.map(
+          (a, i): AvatarUIProps => {
+            const rect_x = this.tableRef.current!.getBoundingClientRect();
+            const rect_a = this.centerRef.current!.getBoundingClientRect();
+            const rect_b = this.seatRef[i].current!.getBoundingClientRect();
+
+            return {
+              ...a,
+              avatarShow: false,
+              avatarInitialPosition: [rect_b.height / 2, rect_b.width / 2],
+              avatarPosition: [rect_a.top - rect_b.top, rect_a.left - rect_b.left],
+              tableWidth: Math.min(rect_x.height * 4.5, rect_x.width),
+            };
+          }
+        ),
       });
 
     if (animationProgress > initialFrame && this.animationState[0] === 0) {
-      this.avatarRef.forEach((avatar, i) => {
-        const a = avatar.current!;
-        if (!a) return;
-        const rect_a = this.centerRef.current!.getBoundingClientRect();
-        const rect_b = this.seatRef[i].current!.getBoundingClientRect();
-        a.setState({
-          avatarShow: true,
-          avatarPosition: [rect_a.top - rect_b.top, rect_a.left - rect_b.left],
-        });
+      this.setState({
+        avatars: this.state.avatars.map(
+          (a, i): AvatarUIProps => {
+            return {
+              ...a,
+              avatarShow: true,
+            };
+          }
+        ),
       });
 
       this.animationState[0]++;
     }
 
-    if (animationProgress > initialFrame + 40) {
-      this.avatarRef.forEach((avatar, i) => {
-        const a = avatar.current!;
-        if (!a) return;
-        a.setState({
-          avatarPosition: a.state.avatarInitialPosition,
-        });
+    if (animationProgress > initialFrame + 120) {
+      this.setState({
+        avatars: this.state.avatars.map(
+          (a, i): AvatarUIProps => {
+            return {
+              ...a,
+              avatarPosition: a.avatarInitialPosition,
+            };
+          }
+        ),
       });
+
+      this.initShields();
+      this.animationState[0]++;
     } else {
       this.allAnimations[0] = this.animationFrame(this.moveAvatars);
     }
@@ -258,74 +309,89 @@ class Table extends React.PureComponent<
   moveShields(animationTime: number) {
     let initAnimation: boolean = false;
 
-    if (!this.animationStartShield) {
-      this.animationStartShield = animationTime;
+    if (!this.animationStart[1]) {
+      this.animationStart[1] = animationTime;
       this.animationState[1] = 0;
       initAnimation = true;
     }
-    const initialFrame = 750;
-    const animationProgress = animationTime - this.animationStartShield;
+    const initialFrame = 600;
+    const animationProgress = animationTime - this.animationStart[1];
 
     if (initAnimation)
-      this.avatarRef.forEach((avatar, i) => {
-        const a = avatar.current!;
-        if (!a) return;
-        if (!a.props.onMission) return;
-        a.setState({
-          shieldShow: false,
-        });
+      this.setState({
+        avatars: this.state.avatars.map(
+          (a, i): AvatarUIProps => {
+            if (!a.onMission) return a;
+            return {
+              ...a,
+              shieldShow: false,
+            };
+          }
+        ),
       });
 
-    if (animationProgress > initialFrame - 740 && this.animationState[1] === 0) {
-      this.avatarRef.forEach((avatar, i) => {
-        const a = avatar.current!;
-        if (!a) return;
-        if (!a.props.onMission) return;
-        const rect_a = this.centerRef.current!.getBoundingClientRect();
-        const rect_b = a.shieldLocation.current!.getBoundingClientRect();
-        a.setState({
-          shieldShow: true,
-          shieldPosition: [rect_a.top - rect_b.top, rect_a.left - rect_b.left],
-        });
-      });
-
-      this.animationState[1]++;
-    }
-
-    if (animationProgress > initialFrame && this.animationState[1] === 1) {
-      this.avatarRef.forEach((avatar, i) => {
-        const a = avatar.current!;
-        if (!a) return;
-        if (!a.props.onMission) return;
-        a.setState({
-          shieldPosition: [0, 0],
-        });
+    if (animationProgress > initialFrame && this.animationState[1] === 0) {
+      this.setState({
+        avatars: this.state.avatars.map(
+          (a, i): AvatarUIProps => {
+            if (!a.onMission) return a;
+            const rect_a = this.centerRef.current!.getBoundingClientRect();
+            const rect_b = this.avatarRef[i].current!.shieldLocation.current!.getBoundingClientRect();
+            return {
+              ...a,
+              shieldShow: true,
+              shieldPosition: [rect_a.top - rect_b.top, rect_a.left - rect_b.left],
+            };
+          }
+        ),
       });
 
       this.animationState[1]++;
     }
 
-    if (animationProgress > initialFrame + 700 && this.animationState[1] === 2) {
-      this.avatarRef.forEach((avatar, i) => {
-        const a = avatar.current!;
-        if (!a) return;
-        if (!a.props.onMission) return;
-        a.setState({
-          shieldScale: 1.2,
-        });
+    if (animationProgress > initialFrame + 450 && this.animationState[1] === 1) {
+      this.setState({
+        avatars: this.state.avatars.map(
+          (a, i): AvatarUIProps => {
+            if (!a.onMission) return a;
+            return {
+              ...a,
+              shieldPosition: [0, 0],
+            };
+          }
+        ),
       });
 
       this.animationState[1]++;
     }
 
-    if (animationProgress > initialFrame + 950) {
-      this.avatarRef.forEach((avatar, i) => {
-        const a = avatar.current!;
-        if (!a) return;
-        if (!a.props.onMission) return;
-        a.setState({
-          shieldScale: 1,
-        });
+    if (animationProgress > initialFrame + 900 && this.animationState[1] === 2) {
+      this.setState({
+        avatars: this.state.avatars.map(
+          (a, i): AvatarUIProps => {
+            if (!a.onMission) return a;
+            return {
+              ...a,
+              shieldScale: 1.2,
+            };
+          }
+        ),
+      });
+
+      this.animationState[1]++;
+    }
+
+    if (animationProgress > initialFrame + 1200) {
+      this.setState({
+        avatars: this.state.avatars.map(
+          (a, i): AvatarUIProps => {
+            if (!a.onMission) return a;
+            return {
+              ...a,
+              shieldScale: 1,
+            };
+          }
+        ),
       });
     } else {
       this.allAnimations[1] = this.animationFrame(this.moveShields);
@@ -336,17 +402,58 @@ class Table extends React.PureComponent<
     return false;
   }
 
-  renderAvatar = (avatar: AvatarUIProps, i: number, origin: number) => (
-    <div className="table-seat" ref={this.seatRef[i + origin]} key={'Seat' + i}>
-      <AvatarUI {...avatar} table={this} ref={this.avatarRef[i + origin]} />
-    </div>
-  );
+  sortAvatars = (mappedAvatars: JSX.Element[]) => {
+    const k = mappedAvatars.length;
+    const l = Math.floor(k / 2);
+
+    const o: {
+      top: JSX.Element[];
+      bot: JSX.Element[];
+      left: JSX.Element[];
+      right: JSX.Element[];
+    } = {
+      top: [],
+      bot: [],
+      left: [],
+      right: [],
+    };
+
+    mappedAvatars.forEach((e, i) => {
+      if (k < 4) {
+        switch (i) {
+          case 0:
+            o.top.push(e);
+            break;
+          default:
+            o.bot.push(e);
+            break;
+        }
+      } else {
+        switch (i) {
+          case 0:
+            o.left.push(e);
+            break;
+          case l:
+            o.right.push(e);
+            break;
+          default:
+            i < l ? o.top.push(e) : o.bot.push(e);
+            break;
+        }
+      }
+    });
+
+    return o;
+  };
 
   render() {
-    const game = this.props.game;
-    const topO = this.state.left.length;
-    const rightO = this.state.top.length + topO;
-    const botO = this.state.right.length + rightO;
+    const mappedAvatars = this.state.avatars.map((a, i) => (
+      <div className="table-seat" ref={this.seatRef[i]} key={'Seat' + i}>
+        <AvatarUI {...a} table={this} ref={this.avatarRef[i]} />
+      </div>
+    ));
+
+    const sortedAvatars = this.sortAvatars(mappedAvatars);
 
     return (
       <div id="Table" className="tab">
@@ -366,29 +473,29 @@ class Table extends React.PureComponent<
         </div>
         <div className="table-row table-display" ref={this.tableRef} style={{ width: '95%' }}>
           <div className="table-column">
-            <div className="table-prow">{this.state.left.map((a, i) => this.renderAvatar(a, i, 0))}</div>
+            <div className="table-prow">{sortedAvatars.left}</div>
           </div>
           <div className="table-column">
-            <div className="table-prow">{this.state.top.map((a, i) => this.renderAvatar(a, i, topO))}</div>
+            <div className="table-prow">{sortedAvatars.top}</div>
             <div className="table-prow">
               <div className="table-center" ref={this.centerRef}>
-                {game.started ? (
+                {this.props.game.started ? (
                   <MissionTracker
-                    count={Math.max(game.players.length - 5, 0)}
-                    results={game.results}
-                    round={game.round}
+                    count={Math.max(this.props.game.players.length - 5, 0)}
+                    results={this.props.game.results}
+                    round={this.props.game.round}
                   />
                 ) : null}
               </div>
             </div>
-            <div className="table-prow">{this.state.bot.map((a, i) => this.renderAvatar(a, i, botO)).reverse()}</div>
+            <div className="table-prow">{sortedAvatars.bot.reverse()}</div>
           </div>
           <div className="table-column">
-            <div className="table-prow">{this.state.right.map((a, i) => this.renderAvatar(a, i, rightO))}</div>
+            <div className="table-prow">{sortedAvatars.right}</div>
           </div>
         </div>
         <div className="table-row table-info">
-          <StatusBar {...game} selected={this.state.selected} />
+          <StatusBar {...this.props.game} selected={this.state.selected} />
         </div>
       </div>
     );

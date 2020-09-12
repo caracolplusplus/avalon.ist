@@ -1,11 +1,9 @@
 // External
 
-import React, { Component, createRef } from 'react';
+import React, { createRef } from 'react';
 import { RouteComponentProps } from 'react-router';
 
 // Internal
-
-// import GameForm from './Lobby/GameForm'
 
 import socket from '../socket-io/socket-io';
 import AvalonScrollbars from '../components/utils/AvalonScrollbars';
@@ -27,8 +25,8 @@ interface GameProps {
 
 class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState> {
   initialHeight = Math.max(window.innerHeight, 540);
-  resizeCount = 1;
   tableRef = createRef<Table>();
+  tabsRef = [createRef<Tabs>(), createRef<Tabs>(), createRef<Tabs>()];
 
   constructor(props: RouteComponentProps<GameProps>) {
     super(props);
@@ -49,6 +47,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
       // Game UI Info
       tabs: 2,
       scale: 1,
+      highlighted: [false, false],
       // Game Pick Info
       picks: [],
       votesRound: [],
@@ -91,43 +90,49 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
   }
 
   componentDidMount() {
+    socket.on('generalChatUpdate', () => this.setHighlight(0, true));
+    socket.on('gameChatUpdate', () => this.setHighlight(1, true));
     socket.on('gameUpdate', this.triggerRequest);
     socket.on('gameResponse', this.parseGame);
 
-    socket.on('rejoinGame', this.joinRoom);
+    socket.on('roomJoinBack', this.joinRoom);
 
     this.joinRoom();
   }
 
   joinRoom() {
-    socket.emit('roomJoin', {
-      roomNumber: this.props.match.params.id,
-    });
+    socket.emit('roomJoin', this.props.match.params.id);
   }
 
   componentWillUnmount() {
+    socket.off('generalChatUpdate', () => this.setHighlight(0, true));
+    socket.off('gameChatUpdate', () => this.setHighlight(1, true));
     socket.off('gameUpdate', this.triggerRequest);
     socket.off('gameResponse', this.parseGame);
 
-    socket.emit('roomLeave', {
-      roomNumber: this.props.match.params.id,
-    });
+    socket.emit('roomLeave');
   }
 
+  setHighlight = (no: number, value: boolean) => {
+    const tabsSelected = this.tabsRef.map(r => r.current ? r.current.state.tab : -1);
+    if (tabsSelected.includes(no)) value = false;
+
+    const highlighted = [...this.state.highlighted];
+    highlighted[no] = value;
+
+    this.setState({ highlighted });
+  };
+
   triggerRequest() {
-    socket.emit('gameRequest', {
-      roomNumber: this.props.match.params.id,
-    });
+    socket.emit('gameRequest');
   }
 
   parseGame(data: GameState) {
     data.tabs = this.state.tabs;
     data.scale = this.state.scale;
+    data.highlighted = this.state.highlighted;
 
-    this.setState(data, () => {
-      if (this.resizeCount) this.tableRef.current!.resizeTable();
-      this.resizeCount = 0;
-    });
+    this.setState(data);
   }
 
   setTableHeight() {
@@ -135,7 +140,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
       scale: (this.state.scale + 0.1) % 1.1,
     });
 
-    this.tableRef.current!.resizeTable();
+    this.tableRef.current!.initAvatars();
   }
 
   render() {
@@ -143,7 +148,15 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
     const initialTabArray = [1, 3, 2];
 
     for (let i = 0; i < this.state.tabs; i++) {
-      tabs.push(<Tabs key={'Tab' + i} game={this.state} initialTab={initialTabArray[i]}/>);
+      tabs.push(
+        <Tabs
+          key={'Tab' + i}
+          ref={this.tabsRef[i]}
+          game={this.state}
+          initialTab={initialTabArray[i]}
+          onClick={this.setHighlight}
+        />
+      );
     }
 
     return (

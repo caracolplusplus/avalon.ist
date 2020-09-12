@@ -15,6 +15,7 @@ interface GameState {
   // Game UI Info
   tabs: number;
   scale: number;
+  highlighted: boolean[];
   // Game Pick Info
   picks: number[];
   votesRound: number[];

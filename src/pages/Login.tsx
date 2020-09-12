@@ -1,6 +1,6 @@
 // External
 
-import React, { Component, ChangeEvent, FormEvent } from "react";
+import React, { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
 
 // Internal
@@ -17,7 +17,7 @@ import "../styles/Login.scss";
 
 // Declaration
 
-class Login extends Component<
+class Login extends React.PureComponent<
   {},
   {
     error: string | null;

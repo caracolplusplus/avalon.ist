@@ -5,7 +5,8 @@
     .tag {
       background-color: Globals.$gray-3;
     }
-    .tag:hover, .tag:focus {
+    .tag:hover,
+    .tag:focus {
       background-color: black;
     }
   }
@@ -16,7 +17,8 @@
         color: Globals.$gray-1;
       }
     }
-    .tag:hover, .tag:focus {
+    .tag:hover,
+    .tag:focus {
       background-color: white;
     }
   }
@@ -35,12 +37,19 @@
         transition: background-color 0.5s;
         p {
           font-size: $base-font-size * 0.22;
+          font-weight: 700;
         }
-      }
-      .tag.true {
-        background-color: Globals.$green-1;
-        p {
-          color: white;
+        &.highlighted {
+          background-color: Globals.$gold-1;
+          p {
+            color: white;
+          }
+        }
+        &.true {
+          background-color: Globals.$green-1;
+          p {
+            color: white;
+          }
         }
       }
     }

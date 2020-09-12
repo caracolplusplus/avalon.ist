@@ -43,53 +43,63 @@ class Profile {
 
   async saveToUser() {
     const query = new Parse.Query('_User');
+    query.equalTo('username', this.user);
 
     await query
-      .get(this.user, {
+      .first({
         useMasterKey: true,
       })
       .then((user) => {
-        for (let x in this) {
-          if (x === 'user') continue;
-
-          user.set(x, this[x]);
-        }
-
-        user.save({}, { useMasterKey: true });
+        if (user) this.writeUser(user);
       })
       .catch((err) => {
         console.log(err);
       });
   }
 
+  writeUser(user) {
+    for (let x in this) {
+      if (x === 'user') continue;
+
+      user.set(x, this[x]);
+    }
+
+    user.save({}, { useMasterKey: true });
+  }
+
   async getFromUser() {
     const query = new Parse.Query('_User');
+    query.equalTo('username', this.user);
 
     await query
-      .get(this.user, {
+      .first({
         useMasterKey: true,
       })
       .then((user) => {
-        for (let x in this) {
-          if (x === 'user') continue;
-
-          const got = user.get(x);
-
-          if (got !== undefined) {
-            if (['avatarClassic', 'avatarGummy', 'gameStats'].includes(x)) {
-              this[x] = {
-                ...this[x],
-                ...got,
-              };
-            } else {
-              this[x] = got;
-            }
-          }
-        }
+        if (user) this.readUser(user);
       })
       .catch((err) => {
         console.log(err);
       });
+  }
+
+  readUser(user) {
+    for (let x in this) {
+      if (x === 'user') continue;
+
+      const got = user.get(x);
+
+      if (got !== undefined) {
+        if (['avatarClassic', 'avatarGummy', 'gameStats'].includes(x)) {
+          this[x] = {
+            ...this[x],
+            ...got,
+          };
+        } else {
+          this[x] = got;
+        }
+      }
+    }
   }
 }
 

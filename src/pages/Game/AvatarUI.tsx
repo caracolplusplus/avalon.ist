@@ -1,12 +1,13 @@
 // Import External Components
 
-import React, { Component, createRef } from 'react';
+import React, { createRef } from 'react';
 import { faStamp, faPen, faPaintBrush, faCheck, faGavel, faAddressCard } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SketchPicker, ColorResult, RGBColor } from 'react-color';
 
 // Import Internal Components
 
+import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 import AvatarUIProps from './AvatarUIProps';
 
 // Import Styles
@@ -18,19 +19,11 @@ import '../../styles/Game/AvatarUI.scss';
 class AvatarUI extends React.PureComponent<
   AvatarUIProps,
   {
-    shieldPosition: [number, number];
-    shieldScale: number;
-    shieldShow: boolean;
-    avatarInitialPosition: [number, number];
-    avatarPosition: [number, number];
-    avatarShow: boolean;
-    avatarSize: number;
     currentBackground: number;
     currentHighlight: RGBColor;
     renderPicker: boolean;
     renderButtons: boolean;
-    picked: boolean;
-    width: number;
+    avatarSelected: boolean;
   }
 > {
   background = ['none', 'res', 'spy'];
@@ -39,13 +32,6 @@ class AvatarUI extends React.PureComponent<
   constructor(props: AvatarUIProps) {
     super(props);
     this.state = {
-      shieldPosition: [0, 0],
-      shieldShow: false,
-      shieldScale: 1,
-      avatarInitialPosition: [0, 0],
-      avatarPosition: [0, 0],
-      avatarShow: false,
-      avatarSize: 350,
       currentBackground: 0,
       currentHighlight: {
         r: 255,
@@ -55,8 +41,7 @@ class AvatarUI extends React.PureComponent<
       },
       renderPicker: false,
       renderButtons: false,
-      picked: false,
-      width: 0,
+      avatarSelected: false,
     };
     this.handleHighlight = this.handleHighlight.bind(this);
   }
@@ -64,7 +49,7 @@ class AvatarUI extends React.PureComponent<
   componentDidUpdate(prevProps: AvatarUIProps) {
     if (prevProps.isPickable !== this.props.isPickable) {
       this.setState({
-        picked: false,
+        avatarSelected: false,
       });
     }
   }
@@ -80,9 +65,9 @@ class AvatarUI extends React.PureComponent<
   pickPlayer = () =>
     this.setState(
       {
-        picked: this.props.isPickable && !this.state.picked,
+        avatarSelected: this.props.isPickable && !this.state.avatarSelected,
       },
-      this.props.table.countSelected
+      this.props.table!.countSelected
     );
 
   setBackgroundColor = () =>
@@ -106,9 +91,9 @@ class AvatarUI extends React.PureComponent<
         <div
           id="Avatar-UI"
           style={{
-            top: this.state.avatarPosition[0] + 'px',
-            left: this.state.avatarPosition[1] + 'px',
-            display: this.state.avatarShow ? undefined : 'none',
+            top: this.props.avatarPosition[0] + 'px',
+            left: this.props.avatarPosition[1] + 'px',
+            display: this.props.avatarShow ? undefined : 'none',
           }}
           onMouseOver={this.renderButtonsTrue}
           onMouseLeave={this.renderButtonsFalse}
@@ -116,11 +101,11 @@ class AvatarUI extends React.PureComponent<
           <div
             id="ave-graphics"
             style={{
-              width: this.state.avatarSize + 'px',
-              height: this.state.avatarSize + 'px',
+              width: this.props.avatarSize + 'px',
+              height: this.props.avatarSize + 'px',
+              maxHeight: Math.max(this.props.tableWidth * 0.06, 45) + 'px',
+              maxWidth: Math.max(this.props.tableWidth * 0.06, 45) + 'px',
               opacity: this.props.afk ? '0.5' : '1',
-              maxHeight: Math.max(this.state.width * 0.06, 45) + 'px',
-              maxWidth: Math.max(this.state.width * 0.06, 45) + 'px',
             }}
           >
             <div
@@ -128,7 +113,7 @@ class AvatarUI extends React.PureComponent<
               className={
                 this.background[this.state.currentBackground] +
                 ' ' +
-                (this.state.picked && this.props.isPickable ? 'picked' : '')
+                (this.state.avatarSelected && this.props.isPickable ? 'picked' : '')
               }
             />
             <div
@@ -147,12 +132,12 @@ class AvatarUI extends React.PureComponent<
             {this.props.killed ? <div className="ave-sword" /> : null}
             {this.props.onMission ? (
               <div className="ave-shield" ref={this.shieldLocation}>
-                {this.state.shieldShow ? (
+                {this.props.shieldShow ? (
                   <div
                     style={{
-                      transform: 'scale(' + this.state.shieldScale + ')',
-                      top: this.state.shieldPosition[0] + 'px',
-                      left: this.state.shieldPosition[1] + 'px',
+                      transform: 'scale(' + this.props.shieldScale + ')',
+                      top: this.props.shieldPosition[0] + 'px',
+                      left: this.props.shieldPosition[1] + 'px',
                     }}
                     className="ave-shield-display"
                   />
@@ -181,8 +166,8 @@ class AvatarUI extends React.PureComponent<
           <p
             className={'ave-username ' + (this.props.isMe ? 'me' : '')}
             style={{
-              width: Math.max(this.state.width * 0.15, 40) + 'px',
-              fontSize: Math.max(this.state.width * 0.01, 10) + 'px',
+              width: Math.max(this.props.tableWidth * 0.15, 40) + 'px',
+              fontSize: Math.max(this.props.tableWidth * 0.01, 10) + 'px',
             }}
           >
             {this.props.card ? <FontAwesomeIcon icon={faAddressCard} /> : null}{' '}
@@ -192,7 +177,7 @@ class AvatarUI extends React.PureComponent<
             className={'ave-role ' + this.props.isRes}
             style={{
               opacity: this.props.role !== 'Spy?' && this.props.role !== 'Resistance?' ? '1' : '0',
-              fontSize: Math.max(this.state.width * 0.008, 8) + 'px',
+              fontSize: Math.max(this.props.tableWidth * 0.008, 8) + 'px',
             }}
           >
             {this.props.role}
@@ -200,13 +185,15 @@ class AvatarUI extends React.PureComponent<
         </div>
         {this.state.renderPicker ? (
           <div className="hl-picker">
-            <div className="hl-stuff">
-              <p>CHANGE HIGHLIGHT COLOR</p>
-              <SketchPicker color={this.state.currentHighlight} onChange={this.handleHighlight} />
-              <button onClick={this.hideColorPicker}>
-                <FontAwesomeIcon icon={faCheck} />
-              </button>
-            </div>
+            <AvalonScrollbars>
+              <div className="hl-stuff">
+                <p>CHANGE HIGHLIGHT COLOR</p>
+                <SketchPicker color={this.state.currentHighlight} onChange={this.handleHighlight} />
+                <button onClick={this.hideColorPicker}>
+                  <FontAwesomeIcon icon={faCheck} />
+                </button>
+              </div>
+            </AvalonScrollbars>
           </div>
         ) : null}
       </>

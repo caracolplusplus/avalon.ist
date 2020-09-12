@@ -19,18 +19,16 @@ module.exports = function (io, socket) {
 		}
 	};
 
-	const gameChatRequest = (data) => {
-		// Data
-		// > roomNumber
+	const gameChatRequest = () => {
 		const user = socket.user;
 
 		if (user) {
 			try {
 				const username = user.get('username');
-				const room = new RoomHandler(data.roomNumber).getRoom();
+				const room = new RoomHandler(socket.room).getRoom();
 
 				socket.emit(
-					'gameChatResponse' + data.roomNumber,
+					'gameChatResponse' + socket.room,
 					room.chat.messages.filter((m) => m.public || m.to.includes(username))
 				);
 			} catch (err) {

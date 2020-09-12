@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
 
@@ -14,7 +14,7 @@ import GameState from './GameState';
 
 import '../../styles/Game/VoteHistory.scss';
 
-// Declaration
+// Types
 
 interface VoteHistoryProps {
   game: GameState;
@@ -24,6 +24,8 @@ interface VoteHistoryState {
   loading: boolean;
   rowHeight: number;
 }
+
+// Declaration
 
 class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState> {
   constructor(props: VoteHistoryProps) {
@@ -39,20 +41,12 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState
   }
 
   setRowHeight() {
-    if (this.state.loading) return;
-
-    const vhWidth = document.getElementById('Vote-History')!.offsetWidth;
-
-    this.setState({ rowHeight: vhWidth / 70 });
+    const vh = document.getElementById('Vote-History');
+    if (vh) this.setState({ rowHeight: vh.offsetWidth / 70 });
   }
 
   componentDidMount() {
-    this.setState(
-      {
-        loading: false,
-      },
-      this.setRowHeight
-    );
+    this.setRowHeight();
     window.addEventListener('resize', this.setRowHeight);
   }
 
@@ -70,12 +64,7 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState
       old.missionVotes !== current.missionVotes ||
       old.missionTeams !== current.missionTeams
     )
-      this.setState(
-        {
-          loading: false,
-        },
-        this.setRowHeight
-      );
+      this.setRowHeight();
   }
 
   SetHeaders() {
@@ -168,7 +157,7 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState
     return (
       <AvalonScrollbars>
         <div id="Vote-History" className="row">
-          {this.state.loading ? null : (
+          {this.props.game.code < 0 ? null :  (
             <table id="vh-cont" className="vh-cont">
               <tbody>
                 <this.SetHeaders />

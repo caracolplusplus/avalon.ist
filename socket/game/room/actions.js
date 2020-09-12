@@ -70,7 +70,7 @@ class Actions {
     this.votesMission = newVotesMission;
 
     this.leader = (this.leader + 1) % this.players;
-    if (this.round === 0) this.hammer = (this.leader + 4) % this.players; 
+    if (this.round === 0) this.hammer = (this.leader + 4) % this.players;
 
     this.missionClass.addLeader(this.mission + 1, this.leader);
 
@@ -79,34 +79,45 @@ class Actions {
     this.chatClass.onPick(this.gameClass.players[this.leader]);
   }
 
-  // This method checks for duplicates in picked team
-  hasDuplicates(array) {
+  // Get pick names
+  pickNames() {
+    return this.gameClass.players
+      .filter((p, i) => this.picks.includes(i))
+      .toString()
+      .replace(/,/g, ', ');
+  }
+
+  // These methods check pick validity
+  picksHaveDuplicates(array) {
     return new Set(array).size !== array.length;
   }
 
+  picksLengthIsWrong(array) {
+    return array.length !== playerMatrix[this.players - 5][this.mission];
+  }
+
   // This method picks a team
-  pickTeam(picks) {
+  pickTeam(index, picks) {
+    picks = picks.map((p) => Math.round(Math.min(Math.max(p, 0), this.players - 1)));
+
     if (
+      index !== this.leader ||
       this.stage !== 'PICKING' ||
-      this.hasDuplicates(picks) ||
-      picks.find((p) => p >= this.players || p < 0) !== undefined ||
-      picks.length !== playerMatrix[this.players - 5][this.mission]
+      this.picksHaveDuplicates(picks) ||
+      this.picksLengthIsWrong(picks)
     )
       return false;
 
     this.missionClass.addPicks(this.mission + 1, this.round + 1, picks);
 
-    this.picks = picks.map((p) => Math.round(p));
-    this.voted = [...this.picks];
+    this.picks = [...picks];
+    this.voted = [...picks];
 
     this.stage = 'VOTING';
 
-    const newVotesRound = new Array(this.players).fill(-1);
-    this.votesRound = newVotesRound;
+    this.votesRound = new Array(this.players).fill(-1);
 
-    const team = this.gameClass.players.filter((p, i) => this.picks.includes(i));
-
-    this.chatClass.afterPick(this.mission + 1, this.round + 1, team.toString().replace(/,/g, ', '));
+    this.chatClass.afterPick(this.mission + 1, this.round + 1, this.pickNames());
 
     return true;
   }
@@ -125,9 +136,7 @@ class Actions {
       let result = this.missionVoteChecker();
 
       if (result) {
-        const team = this.gameClass.players.filter((p, i) => this.picks.includes(i));
-        this.chatClass.afterPassing(team.toString().replace(/,/g, ', '));
-
+        this.chatClass.afterPassing(this.pickNames());
         this.stage = 'MISSION';
       } else {
         this.newRound();
@@ -162,11 +171,22 @@ class Actions {
     return false;
   }
 
+  // This method checks resistance vote validity
+  voteIsInvalid(index, vote) {
+    const res = ['Resistance', 'Percival'].includes(this.gameClass.roles[index]);
+    return res && vote === 0;
+  }
+
   // This method sends a vote for success in a mission
   voteForSuccess(index, vote) {
     if (this.stage !== 'MISSION') return false;
 
-    if (this.votesMission.includes(-1) && (vote === 0 || vote === 1)) {
+    if (
+      this.voted.includes(index) &&
+      this.votesMission.includes(-1) &&
+      (vote === 0 || vote === 1) &&
+      !this.voteIsInvalid(index, vote)
+    ) {
       this.votesMission.unshift(vote);
       this.votesMission.pop();
 
@@ -181,7 +201,7 @@ class Actions {
 
       if (this.mission - this.fails > 2) {
         if (this.hasAssassin) {
-          this.chatClass.waitingForShot(this.gameClass.players.find((p, i) => this.gameClass.roles[i] === 'Assassin'));
+          this.chatClass.waitingForShot(this.gameClass.players[this.gameClass.roles.indexOf('Assassin')]);
           this.stage = 'ASSASSINATION';
         } else {
           this.gameEnd(4);
@@ -228,33 +248,40 @@ class Actions {
   }
 
   // Method for identifying roles with Lady of the Lake
-  cardPlayer(holder, player) {
-    if (this.stage !== 'CARDING' || this.missionClass.cardHolders.includes(player)) return false;
-
-    this.missionClass.cardHolders.push(holder);
-
-    this.card = player;
-    this.newRound();
-
+  cardPlayer(index, carded) {
     const players = this.gameClass.players;
     const roles = this.gameClass.roles;
 
-    if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[player])) {
-      this.chatClass.afterCard(players[holder], players[player], true);
+    if (
+      this.stage !== 'CARDING' ||
+      this.missionClass.cardHolders.includes(carded) ||
+      index !== this.card ||
+      index === carded ||
+      !roles[carded]
+    )
+      return false;
+
+    this.missionClass.cardHolders.push(index);
+
+    this.card = carded;
+    this.newRound();
+
+    if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[carded])) {
+      this.chatClass.afterCard(players[index], players[carded], true);
       return true;
     }
 
-    this.chatClass.afterCard(players[holder], players[player], false);
+    this.chatClass.afterCard(players[index], players[carded], false);
     return true;
   }
 
   // This method checks to see who is shot
   // Returns true if the shot has happened, returns false if its not
-  shootPlayer(shot) {
-    if (this.stage !== 'ASSASSINATION') return false;
-
+  shootPlayer(index, shot) {
     const players = this.gameClass.players;
     const roles = this.gameClass.roles;
+
+    if (this.stage !== 'ASSASSINATION' || !roles[shot] || roles[index] !== 'Assassin') return false;
 
     if (roles[shot] === 'Merlin') {
       this.chatClass.afterShot(players[shot]);

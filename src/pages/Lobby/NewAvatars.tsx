@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from "react";
+import React from "react";
 
 // Styles
 
@@ -21,7 +21,7 @@ const Avatar = (props: AvatarProps) => {
   );
 };
 
-class NewAvatars extends Component {
+class NewAvatars extends React.PureComponent {
   render() {
     return (
       <div id="New-Avatars" className="row">

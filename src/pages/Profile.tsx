@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from 'react'
+import React from 'react'
 import { RouteComponentProps } from 'react-router'
 
 // Styles
@@ -13,7 +13,7 @@ interface ProfileProps {
   username: string
 }
 
-class Profile extends Component<RouteComponentProps<ProfileProps>, {}> {
+class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, {}> {
   player: string = "I don't exist"
 
   render() {

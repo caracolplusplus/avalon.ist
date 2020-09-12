@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 
 // Internal
@@ -11,12 +11,14 @@ import AvalonScrollbars from '../../components/utils/AvalonScrollbars'
 
 import '../../styles/Lobby/Announcements.scss'
 
-// Declaration
+// Types
 
 interface AnnouncementProps {
   date: string
   text: string
 }
+
+// Declaration
 
 const Announcement = (props: AnnouncementProps) => {
   return (
@@ -27,7 +29,7 @@ const Announcement = (props: AnnouncementProps) => {
   )
 }
 
-class Announcements extends Component {
+class Announcements extends React.PureComponent {
   render() {
     return (
       <div id="Announcements" className="row">

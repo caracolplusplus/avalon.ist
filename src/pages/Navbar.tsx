@@ -1,6 +1,6 @@
 // External
 
-import React, { Component } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,7 +13,7 @@ import { rootType } from "../redux/reducers";
 
 import { logout } from "../components/auth/logout";
 
-// Import Styles
+// Styles
 
 import "../styles/Navbar.scss";
 
@@ -29,7 +29,9 @@ interface NavbarState {
   showSidebar: boolean;
 }
 
-class Navbar extends Component<{ username: string }, NavbarState> {
+// Declaration
+
+class Navbar extends React.PureComponent<{ username: string }, NavbarState> {
   constructor(props: { username: string }) {
     super(props);
     this.state = {

@@ -32,10 +32,10 @@ module.exports = function (io, socket) {
 						socket.user = user;
 						socket.emit('gameUpdate');
 						socket.emit('roomListUpdate');
-						socket.emit('rejoinGame');
+						socket.emit('roomJoinBack');
 
 						if (!ClientsOnline.hasOwnProperty(username)) {
-							const profile = new Profile(input.objectId);
+							const profile = new Profile(username);
 
 							ClientsOnline[username] = {
 								profile: profile,
