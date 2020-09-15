@@ -86,7 +86,9 @@ class App extends React.PureComponent<appProps, appState> {
         loading: false,
       });
 
-      socket.emit('parseLink', currentUser);
+      console.log(currentUser);
+
+      socket.emit('parseLink', currentUser.id);
     } else {
       this.props.dispatch(setOnline(false));
 
