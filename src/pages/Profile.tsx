@@ -57,7 +57,7 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
         isMod: false,
         isContrib: false,
 
-        // Banned :O
+        // Banned
         banned: false,
         }
     }
