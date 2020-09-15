@@ -39,6 +39,9 @@ class Profile {
     this.isAdmin = false;
     this.isMod = false;
     this.isContrib = false;
+
+    // Banned :O
+    this.banned = false;
   }
 
   async saveToUser() {
