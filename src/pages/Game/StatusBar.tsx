@@ -9,8 +9,16 @@ import GameInfo from '../Lobby/GameInfo';
 import GameForm from '../Lobby/GameForm';
 import GameState from './GameState';
 import Button from '../../components/utils/Button';
+import SelectablePlayerList from './SelectablePlayerList';
 
 // Types
+
+enum FormType {
+  None = 0,
+  Settings = 1,
+  Kick = 2,
+  Info = 3,
+}
 
 interface Message {
   loading: boolean;
@@ -18,6 +26,7 @@ interface Message {
   showButtonOne: boolean;
   showButtonTwo: boolean;
   showButtonThree: boolean;
+  showButtonFour: boolean;
   buttonOne: {
     type: 'button';
     text: string;
@@ -36,6 +45,12 @@ interface Message {
     onClick: ((...args: any[]) => void) | undefined;
     className: string;
   };
+  buttonFour: {
+    type: 'button';
+    text: string;
+    onClick: ((...args: any[]) => void) | undefined;
+    className: string;
+  };
 }
 
 interface StatusBarProps extends GameState {
@@ -43,7 +58,7 @@ interface StatusBarProps extends GameState {
 }
 
 interface StatusBarState {
-  showForm: boolean;
+  showForm: FormType;
 }
 
 // Declaration
@@ -54,9 +69,11 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   constructor(props: StatusBarProps) {
     super(props);
     this.state = {
-      showForm: false,
+      showForm: FormType.None,
     };
-    this.formSetup = this.formSetup.bind(this);
+    this.showSettings = this.showSettings.bind(this);
+    this.showInfo = this.showInfo.bind(this);
+    this.showKick = this.showKick.bind(this);
     this.sitAndStand = this.sitAndStand.bind(this);
     this.startGame = this.startGame.bind(this);
     this.pickTeam = this.pickTeam.bind(this);
@@ -66,8 +83,16 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     this.cardPlayer = this.cardPlayer.bind(this);
   }
 
-  formSetup() {
-    this.setState({ showForm: true });
+  showSettings() {
+    this.setState({ showForm: FormType.Settings });
+  }
+
+  showKick() {
+    this.setState({ showForm: FormType.Kick });
+  }
+
+  showInfo() {
+    this.setState({ showForm: FormType.Info });
   }
 
   sitAndStand() {
@@ -117,16 +142,20 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       const gameCantStart = this.props.players.length < 5;
 
       message.showButtonThree = true;
+      message.showButtonFour = true;
       message.text = 'Modify settings or start the game.';
       message.buttonOne.text = 'SETTINGS';
       message.buttonOne.className = 'neutral';
-      message.buttonOne.onClick = this.formSetup;
+      message.buttonOne.onClick = this.showSettings;
       message.buttonTwo.text = 'START';
       message.buttonTwo.className = gameCantStart ? 'disabled' : 'confirm';
       message.buttonTwo.onClick = gameCantStart ? undefined : this.startGame;
       message.buttonThree.text = 'STAND UP';
       message.buttonThree.className = 'cancel';
       message.buttonThree.onClick = this.sitAndStand;
+      message.buttonFour.text = 'KICK';
+      message.buttonFour.className = 'kick';
+      message.buttonFour.onClick = this.showKick;
     } else {
       const host = this.props.players[0];
       const hasSeat = this.props.seat > -1;
@@ -134,7 +163,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       message.text = 'Waiting for ' + host + ' to start the game.';
       message.buttonOne.text = 'INFO';
       message.buttonOne.className = 'neutral';
-      message.buttonOne.onClick = this.formSetup;
+      message.buttonOne.onClick = this.showInfo;
       message.buttonTwo.text = hasSeat ? 'STAND UP' : 'SIT';
       message.buttonTwo.className = hasSeat ? 'cancel' : 'confirm';
       message.buttonTwo.onClick = this.sitAndStand;
@@ -305,7 +334,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     return message;
   }
 
-  hideForm = () => this.setState({ showForm: false });
+  hideForm = () => this.setState({ showForm: FormType.None });
 
   message: Message = {
     loading: true,
@@ -313,6 +342,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     showButtonOne: true,
     showButtonTwo: true,
     showButtonThree: false,
+    showButtonFour: false,
     buttonOne: {
       type: 'button',
       text: '',
@@ -326,6 +356,12 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       className: '',
     },
     buttonThree: {
+      type: 'button',
+      text: '',
+      onClick: () => {},
+      className: '',
+    },
+    buttonFour: {
       type: 'button',
       text: '',
       onClick: () => {},
@@ -350,6 +386,40 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       this.message = this.onFreeze(this.message);
     }
 
+    let form = null;
+    if (!this.props.started && this.state.showForm !== FormType.None) {
+      if (this.state.showForm === FormType.Kick && this.props.seat === 0) {
+        form = (
+          <>
+            {' '}
+            <SelectablePlayerList
+              text="Kick"
+              // Skip the first player, since that's the game host and you can't kick yourself.
+              players={this.props.players.slice(1)}
+              onExit={this.hideForm}
+              onSelect={() => {}}
+            />{' '}
+          </>
+        );
+      }
+      if (this.state.showForm === FormType.Settings && this.props.seat === 0) {
+        form = (
+          <GameForm
+            title="MODIFY GAME SETTINGS"
+            createsGame={false}
+            initialRoleSettings={this.props.roleSettings}
+            initialPlayerMax={this.props.playerMax}
+            onExit={this.hideForm}
+          />
+        );
+      }
+      if (this.state.showForm === FormType.Info) {
+        form = (
+          <GameInfo roleSettings={this.props.roleSettings} playerMax={this.props.playerMax} onExit={this.hideForm} />
+        );
+      }
+    }
+
     return this.props.code < 0 ? null : (
       <>
         <p className="message">{this.message.text}</p>{' '}
@@ -370,19 +440,13 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
             <Button {...this.message.buttonThree} />{' '}
           </div>
         ) : null}
-        {!this.props.started && this.state.showForm ? (
-          this.props.seat === 0 ? (
-            <GameForm
-              title="MODIFY GAME SETTINGS"
-              createsGame={false}
-              initialRoleSettings={this.props.roleSettings}
-              initialPlayerMax={this.props.playerMax}
-              onExit={this.hideForm}
-            />
-          ) : (
-            <GameInfo roleSettings={this.props.roleSettings} playerMax={this.props.playerMax} onExit={this.hideForm} />
-          )
+        {this.message.showButtonFour ? (
+          <div className="button-cont">
+            {' '}
+            <Button {...this.message.buttonFour} />{' '}
+          </div>
         ) : null}
+        {form}
       </>
     );
   }
