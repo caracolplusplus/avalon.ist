@@ -15,7 +15,7 @@
         HIGHLIGHT 2
         POSITIVE 1
         NEUTRAL 0
-        NEGATIVE -1 
+        NEGATIVE -1
     Timestamp
         MILLISECONDS
 } */
@@ -324,6 +324,20 @@ class Chat {
 				timestamp: Date.now(),
 			}
 		);
+	}
+
+	kickPlayer(host, player) {
+		const content = '{player} has been kicked by {host}!';
+
+		this.messages.push({
+			public: true,
+			content: content.replace(/{player}/gi, player).replace(/{host}/gi, host),
+			author: AVALONIST_NAME,
+			to: [],
+			type: 1,
+			character: -1,
+			timestamp: Date.now(),
+		});
 	}
 }
 

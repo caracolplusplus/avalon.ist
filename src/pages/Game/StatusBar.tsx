@@ -81,6 +81,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     this.voteForSuccess = this.voteForSuccess.bind(this);
     this.shootPlayer = this.shootPlayer.bind(this);
     this.cardPlayer = this.cardPlayer.bind(this);
+    this.kickPlayer = this.kickPlayer.bind(this);
   }
 
   showSettings() {
@@ -132,6 +133,12 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   shootPlayer() {
     socket.emit('shootPlayer', {
       shot: this.props.selected[0],
+    });
+  }
+
+  kickPlayer(player: string) {
+    socket.emit('kickPlayer', {
+      kick: player,
     });
   }
 
@@ -393,11 +400,14 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
           <>
             {' '}
             <SelectablePlayerList
+              title="Select a player to kick"
               text="Kick"
               // Skip the first player, since that's the game host and you can't kick yourself.
               players={this.props.players.slice(1)}
               onExit={this.hideForm}
-              onSelect={() => {}}
+              onSelect={(player: string) => {
+                this.kickPlayer(player);
+              }}
             />{' '}
           </>
         );

@@ -6,6 +6,7 @@ class Game {
     // Players and Roles
     this.players = players;
     this.clients = {};
+    this.kickedPlayers = new Set();
     this.roles = roles;
     this.roleSettings = {
       // Res

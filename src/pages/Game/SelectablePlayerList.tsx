@@ -19,6 +19,7 @@ import '../../styles/Utils/SettingsMenu.scss';
 interface SelectablePlayerListProps {
   players: string[];
   text: string;
+  title: string;
   onSelect: (...args: any[]) => void;
   onExit: (...args: any[]) => void;
 }
@@ -58,7 +59,7 @@ class SelectablePlayerList extends React.PureComponent<SelectablePlayerListProps
       <div className="settings-form">
         <AvalonScrollbars>
           <form autoComplete="off">
-            <p className="title">Select a Player to kick</p>
+            <p className="title">{this.props.title}</p>
             <div className="input-container">
               <p className="handle">Players</p>{' '}
               <List
@@ -71,17 +72,17 @@ class SelectablePlayerList extends React.PureComponent<SelectablePlayerListProps
                   };
                 })}
                 show={this.state.show}
-                title={this.state.selected}
+                title={this.state.selected.length > 0 ? this.state.selected : 'Select a player...'}
                 onClick={() => {
                   this.toggleShow();
                 }}
               />
             </div>
             <div className="buttons">
-              <Button className="" type="button" text={this.props.text} onClick={this.onClick} />
               <button className="bt-cancel" type="button" onClick={this.props.onExit}>
                 <FontAwesomeIcon icon={faTimes} />
               </button>
+              <Button className="" type="button" text={this.props.text} onClick={this.onClick} />
             </div>
           </form>
         </AvalonScrollbars>
