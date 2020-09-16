@@ -6,7 +6,7 @@ const ClientsOnline = require('./clients-online');
 module.exports = function (io, socket) {
 	const GEN_CHAT = 'GeneralChat';
 
-	const parseLink = (input) => {
+	const parseLink = (id) => {
 		const sendJoinMessage = (username) => {
 			if (ClientsOnline[username].sockets.length === 1) {
 				GeneralChat.joinLeaveLobby(username, true);
@@ -17,49 +17,47 @@ module.exports = function (io, socket) {
 		};
 
 		const afterJoin = () => {
-			if (input) {
-				const query = new Parse.Query('_User');
+			const query = new Parse.Query('_User');
 
-				query
-					.get(input.objectId, {
-						useMasterKey: true,
-					})
-					.then(async (user) => {
-						const username = user.get('username');
+			query
+				.get(id, {
+					useMasterKey: true,
+				})
+				.then(async (user) => {
+					const username = user.get('username');
 
-						console.log(username + ' has connected!');
+					console.log(username + ' has connected!');
 
-						socket.user = user;
-						socket.emit('gameUpdate');
-						socket.emit('roomListUpdate');
-						socket.emit('roomJoinBack');
+					socket.user = user;
+					socket.emit('gameUpdate');
+					socket.emit('roomListUpdate');
+					socket.emit('roomJoinBack');
 
-						if (!ClientsOnline.hasOwnProperty(username)) {
-							const profile = new Profile(username);
+					if (!ClientsOnline.hasOwnProperty(username)) {
+						const profile = new Profile(username);
 
-							ClientsOnline[username] = {
-								profile: profile,
-								sockets: [socket.id],
-							};
+						ClientsOnline[username] = {
+							profile: profile,
+							sockets: [socket.id],
+						};
 
-							await profile.getFromUser();
-							profile.saveToUser();
+						await profile.getFromUser();
+						profile.saveToUser();
 
-							sendJoinMessage(username);
-						} else if (!ClientsOnline[username].sockets.includes(socket.id)) {
-							ClientsOnline[username].sockets.push(socket.id);
-							await ClientsOnline[username].profile.getFromUser();
-							ClientsOnline[username].profile.saveToUser();
+						sendJoinMessage(username);
+					} else if (!ClientsOnline[username].sockets.includes(socket.id)) {
+						ClientsOnline[username].sockets.push(socket.id);
+						await ClientsOnline[username].profile.getFromUser();
+						ClientsOnline[username].profile.saveToUser();
 
-							sendJoinMessage(username);
-						}
+						sendJoinMessage(username);
+					}
 
-						clientsOnlineRequest();
-					})
-					.catch((err) => {
-						console.log(err);
-					});
-			}
+					clientsOnlineRequest();
+				})
+				.catch((err) => {
+					console.log(err);
+				});
 		};
 
 		socket.join(GEN_CHAT, afterJoin);

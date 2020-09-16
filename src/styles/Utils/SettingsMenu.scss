@@ -2,6 +2,7 @@
 
 @mixin init-game-list($base-font-size) {
   .settings-form {
+    animation: wake 0.5s 1;
     position: fixed;
     top: $base-font-size;
     left: 0;
