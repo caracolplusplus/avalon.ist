@@ -281,6 +281,8 @@ module.exports = function (io, socket) {
 				const game = room.game;
 
 				if (game.started) return false;
+				// Kicked players cannot re-join game.
+				if (game.kickedPlayers.has(username)) return false;
 
 				game.switchSeatOnGame(username, data.canSit);
 				game.setRolesOnGame(game.roleSettings, game.maxPlayers);
@@ -492,6 +494,43 @@ module.exports = function (io, socket) {
 		}
 	};
 
+	const kickPlayer = (data) => {
+		// Data
+		// > kick
+		const user = socket.user;
+
+		if (user) {
+			const username = user.get('username');
+			const handler = new RoomHandler(socket.room);
+
+			try {
+				const room = handler.getRoom();
+				const game = room.game;
+				const chat = room.chat;
+
+				// Can't kick people after game starts.
+				if (game.started) return false;
+				// Only the host can kick people.
+				if (username !== game.host) return false;
+				const playerIndex = game.players.indexOf(data.kick);
+
+				if (playerIndex > -1) {
+					game.kickedPlayers.add(data.kick);
+					game.switchSeatOnGame(data.kick, false);
+					game.setRolesOnGame(game.roleSettings, game.maxPlayers);
+					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
+					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					chat.kickPlayer(game.host, data.kick);
+					return true;
+				}
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		return false;
+	};
+
 	socket
 		.on('roomJoin', roomJoin)
 		.on('roomLeave', roomLeave)
@@ -504,5 +543,6 @@ module.exports = function (io, socket) {
 		.on('voteForMission', voteForMission)
 		.on('voteForSuccess', voteForSuccess)
 		.on('cardPlayer', cardPlayer)
-		.on('shootPlayer', shootPlayer);
+		.on('shootPlayer', shootPlayer)
+		.on('kickPlayer', kickPlayer)
 };
