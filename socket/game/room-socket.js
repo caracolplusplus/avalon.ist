@@ -41,7 +41,10 @@ module.exports = function (io, socket) {
 
 				if (game.clients[username].sockets.length === 0) {
 					chat.onEnter(username, false);
-
+					// If sockets are empty, then there are no connections for this client,
+					// so remove it from the object so we can reap the room. If the client
+					// reconnects, they will be readded to the clients objects anyways.
+					delete game.clients[username];
 					if (!game.started) {
 						game.switchSeatOnGame(username, false);
 						game.setRolesOnGame(game.roleSettings, game.maxPlayers);
@@ -50,6 +53,13 @@ module.exports = function (io, socket) {
 					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
 					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
 					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+				}
+
+				// If no more clients, then delete the room.
+				if (Object.keys(game.clients).length === 0) {
+					handler.deleteRoom();
+					// Notify other players room has been deleted.
+					io.to(GAME_LIST_NAME).emit('roomListUpdate');
 				}
 
 				socket.off('disconnect', afterLeave);

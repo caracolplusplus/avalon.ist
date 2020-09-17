@@ -136,6 +136,15 @@ class RoomHandler {
 
     return arr;
   }
+
+  deleteRoom() {
+    const id = this.roomName.toString();
+    if (id in activeRooms) {
+      delete activeRooms[id];
+    } else {
+      console.log('ERROR: Room ' + id + ' does not exist.');
+    }
+  }
 }
 
 module.exports = RoomHandler;
