@@ -2,12 +2,14 @@
 
 import React, { ChangeEvent, FormEvent, createRef } from 'react';
 import { Link } from 'react-router-dom';
+import { connect } from "react-redux";
 
 // Internal
 
 import socket from '../../socket-io/socket-io';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 import { ChatInput } from '../../components/utils/Input';
+import { rootType } from "../../redux/reducers";
 
 // Styles
 
@@ -29,12 +31,18 @@ interface ChatProps {
   code?: string;
   players: string[];
   stage?: string;
+  chatHighlights: { [key: string]: string; };
 }
 
 interface ChatState {
   messages: ChatSnapshot[];
   content: string;
 }
+
+const mapState = (state: rootType) => {
+  const { chatHighlights } = state;
+  return { chatHighlights };
+};
 
 class Chat extends React.PureComponent<ChatProps, ChatState> {
   scrollbars = createRef<AvalonScrollbars>();
@@ -57,7 +65,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   }
 
   componentDidMount() {
-    if (this.props.code === undefined) {
+   if (this.props.code === undefined) {
       this.startChat();
     } else if (this.props.code !== '-1') {
       this.toGameChat();
@@ -133,12 +141,14 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     const messageClass = classType + classCharacter + classSpectator;
     const messageAuthor = snap.type < 1 ? snap.author : undefined;
     const messageContent = snap.content;
+    const messageHighlight = (messageAuthor && messageAuthor in this.props.chatHighlights) ?
+        this.props.chatHighlights[messageAuthor] : '';
 
     const messageDate = new Date(snap.timestamp);
     const messageHour = ('0' + messageDate.getHours()).slice(-2) + ':' + ('0' + messageDate.getMinutes()).slice(-2);
 
     return (
-      <div className={'message ' + messageClass}>
+      <div className={'message ' + messageClass} style={{backgroundColor: messageHighlight}}>
         <span className="hour">{messageHour}</span>
         <p className="text">
           {messageAuthor ? (
@@ -174,4 +184,4 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   }
 }
 
-export default Chat;
+export default connect(mapState, null)(Chat);

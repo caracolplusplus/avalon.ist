@@ -35,7 +35,7 @@ class Lobby extends React.PureComponent {
               <PlayerList players={[]} clients={[]} />
             </div>
             <div className="column section">
-              <Chat players={[]} stage={'NONE'}/>
+              <Chat chatHighlights={{}} players={[]} stage={'NONE'}/>
             </div>
             <div className="column section">
               <GameList />
