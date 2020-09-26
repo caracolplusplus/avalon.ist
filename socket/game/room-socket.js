@@ -2,14 +2,12 @@ const Parse = require('../parse/parse');
 const Profile = require('../profile/profile');
 const RoomHandler = require('./room-handler');
 const GeneralChat = require('../chat/general-chat');
-const ClientsOnline = require('../auth/clients-online');
 
 module.exports = function (io, socket) {
-	const LINK_NAME = 'RoomLink';
 	const GEN_CHAT = 'GeneralChat';
+	const GAME_CHAT = 'GameChat';
 	const GAME_LIST_NAME = 'RoomList';
 	const GAME_NAME = 'Room';
-	const GAME_CHAT = 'GameChat';
 
 	const getGlobals = async (data) => {
 		const query = new Parse.Query('Globals');
@@ -18,6 +16,15 @@ module.exports = function (io, socket) {
 		return await query.find({
 			useMasterKey: true,
 		});
+	};
+
+	const emissionProtocol = (updateRoomList, updateChat, roomHandler, startEndProtocol) => {
+		if (startEndProtocol) io.to(GEN_CHAT).emit('generalChatUpdate');
+
+		io.to(GAME_NAME + socket.room).emit('gameUpdate');
+
+		if (updateRoomList) io.to(GAME_LIST_NAME).emit('roomListUpdate');
+		if (updateChat) io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
 	};
 
 	const afterLeave = () => {
@@ -41,18 +48,18 @@ module.exports = function (io, socket) {
 
 				if (game.clients[username].sockets.length === 0) {
 					chat.onEnter(username, false);
+
 					// If sockets are empty, then there are no connections for this client,
 					// so remove it from the object so we can reap the room. If the client
 					// reconnects, they will be readded to the clients objects anyways.
 					delete game.clients[username];
+
 					if (!game.started) {
 						game.switchSeatOnGame(username, false);
 						game.setRolesOnGame(game.roleSettings, game.maxPlayers);
 					}
 
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
-					io.to(GAME_NAME + socket.room).emit('gameUpdate');
+					emissionProtocol(true, true, handler, false);
 				}
 
 				// If no more clients, then delete the room.
@@ -96,35 +103,25 @@ module.exports = function (io, socket) {
 
 					socket.room = r;
 
-					const sendJoinMessage = () => {
-						if (game.clients[username].sockets.length === 1) {
-							chat.onEnter(username, true);
-							io.to(GAME_CHAT + r).emit('gameChatUpdate');
-							io.to(GAME_NAME + r).emit('gameUpdate');
-							io.to(LINK_NAME + r).emit('roomLinkUpdate' + r);
-						} else {
-							socket.emit('gameChatUpdate');
-						}
-					};
-
 					if (!game.clients.hasOwnProperty(username)) {
-						const profile = new Profile(username);
-
 						game.clients[username] = {
-							profile: profile,
+							timestamp: Date.now(),
 							sockets: [socket.id],
 						};
 
-						sendJoinMessage();
+						chat.onEnter(username, true);
+
+						emissionProtocol(true, true, handler, false);
 					} else if (!game.clients[username].sockets.includes(socket.id)) {
 						game.clients[username].sockets.push(socket.id);
-						game.clients[username].profile.getFromUser();
-						sendJoinMessage();
+
+						socket.emit('gameChatUpdate');
 					}
 
 					socket.on('disconnect', afterLeave);
 				} catch (err) {
 					console.log(err);
+					socket.emit('gameNotFound');
 				}
 			}
 		};
@@ -132,7 +129,58 @@ module.exports = function (io, socket) {
 		socket.join(GAME_NAME + r, initialUpdate);
 	};
 
-	const gameRequest = () => {
+	const voteHistoryParsing = (missions, actions) => {
+		return new Promise((resolve) => {
+			// Past Mission Info
+			let results = [];
+			let cardHolders = [];
+			const missionLeader = [[], [], [], [], []];
+			const missionVotes = [[], [], [], [], []];
+			const missionTeams = [[], [], [], [], []];
+
+			if (Object.keys(missions).length > 0) {
+				results = missions.missionResults;
+				cardHolders = missions.cardHolders;
+
+				for (let i = 0; i < 5; i++) {
+					const i_miss = i + 1;
+
+					const currentLeader = missions['m' + i_miss + 'leader'];
+					missionLeader[i] = currentLeader.length > 0 ? currentLeader : [];
+
+					for (let j = 0; j < 5; j++) {
+						const j_miss = j + 1;
+
+						const currentVotes = missions['m' + i_miss + j_miss + 'votes'];
+						const currentTeam = missions['m' + i_miss + j_miss + 'picks'];
+
+						if (currentVotes.length > 0) {
+							missionVotes[i][j] = currentVotes;
+							missionTeams[i][j] = currentTeam;
+						} else if (currentTeam.length > 0) {
+							missionTeams[i][j] = currentTeam;
+							missionVotes[i][j] = [];
+						}
+					}
+				}
+
+				if (actions.stage === 'PICKING') {
+					missionVotes[actions.mission][actions.round] = [];
+					missionTeams[actions.mission][actions.round] = [];
+				}
+			}
+
+			resolve({
+				results,
+				cardHolders,
+				missionLeader,
+				missionVotes,
+				missionTeams,
+			});
+		});
+	};
+
+	const gameRequest = async () => {
 		const user = socket.user;
 
 		if (user) {
@@ -145,22 +193,15 @@ module.exports = function (io, socket) {
 				const actions = room.actions;
 				const missions = room.missions;
 
-				const clients = [];
-
-				for (cli in game.clients) {
-					const currentClient = game.clients[cli];
-
-					if (currentClient.sockets.length > 0) clients.push(cli);
-				}
-
 				const seat = game.players.indexOf(username);
+				const history = voteHistoryParsing(missions, actions);
 
 				let response = {
 					// Player Info
+					seat: seat,
 					username: username,
 					players: game.players,
-					clients: clients,
-					seat: seat,
+					clients: Object.keys(game.clients),
 					imRes: ['Resistance', 'Percival'].includes(game.roles[seat]),
 					// Don't include Merlin, this is for disallowing fail button on missions
 					// Game State Info
@@ -172,8 +213,8 @@ module.exports = function (io, socket) {
 					assassination: actions.assassination,
 					// Game Pick Info
 					picks: actions.picks,
+					picksYetToVote: actions.picksYetToVote,
 					votesRound: actions.votesRound,
-					voted: actions.voted,
 					// Game Knowledge
 					publicKnowledge: game.publicKnowledge,
 					privateKnowledge: game.privateKnowledge[username] ? game.privateKnowledge[username] : [],
@@ -190,52 +231,8 @@ module.exports = function (io, socket) {
 					// Game Settings
 					roleSettings: game.roleSettings,
 					playerMax: game.maxPlayers,
+					...(await history),
 				};
-
-				// Past Mission Info
-				let results = [];
-				let cardHolders = [];
-				const missionLeader = [[], [], [], [], []];
-				const missionVotes = [[], [], [], [], []];
-				const missionTeams = [[], [], [], [], []];
-
-				if (Object.keys(missions).length > 0) {
-					results = missions.missionResults;
-					cardHolders = missions.cardHolders;
-
-					for (let i = 0; i < 5; i++) {
-						const i_miss = i + 1;
-
-						const currentLeader = missions['m' + i_miss + 'leader'];
-						missionLeader[i] = currentLeader.length > 0 ? currentLeader : [];
-
-						for (let j = 0; j < 5; j++) {
-							const j_miss = j + 1;
-
-							const currentVotes = missions['m' + i_miss + j_miss + 'votes'];
-							const currentTeam = missions['m' + i_miss + j_miss + 'picks'];
-
-							if (currentVotes.length > 0) {
-								missionVotes[i][j] = currentVotes;
-								missionTeams[i][j] = currentTeam;
-							} else if (currentTeam.length > 0) {
-								missionTeams[i][j] = currentTeam;
-								missionVotes[i][j] = [];
-							}
-						}
-					}
-
-					if (actions.stage === 'PICKING') {
-						missionVotes[actions.mission][actions.round] = [];
-						missionTeams[actions.mission][actions.round] = [];
-					}
-				}
-
-				response.results = results;
-				response.cardHolders = cardHolders;
-				response.missionLeader = missionLeader;
-				response.missionVotes = missionVotes;
-				response.missionTeams = missionTeams;
 
 				// Send to client
 				socket.emit('gameResponse', response);
@@ -300,9 +297,7 @@ module.exports = function (io, socket) {
 				console.log(err);
 			}
 
-			io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-			io.to(GAME_NAME + socket.room).emit('gameUpdate');
-			io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+			emissionProtocol(true, true, handler, false);
 			return true;
 		}
 	};
@@ -328,8 +323,7 @@ module.exports = function (io, socket) {
 				console.log(err);
 			}
 
-			io.to(GAME_NAME + socket.room).emit('gameUpdate');
-			io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+			emissionProtocol(true, false, handler, false);
 			return true;
 		}
 	};
@@ -343,9 +337,7 @@ module.exports = function (io, socket) {
 
 			try {
 				if (handler.initGame(username)) {
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-					io.to(GAME_NAME + socket.room).emit('gameUpdate');
-					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					emissionProtocol(true, true, handler, false);
 					return true;
 				}
 				return false;
@@ -372,9 +364,7 @@ module.exports = function (io, socket) {
 				const playerIndex = game.players.indexOf(username);
 
 				if (playerIndex > -1 && actions.pickTeam(playerIndex, data.team)) {
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-					io.to(GAME_NAME + socket.room).emit('gameUpdate');
-					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					emissionProtocol(false, true, handler, false);
 					return true;
 				}
 				return false;
@@ -401,10 +391,7 @@ module.exports = function (io, socket) {
 				const playerIndex = game.players.indexOf(username);
 
 				if (playerIndex > -1 && actions.voteForMission(playerIndex, data.vote)) {
-					if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-					io.to(GAME_NAME + socket.room).emit('gameUpdate');
-					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					emissionProtocol(actions.ended, true, handler, actions.ended);
 					return true;
 				}
 				return false;
@@ -431,10 +418,7 @@ module.exports = function (io, socket) {
 				const playerIndex = game.players.indexOf(username);
 
 				if (playerIndex > -1 && actions.voteForSuccess(playerIndex, data.vote)) {
-					if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-					io.to(GAME_NAME + socket.room).emit('gameUpdate');
-					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					emissionProtocol(!actions.picksYetToVote.length, true, handler, actions.ended);
 					return true;
 				}
 
@@ -462,9 +446,7 @@ module.exports = function (io, socket) {
 				const playerIndex = game.players.indexOf(username);
 
 				if (playerIndex > -1 && actions.cardPlayer(playerIndex, data.carded)) {
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-					io.to(GAME_NAME + socket.room).emit('gameUpdate');
-					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					emissionProtocol(false, true, handler, false);
 					return true;
 				}
 				return false;
@@ -491,10 +473,7 @@ module.exports = function (io, socket) {
 				const playerIndex = game.players.indexOf(username);
 
 				if (playerIndex > -1 && actions.shootPlayer(playerIndex, data.shot)) {
-					if (actions.ended) io.to(GEN_CHAT).emit('generalChatUpdate');
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-					io.to(GAME_NAME + socket.room).emit('gameUpdate');
-					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
+					emissionProtocol(true, true, handler, actions.ended);
 					return true;
 				}
 				return false;
@@ -528,10 +507,9 @@ module.exports = function (io, socket) {
 					game.kickedPlayers.add(data.kick);
 					game.switchSeatOnGame(data.kick, false);
 					game.setRolesOnGame(game.roleSettings, game.maxPlayers);
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-					io.to(GAME_NAME + socket.room).emit('gameUpdate');
-					io.to(LINK_NAME + socket.room).emit('roomLinkUpdate' + socket.room);
 					chat.kickPlayer(game.host, data.kick);
+					emissionProtocol(true, true, handler, false);
+
 					return true;
 				}
 			} catch (err) {
@@ -554,5 +532,5 @@ module.exports = function (io, socket) {
 		.on('voteForSuccess', voteForSuccess)
 		.on('cardPlayer', cardPlayer)
 		.on('shootPlayer', shootPlayer)
-		.on('kickPlayer', kickPlayer)
+		.on('kickPlayer', kickPlayer);
 };

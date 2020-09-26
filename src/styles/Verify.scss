@@ -15,7 +15,7 @@
       h1,
       h2,
       p,
-      .welcome {
+      .welcome, .not-found {
         width: $base-font-size * 7.5;
       }
     }
@@ -23,7 +23,7 @@
       h1,
       h2,
       p,
-      .welcome {
+      .welcome, .not-founds {
         width: $base-font-size * 18.125;
       }
     }
@@ -44,8 +44,9 @@
     .thumb-vertical {
       z-index: 998;
     }
-    .welcome {
-      background-image: url('../images/lobby-welcome.png');
+    .welcome,
+    .not-found {
+      image-rendering: pixelated;
       height: $base-font-size * 4;
       margin-bottom: $base-font-size * 0.25;
       background-size: contain;
@@ -53,6 +54,13 @@
       background-repeat: no-repeat;
       border-radius: 0px;
       background-color: transparent;
+    }
+    .welcome {
+      background-image: url('../images/lobby-welcome.png');
+    }
+    .not-found {
+      background-image: url('../images/lobby-404.png');
+      height: $base-font-size * 4;
     }
   }
 }

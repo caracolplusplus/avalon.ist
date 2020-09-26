@@ -1,1 +1,2 @@
-module.exports = {};
+module.exports.clients = {};
+module.exports.sockets = [];

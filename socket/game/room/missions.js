@@ -65,13 +65,6 @@ class Missions {
         this.cardHolders = [];
     }
 
-    deserialize(input) {
-        for (const x in input) {
-            Reflect.set(this, x, Reflect.get(input, x));
-        }
-        return this;
-    }
-
     // Methods for storing Missions
     addPicks(mission, round, picks) {
         this["m" + mission + round + "picks"] = picks;

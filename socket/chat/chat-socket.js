@@ -11,11 +11,17 @@ module.exports = function (io, socket) {
 
 		if (user) {
 			const username = user.get('username');
+			const result = [];
 
-			socket.emit(
-				'generalChatResponse',
-				GeneralChat.messages.filter((m) => m.public || m.to.includes(username))
-			);
+			const messages = GeneralChat.messages;
+			const messagesLength = messages.length;
+
+			for (i = 0; i < messagesLength; i++) {
+				const currentMessage = messages[i];
+				if (currentMessage.public || currentMessage.to.includes(username)) result.push(currentMessage);
+			}
+
+			socket.emit('generalChatResponse', result);
 		}
 	};
 
@@ -26,11 +32,17 @@ module.exports = function (io, socket) {
 			try {
 				const username = user.get('username');
 				const room = new RoomHandler(socket.room).getRoom();
+				const result = [];
 
-				socket.emit(
-					'gameChatResponse' + socket.room,
-					room.chat.messages.filter((m) => m.public || m.to.includes(username))
-				);
+				const messages = room.chat.messages;
+				const messagesLength = messages.length;
+
+				for (i = 0; i < messagesLength; i++) {
+					const currentMessage = messages[i];
+					if (currentMessage.public || currentMessage.to.includes(username)) result.push(currentMessage);
+				}
+
+				socket.emit('gameChatResponse' + socket.room, result);
 			} catch (err) {
 				console.log(err);
 			}

@@ -16,10 +16,11 @@ interface GameState {
   tabs: number;
   scale: number;
   highlighted: boolean[];
+  notFound: boolean;
   // Game Pick Info
   picks: number[];
+  picksYetToVote: number[];
   votesRound: number[];
-  voted: number[];
   // Game Knowledge
   publicKnowledge: string[];
   privateKnowledge: string[];

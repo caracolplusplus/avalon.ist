@@ -28,13 +28,6 @@ class Game {
     this.started = false;
   }
 
-  deserialize(input) {
-    for (const x in input) {
-      Reflect.set(this, x, Reflect.get(input, x));
-    }
-    return this;
-  }
-
   // Sets Roles according to given settings
   setRolesOnGame(settings, maxPlayers) {
     this.roleSettings = settings;

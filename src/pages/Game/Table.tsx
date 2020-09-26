@@ -120,14 +120,13 @@ class Table extends React.PureComponent<
     if (prevProps !== this.props) {
       this.animationCallback = () => {};
 
+      if (prevProps.game.picks.length !== this.props.game.picks.length) this.animationCallback = this.initShields;
+
       if (
         prevProps.game.players.length !== this.props.game.players.length ||
         prevProps.game.started !== this.props.game.started
       )
         this.animationCallback = this.initAvatars;
-
-      if (prevProps.game.picks.includes(-1) && !this.props.game.picks.includes(-1))
-        this.animationCallback = this.initShields;
 
       this.createSeats();
     }
@@ -152,59 +151,63 @@ class Table extends React.PureComponent<
     const imCarding = game.seat === game.card && game.stage === 'CARDING';
     const imVoting = game.stage === 'VOTING';
 
-    const avatars = players.map(
-      (p, i): AvatarUIProps => {
-        const ave = this.state.avatars[i];
+    const avatars: AvatarUIProps[] = [];
+    const l = players.length
 
-        this.seatRef.push(createRef<HTMLDivElement>());
-        this.avatarRef.push(createRef<AvatarUI>());
+    for (let i = 0; i < l; i++) {
+      const p = players[i];
+      const ave = this.state.avatars[i];
 
-        // Avatars
-        const spyUrl = 'https://cdn.discordapp.com/attachments/612734001916018707/736446594936733786/base-spy.png';
-        const resUrl = 'https://cdn.discordapp.com/attachments/688596182758326313/732067339746541628/base-res.png';
+      this.seatRef.push(createRef<HTMLDivElement>());
+      this.avatarRef.push(createRef<AvatarUI>());
 
-        // Data
-        const username = p;
-        const role = knowledge[i];
-        const vote = imVoting ? -1 : game.votesRound[i];
-        const leader = game.leader === i || (game.started === false && i === 0);
-        const hammer = game.hammer === i;
-        const killed = game.assassination === i;
-        const card = game.card === i;
-        const afk = !game.clients.includes(username);
-        const onMission = game.picks.includes(i);
-        const isRes = resistance.includes(knowledge[i]);
-        const isPickable = imPicking || imKilling || imCarding;
-        const isMe = game.seat === i;
+      // Avatars
+      const spyUrl = 'https://cdn.discordapp.com/attachments/612734001916018707/736446594936733786/base-spy.png';
+      const resUrl = 'https://cdn.discordapp.com/attachments/688596182758326313/732067339746541628/base-res.png';
 
-        return {
-          spyUrl,
-          resUrl,
-          username,
-          role,
-          vote,
-          leader,
-          hammer,
-          killed,
-          card,
-          afk,
-          onMission,
-          isRes,
-          isPickable,
-          isMe,
-          table: null,
-          // Animation
-          shieldPosition: ave ? ave.shieldPosition : [0, 0],
-          shieldShow: ave ? ave.shieldShow : false,
-          shieldScale: ave ? ave.shieldScale : 1,
-          avatarInitialPosition: ave ? ave.avatarInitialPosition : [0, 0],
-          avatarPosition: ave ? ave.avatarPosition : [0, 0],
-          avatarShow: ave ? ave.avatarShow : false,
-          avatarSize: ave ? ave.avatarSize : 350,
-          tableWidth: ave ? ave.tableWidth : 0,
-        };
-      }
-    );
+      // Data
+      const username = p;
+      const role = knowledge[i];
+      const vote = game.ended || imVoting ? -1 : game.votesRound[i];
+      const leader = !game.ended && (game.leader === i || (game.started === false && i === 0));
+      const hammer = game.hammer === i;
+      const killed = game.assassination === i;
+      const card = game.card === i;
+      const afk = !game.clients.includes(username);
+      const onMission = !game.ended && game.picks.includes(i);
+      const isRes = resistance.includes(knowledge[i]);
+      const isPickable = imPicking || imKilling || imCarding;
+      const isMe = game.seat === i;
+
+      const output: AvatarUIProps = {
+        spyUrl,
+        resUrl,
+        username,
+        role,
+        vote,
+        leader,
+        hammer,
+        killed,
+        card,
+        afk,
+        onMission,
+        isRes,
+        isPickable,
+        isMe,
+        table: null,
+        // Animation
+        shieldPosition: ave ? ave.shieldPosition : [0, 0],
+        shieldShow: ave ? ave.shieldShow : false,
+        shieldScale: ave ? ave.shieldScale : 1,
+        avatarInitialPosition: ave ? ave.avatarInitialPosition : [0, 0],
+        avatarPosition: ave ? ave.avatarPosition : [0, 0],
+        avatarShow: ave ? ave.avatarShow : false,
+        avatarSize: ave ? ave.avatarSize : 350,
+        tableWidth: ave ? ave.tableWidth : 0,
+      };
+
+      avatars.push(output);
+    }
 
     this.setState({ avatars }, this.animationCallback);
   }
@@ -314,7 +317,7 @@ class Table extends React.PureComponent<
       this.animationState[1] = 0;
       initAnimation = true;
     }
-    const initialFrame = 600;
+    const initialFrame = 50;
     const animationProgress = animationTime - this.animationStart[1];
 
     if (initAnimation)
@@ -418,7 +421,9 @@ class Table extends React.PureComponent<
       right: [],
     };
 
-    mappedAvatars.forEach((e, i) => {
+    for (let i = 0; i < k; i++) {
+      const e = mappedAvatars[i];
+
       if (k < 4) {
         switch (i) {
           case 0:
@@ -441,32 +446,40 @@ class Table extends React.PureComponent<
             break;
         }
       }
-    });
+    }
 
     return o;
   };
 
+  redirectToLobby = () => {
+    this.setState({
+      redirect: true,
+    });
+  }; 
+
   render() {
-    const mappedAvatars = this.state.avatars.map((a, i) => (
-      <div className="table-seat" ref={this.seatRef[i]} key={'Seat' + i}>
-        <AvatarUI {...a} table={this} ref={this.avatarRef[i]} />
-      </div>
-    ));
+    const avatars = this.state.avatars;
+    const mappedAvatars: JSX.Element[] = [];
+
+    for (const i in avatars) {
+      const a = avatars[i];
+
+      mappedAvatars.push(
+        <div className="table-seat" ref={this.seatRef[i]} key={'Seat' + i}>
+          <AvatarUI {...a} table={this} ref={this.avatarRef[i]} />
+        </div>
+      );
+    }
 
     const sortedAvatars = this.sortAvatars(mappedAvatars);
 
-    return (
+    return this.state.redirect ? <Redirect to="/lobby" /> : (
       <div id="Table" className="tab">
         <div className="table-row table-buttons">
-          {this.state.redirect ? <Redirect to="/lobby" /> : null}
           <Button
             type="button"
             text="Exit"
-            onClick={() => {
-              this.setState({
-                redirect: true,
-              });
-            }}
+            onClick={this.redirectToLobby}
             className=""
           />
           <Button type="button" text="Claim" onClick={undefined} className="" />

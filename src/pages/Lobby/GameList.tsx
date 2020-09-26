@@ -22,10 +22,6 @@ interface AvatarProps {
 
 interface GameLinkProps {
   no: string;
-}
-
-interface GameLinkState {
-  loading: boolean;
   results: (boolean | undefined)[];
   avatars: string[];
   host: string;
@@ -35,95 +31,48 @@ interface GameLinkState {
 }
 
 interface GameListState {
-  gameIds: string[];
+  games: GameLinkProps[];
   showCreate: boolean;
 }
+
 // Declaration
 
 const Avatar = (props: AvatarProps) => {
   return <div className="avatar" style={{ backgroundImage: 'url(' + props.url + ')' }} />;
 };
 
-class GameLink extends React.PureComponent<GameLinkProps, GameLinkState> {
+class GameLink extends React.PureComponent<GameLinkProps> {
   gameStateClass = ['waiting', 'in-progress', 'finished', 'paused', 'frozen'];
   gameState = ['Waiting', 'In Progress', 'Finished', 'Paused', 'Frozen'];
 
-  constructor(props: GameLinkProps) {
-    super(props);
-    this.state = {
-      loading: true,
-      results: [],
-      avatars: [],
-      host: '-',
-      mode: '-',
-      spectators: 0,
-      gameState: 0,
-    };
-    this.triggerRequest = this.triggerRequest.bind(this);
-    this.parseRoomLink = this.parseRoomLink.bind(this);
-  }
-
-  componentDidMount() {
-    socket.on('roomLinkUpdate' + this.props.no, this.triggerRequest);
-    socket.on('roomLinkResponse' + this.props.no, this.parseRoomLink);
-
-    socket.emit('roomLinkJoin', {
-      roomNumber: this.props.no,
-    });
-  }
-
-  componentWillUnmount() {
-    socket.off('roomLinkUpdate' + this.props.no, this.triggerRequest);
-    socket.off('roomLinkResponse' + this.props.no, this.parseRoomLink);
-
-    socket.emit('roomLinkLeave', {
-      roomNumber: this.props.no,
-    });
-  }
-
-  triggerRequest() {
-    socket.emit('roomLinkRequest', {
-      roomNumber: this.props.no,
-    });
-  }
-
-  parseRoomLink(data: GameLinkState) {
-    data = {
-      ...data,
-      loading: false,
-    };
-
-    this.setState(data);
-  }
-
   render() {
-    return this.state.loading ? null : (
+    return (
       <Link className="game" to={'/game/' + this.props.no}>
         <h3>
           <p>ROOM {'#' + this.props.no}</p>
-          {this.state.gameState > -1 ? (
-            <p className={this.gameStateClass[this.state.gameState]}>{this.gameState[this.state.gameState]}</p>
+          {this.props.gameState > -1 ? (
+            <p className={this.gameStateClass[this.props.gameState]}>{this.gameState[this.props.gameState]}</p>
           ) : null}
         </h3>
         <p className="tracker">
-          {this.state.results.map((r, i) => (
+          {this.props.results.map((r, i) => (
             <span key={i} className={'mission ' + r} />
           ))}
         </p>
         <p>
           <span className="title">HOST:</span>
-          {this.state.host}
+          {this.props.host}
         </p>
         <p>
           <span className="title">MODE:</span>
-          {this.state.mode}
+          {this.props.mode}
         </p>
         <p>
           <span className="title">SPECTATORS:</span>
-          {this.state.spectators}
+          {this.props.spectators}
         </p>
         <div className="avatars">
-          {this.state.avatars.map((r, i) => (
+          {this.props.avatars.map((r, i) => (
             <Avatar key={i} url={r} />
           ))}
         </div>
@@ -138,9 +87,10 @@ class GameList extends React.PureComponent<{}, GameListState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      gameIds: [],
+      games: [],
       showCreate: false,
     };
+    this.roomListJoin = this.roomListJoin.bind(this);
     this.triggerRequest = this.triggerRequest.bind(this);
     this.parseRoomList = this.parseRoomList.bind(this);
   }
@@ -149,8 +99,9 @@ class GameList extends React.PureComponent<{}, GameListState> {
     socket.on('roomListUpdate', this.triggerRequest);
     socket.on('roomListResponse', this.parseRoomList);
 
-    socket.emit('roomListJoin');
-    this.triggerRequest();
+    socket.on('roomListJoinBack', this.roomListJoin);
+
+    this.roomListJoin();
   }
 
   componentWillUnmount() {
@@ -160,12 +111,16 @@ class GameList extends React.PureComponent<{}, GameListState> {
     socket.emit('roomListLeave');
   }
 
+  roomListJoin() {
+    socket.emit('roomListJoin');
+  }
+
   triggerRequest() {
     socket.emit('roomListRequest');
   }
 
-  parseRoomList(data: string[]) {
-    this.setState({ gameIds: data });
+  parseRoomList(games: GameLinkProps[]) {
+    this.setState({ games });
   }
 
   render() {
@@ -180,7 +135,7 @@ class GameList extends React.PureComponent<{}, GameListState> {
           </button>
         </div>
         <AvalonScrollbars>
-          {this.state.gameIds.map((id) => <GameLink no={id} key={'Game' + id} />).reverse()}
+          {this.state.games.map((g) => <GameLink {...g} key={'Game' + g.no} />).reverse()}
         </AvalonScrollbars>
         {this.state.showCreate ? (
           <GameForm title="CREATE A NEW GAME" onExit={() => this.setState({ showCreate: false })} createsGame={true} />

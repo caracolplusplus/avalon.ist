@@ -17,9 +17,9 @@ class Actions {
     this.roomName = roomName;
     // Mission Vote Handlers
     this.picks = [];
+    this.picksYetToVote = [];
     this.votesRound = [];
     this.votesMission = [];
-    this.voted = [];
     // Power Positions
     this.leader = leader;
     this.hammer = -1;
@@ -46,13 +46,6 @@ class Actions {
     this.chatClass = chatClass;
   }
 
-  deserialize(input) {
-    for (const x in input) {
-      Reflect.set(this, x, Reflect.get(input, x));
-    }
-    return this;
-  }
-
   // Methods for games
   // This method sets a new round to start
   newRound() {
@@ -60,14 +53,8 @@ class Actions {
 
     const playersInMission = playerMatrix[this.players - 5][this.mission];
 
-    const newPicks = new Array(playersInMission).fill(-1);
-    const newVotesMission = new Array(playersInMission).fill(-1);
-
-    newPicks.fill(-1);
-    newVotesMission.fill(-1);
-
-    this.picks = newPicks;
-    this.votesMission = newVotesMission;
+    this.picks = [];
+    this.votesMission = [];
 
     this.leader = (this.leader + 1) % this.players;
     if (this.round === 0) this.hammer = (this.leader + 4) % this.players;
@@ -111,7 +98,7 @@ class Actions {
     this.missionClass.addPicks(this.mission + 1, this.round + 1, picks);
 
     this.picks = [...picks];
-    this.voted = [...picks];
+    this.picksYetToVote = [...picks];
 
     this.stage = 'VOTING';
 
@@ -182,21 +169,19 @@ class Actions {
     if (this.stage !== 'MISSION') return false;
 
     if (
-      this.voted.includes(index) &&
-      this.votesMission.includes(-1) &&
+      this.picksYetToVote.includes(index) &&
       (vote === 0 || vote === 1) &&
       !this.voteIsInvalid(index, vote)
     ) {
-      this.votesMission.unshift(vote);
-      this.votesMission.pop();
+      this.votesMission.push(vote);
 
-      const i = this.voted.findIndex((p) => p === index);
-      this.voted[i] = -1;
+      const i = this.picksYetToVote.indexOf(index);
+      this.picksYetToVote.splice(i, 1);
     } else {
       return false;
     }
 
-    if (!this.votesMission.includes(-1)) {
+    if (!this.picksYetToVote.length) {
       this.missionClass.missionResults.push(this.missionPasses());
 
       if (this.mission - this.fails > 2) {

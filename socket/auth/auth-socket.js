@@ -1,21 +1,15 @@
 const Parse = require('../parse/parse');
 const Profile = require('../profile/profile');
 const GeneralChat = require('../chat/general-chat');
-const ClientsOnline = require('./clients-online');
+const ClientsOnline = require('./clients-online').clients;
+const SocketsOnline = require('./clients-online').sockets;
 
 module.exports = function (io, socket) {
 	const GEN_CHAT = 'GeneralChat';
 
-	const parseLink = (id) => {
-		const sendJoinMessage = (username) => {
-			if (ClientsOnline[username].sockets.length === 1) {
-				GeneralChat.joinLeaveLobby(username, true);
-				io.to(GEN_CHAT).emit('generalChatUpdate');
-			} else {
-				socket.emit('generalChatUpdate');
-			}
-		};
+	SocketsOnline.push(socket);
 
+	const parseLink = (id) => {
 		const afterJoin = () => {
 			const query = new Parse.Query('_User');
 
@@ -29,8 +23,7 @@ module.exports = function (io, socket) {
 					console.log(username + ' has connected!');
 
 					socket.user = user;
-					socket.emit('gameUpdate');
-					socket.emit('roomListUpdate');
+					socket.emit('roomListJoinBack');
 					socket.emit('roomJoinBack');
 
 					if (!ClientsOnline.hasOwnProperty(username)) {
@@ -44,19 +37,21 @@ module.exports = function (io, socket) {
 						await profile.getFromUser();
 						profile.saveToUser();
 
-						sendJoinMessage(username);
+						GeneralChat.joinLeaveLobby(username, true);
+						io.to(GEN_CHAT).emit('generalChatUpdate');
 					} else if (!ClientsOnline[username].sockets.includes(socket.id)) {
 						ClientsOnline[username].sockets.push(socket.id);
+
 						await ClientsOnline[username].profile.getFromUser();
 						ClientsOnline[username].profile.saveToUser();
 
-						sendJoinMessage(username);
+						socket.emit('generalChatUpdate');
 					}
 
 					clientsOnlineRequest();
 				})
 				.catch((err) => {
-					console.log(err);
+					console.log('A wrong user ID has been sent');
 				});
 		};
 
@@ -80,6 +75,8 @@ module.exports = function (io, socket) {
 				}
 
 				if (ClientsOnline[username].sockets.length === 0) {
+					delete ClientsOnline[username];
+
 					GeneralChat.joinLeaveLobby(username, false);
 					io.to(GEN_CHAT).emit('generalChatUpdate');
 				}
@@ -93,25 +90,33 @@ module.exports = function (io, socket) {
 		socket.leave(GEN_CHAT, afterLeave);
 	};
 
-	const clientsOnlineRequest = () => {
-		var usersOnline = [];
+	const removeFromSocketsOnline = () => {
+		const i = SocketsOnline.indexOf(socket);
+		SocketsOnline.splice(i, 1);
+	}
+
+	const filterProfile = (username, profile) => {
+		return new Promise((resolve) =>
+			resolve({
+				username: username,
+				rating: profile.gameRating,
+				isAdmin: profile.isAdmin,
+				isMod: profile.isMod,
+				isContrib: profile.isContrib,
+			})
+		);
+	};
+
+	const clientsOnlineRequest = async () => {
+		const usersOnline = [];
 
 		for (username in ClientsOnline) {
-			const currentClient = ClientsOnline[username];
-
-			if (currentClient.sockets.length > 0) {
-				const currentProfile = currentClient.profile;
-				usersOnline.push({
-					username: username,
-					rating: currentProfile.gameRating,
-					isAdmin: currentProfile.isAdmin,
-					isMod: currentProfile.isMod,
-					isContrib: currentProfile.isContrib,
-				});
-			}
+			usersOnline.push(filterProfile(username, ClientsOnline[username].profile));
 		}
 
-		io.emit('clientsOnlineResponse', usersOnline);
+		const result = await Promise.all(usersOnline);
+
+		io.emit('clientsOnlineResponse', result);
 	};
 
 	const authStateChange = () => {
@@ -119,10 +124,11 @@ module.exports = function (io, socket) {
 	};
 
 	socket
-		.emit('connectionStarted')
+		.emit('connectionStarted', socket.id)
 		.on('authStateChange', authStateChange)
 		.on('parseLink', parseLink)
 		.on('parseUnlink', parseUnlink)
 		.on('disconnect', parseUnlink)
+		.on('disconnect', removeFromSocketsOnline)
 		.on('clientsOnlineRequest', clientsOnlineRequest);
 };

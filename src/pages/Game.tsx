@@ -1,6 +1,7 @@
 // External
 
 import React, { createRef } from 'react';
+import { Redirect } from 'react-router-dom';
 import { RouteComponentProps } from 'react-router';
 
 // Internal
@@ -48,10 +49,11 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
       tabs: 2,
       scale: 1,
       highlighted: [false, false],
+      notFound: false,
       // Game Pick Info
       picks: [],
+      picksYetToVote: [],
       votesRound: [],
-      voted: [],
       // Game Knowledge
       publicKnowledge: [],
       privateKnowledge: [],
@@ -83,6 +85,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
         card: false,
       },
     };
+    this.gameNotFound = this.gameNotFound.bind(this);
     this.joinRoom = this.joinRoom.bind(this);
     this.triggerRequest = this.triggerRequest.bind(this);
     this.parseGame = this.parseGame.bind(this);
@@ -94,14 +97,11 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
     socket.on('gameChatUpdate', () => this.setHighlight(1, true));
     socket.on('gameUpdate', this.triggerRequest);
     socket.on('gameResponse', this.parseGame);
+    socket.on('gameNotFound', this.gameNotFound);
 
     socket.on('roomJoinBack', this.joinRoom);
 
     this.joinRoom();
-  }
-
-  joinRoom() {
-    socket.emit('roomJoin', this.props.match.params.id);
   }
 
   componentWillUnmount() {
@@ -109,12 +109,21 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
     socket.off('gameChatUpdate', () => this.setHighlight(1, true));
     socket.off('gameUpdate', this.triggerRequest);
     socket.off('gameResponse', this.parseGame);
+    socket.off('gameNotFound', this.gameNotFound);
 
     socket.emit('roomLeave');
   }
 
+  joinRoom() {
+    socket.emit('roomJoin', this.props.match.params.id);
+  }
+
+  gameNotFound() {
+    this.setState({ notFound: true });
+  }
+
   setHighlight = (no: number, value: boolean) => {
-    const tabsSelected = this.tabsRef.map(r => r.current ? r.current.state.tab : -1);
+    const tabsSelected = this.tabsRef.map((r) => (r.current ? r.current.state.tab : -1));
     if (tabsSelected.includes(no)) value = false;
 
     const highlighted = [...this.state.highlighted];
@@ -131,6 +140,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
     data.tabs = this.state.tabs;
     data.scale = this.state.scale;
     data.highlighted = this.state.highlighted;
+    data.notFound = this.state.notFound;
 
     this.setState(data);
   }
@@ -159,7 +169,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
       );
     }
 
-    return (
+    return this.state.notFound ? <Redirect to="/game-not-found" /> : (
       <div id="Background-2" className="dark full">
         <Navbar username="" />
         <AvalonScrollbars>

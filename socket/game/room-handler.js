@@ -126,16 +126,61 @@ class RoomHandler {
     return activeRooms[id];
   }
 
-  // Get room ids
-  getRoomList() {
-    const arr = [];
+  // Get Room List
+  createRoomLink(id, room) {
+    return new Promise((resolve) => {
+      const game = room.game;
+      const actions = room.actions;
+      const missions = room.missions;
+
+      const seat = game.players.indexOf(username);
+      const results = game.started ? missions.missionResults : [];
+      let spectators = 0;
+      let gameState = -1;
+
+      if (!game.started) {
+        gameState = 0;
+      } else if (!actions.frozen) {
+        if (!actions.ended) {
+          gameState = 1;
+        } else {
+          gameState = 2;
+        }
+      } else {
+        if (!actions.ended) {
+          gameState = 3;
+        } else {
+          gameState = 4;
+        }
+      }
+
+      for (const cli in game.clients) {
+        if (!game.players.includes(cli)) spectators++;
+      }
+
+      resolve({
+        no: id,
+        results: [results[0], results[1], results[2], results[3], results[4]],
+        avatars: [],
+        host: game.host,
+        mode: 'UNRATED',
+        spectators: spectators,
+        gameState: gameState,
+      });
+    });
+  }
+
+  async getRoomList() {
+    const roomLinks = [];
 
     for (let id in activeRooms) {
-      arr.push(id);
+      roomLinks.push(this.createRoomLink(id, activeRooms[id]));
     }
 
-    return arr;
+    return await Promise.all(roomLinks);
   }
+
+  // Delete a Room
 
   deleteRoom() {
     const id = this.roomName.toString();

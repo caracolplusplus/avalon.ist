@@ -113,7 +113,7 @@ class App extends React.PureComponent<appProps, appState> {
           <Switch>
             <LoggedOutOnly exact path="/" authenticated={this.state.authenticated} component={Login} />
             <LoggedOutOnly exact path="/signup" authenticated={this.state.authenticated} component={Signup} />
-            <UnverifiedOnly exact path="/verify" authenticated={this.state.authenticated} verified={this.state.verified} component={Verify} />
+            <UnverifiedOnly exact path="/verify" authenticated={this.state.authenticated} verified={false} component={Verify} />
             <LoggedInOnly exact path="/lobby" authenticated={this.state.authenticated} verified={this.state.verified} component={Lobby} />
             <LoggedInOnly path="/profile/:username" authenticated={this.state.authenticated} verified={this.state.verified} component={Profile} />
             <LoggedInOnly path="/game/:id" authenticated={this.state.authenticated} verified={this.state.verified} component={Game} />

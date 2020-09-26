@@ -167,7 +167,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       const host = this.props.players[0];
       const hasSeat = this.props.seat > -1;
 
-      message.text = 'Waiting for ' + host + ' to start the game.';
+      message.text = host ? 'Waiting for ' + host + ' to start the game.' : 'Waiting for a new host.';
       message.buttonOne.text = 'INFO';
       message.buttonOne.className = 'neutral';
       message.buttonOne.onClick = this.showInfo;
@@ -183,8 +183,15 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     message.loading = false;
 
     if (this.props.leader === this.props.seat) {
-      const n = this.props.picks.length;
-      const notEnoughPicks = this.props.picks.length !== this.props.selected.length;
+      const n = [
+        [2, 3, 2, 3, 3],
+        [2, 3, 4, 3, 4],
+        [2, 3, 3, 4, 4],
+        [3, 4, 4, 5, 5],
+        [3, 4, 4, 5, 5],
+        [3, 4, 4, 5, 5],
+      ][this.props.players.length - 5][this.props.mission];
+      const notEnoughPicks = n !== this.props.selected.length;
 
       message.showButtonTwo = false;
       message.text = "It's your turn to select a team. Choose " + n + ' players.';
@@ -229,7 +236,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   onMission(message: Message) {
     message.loading = false;
 
-    if (this.props.seat > -1 && this.props.voted.includes(this.props.seat)) {
+    if (this.props.seat > -1 && this.props.picksYetToVote.includes(this.props.seat)) {
       message.text = 'Its your turn to vote. Choose the fate of this mission.';
       message.buttonOne.text = 'SUCCEED';
       message.buttonOne.className = 'confirm';
@@ -238,7 +245,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       message.buttonTwo.className = this.props.imRes ? 'disabled' : 'cancel';
       message.buttonTwo.onClick = this.props.imRes ? undefined : () => this.voteForSuccess(0);
     } else {
-      const remaining = this.props.players.filter((p, i) => this.props.voted.includes(i)).toString();
+      const remaining = this.props.players.filter((p, i) => this.props.picksYetToVote.includes(i)).toString();
 
       message.showButtonOne = false;
       message.showButtonTwo = false;
