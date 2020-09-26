@@ -1,7 +1,33 @@
-Parse.Cloud.define("setUsersAcls", async (request) => {
-	let currentUser = request.user;
-	currentUser.setACL(new Parse.ACL(currentUser));
-	await currentUser.save(null, { useMasterKey: true });
+const SocketsOnline = require('../socket/auth/clients-online').sockets;
 
-	return "Saved ACL for " + currentUser.get("username");
+Parse.Cloud.define('authStateChange', async (request) => {
+	const currentUser = request.user;
+	const currentId = request.params.id;
+
+	let currentSocket = undefined;
+
+	const l = SocketsOnline.length;
+	for (let i = l - 1; i > -1; i--) {
+		const s = SocketsOnline[i];
+
+		if (s.id === currentId) {
+			currentSocket = s;
+			break;
+		}
+	}
+
+	if (currentSocket) {
+		if (currentUser) {
+			const currentAcl = new Parse.ACL(currentUser);
+
+			currentUser.setACL(currentAcl);
+			await currentUser.save(null, { useMasterKey: true });
+
+			currentSocket.user = currentUser;
+		}
+		
+		currentSocket.emit('connectionLinked');
+	}
+
+	return null;
 });

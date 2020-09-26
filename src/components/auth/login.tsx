@@ -8,7 +8,6 @@ export async function login(
 ) {
 	try {
 		await Parse.User.logIn(username, password);
-		Parse.Cloud.run("setUsersAcls", {});
 		socket.emit("authStateChange");
 	} catch (error) {
 		onerror(error.message);

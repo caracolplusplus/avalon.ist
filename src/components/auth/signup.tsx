@@ -9,7 +9,6 @@ export async function signup(email: string, password: string, username: string, 
 
 	try {
 		await user.signUp();
-		Parse.Cloud.run('setUsersAcls', {});
 		socket.emit('authStateChange');
 	} catch (error) {
 		onerror(error.message);

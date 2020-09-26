@@ -270,7 +270,7 @@ class Chat {
 	afterCard(player, carded, isSpy) {
 		const content = '{player} has used Lady of the Lake on {carded}!';
 		const content2 = '{carded} is {result}!';
-		const result = isSpy ? 'Spy' : 'Resistance';
+		const result = isSpy ? 'a Spy' : 'a member of The Resistance';
 
 		this.messages.push(
 			{

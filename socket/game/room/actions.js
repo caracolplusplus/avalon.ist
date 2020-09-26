@@ -252,10 +252,14 @@ class Actions {
     this.newRound();
 
     if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[carded])) {
+      this.gameClass.privateKnowledge[players[index]][carded] = 
+        this.gameClass.privateKnowledge[players[index]][carded] === 'Merlin?' ? 'Morgana' : 'Spy';
       this.chatClass.afterCard(players[index], players[carded], true);
       return true;
     }
 
+    this.gameClass.privateKnowledge[players[index]][carded] = 
+      this.gameClass.privateKnowledge[players[index]][carded] === 'Merlin?' ? 'Merlin' : 'Resistance';
     this.chatClass.afterCard(players[index], players[carded], false);
     return true;
   }

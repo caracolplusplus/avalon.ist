@@ -9,50 +9,42 @@ module.exports = function (io, socket) {
 
 	SocketsOnline.push(socket);
 
-	const parseLink = (id) => {
-		const afterJoin = () => {
-			const query = new Parse.Query('_User');
+	const parseLink = () => {
+		const afterJoin = async () => {
+			const user = socket.user;
 
-			query
-				.get(id, {
-					useMasterKey: true,
-				})
-				.then(async (user) => {
-					const username = user.get('username');
+			if (user) {
+				const username = user.get('username');
 
-					console.log(username + ' has connected!');
+				console.log(username + ' has connected!');
 
-					socket.user = user;
-					socket.emit('roomListJoinBack');
-					socket.emit('roomJoinBack');
+				socket.emit('roomListJoinBack');
+				socket.emit('roomJoinBack');
 
-					if (!ClientsOnline.hasOwnProperty(username)) {
-						const profile = new Profile(username);
+				if (!ClientsOnline.hasOwnProperty(username)) {
+					const profile = new Profile(username);
 
-						ClientsOnline[username] = {
-							profile: profile,
-							sockets: [socket.id],
-						};
+					ClientsOnline[username] = {
+						profile: profile,
+						sockets: [socket.id],
+					};
 
-						await profile.getFromUser();
-						profile.saveToUser();
+					await profile.getFromUser();
+					profile.saveToUser();
 
-						GeneralChat.joinLeaveLobby(username, true);
-						io.to(GEN_CHAT).emit('generalChatUpdate');
-					} else if (!ClientsOnline[username].sockets.includes(socket.id)) {
-						ClientsOnline[username].sockets.push(socket.id);
+					GeneralChat.joinLeaveLobby(username, true);
+					io.to(GEN_CHAT).emit('generalChatUpdate');
+				} else if (!ClientsOnline[username].sockets.includes(socket.id)) {
+					ClientsOnline[username].sockets.push(socket.id);
 
-						await ClientsOnline[username].profile.getFromUser();
-						ClientsOnline[username].profile.saveToUser();
+					await ClientsOnline[username].profile.getFromUser();
+					ClientsOnline[username].profile.saveToUser();
 
-						socket.emit('generalChatUpdate');
-					}
+					socket.emit('generalChatUpdate');
+				}
 
-					clientsOnlineRequest();
-				})
-				.catch((err) => {
-					console.log('A wrong user ID has been sent');
-				});
+				clientsOnlineRequest();
+			}
 		};
 
 		socket.join(GEN_CHAT, afterJoin);
@@ -93,7 +85,7 @@ module.exports = function (io, socket) {
 	const removeFromSocketsOnline = () => {
 		const i = SocketsOnline.indexOf(socket);
 		SocketsOnline.splice(i, 1);
-	}
+	};
 
 	const filterProfile = (username, profile) => {
 		return new Promise((resolve) =>
@@ -120,7 +112,7 @@ module.exports = function (io, socket) {
 	};
 
 	const authStateChange = () => {
-		socket.emit('connectionStarted');
+		socket.emit('connectionStarted', socket.id);
 	};
 
 	socket

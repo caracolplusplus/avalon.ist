@@ -59,10 +59,11 @@ class App extends React.PureComponent<appProps, appState> {
     this.updateDimensions = this.updateDimensions.bind(this);
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
 
-    socket.on('connectionStarted', this.updateState);
+    socket.on('connectionStarted', this.authStateChange);
+    socket.on('connectionLinked', this.updateState);
   }
 
   componentWillUnmount() {
@@ -71,8 +72,16 @@ class App extends React.PureComponent<appProps, appState> {
     socket.disconnect();
   }
 
+  authStateChange(id: string) {
+    Parse.Cloud.run('authStateChange', { id });
+
+    console.log('what');
+  }
+
   updateState() {
     const currentUser = Parse.User.current();
+
+    console.log('hello?');
 
     if (currentUser) {
       const username = currentUser.getUsername();
@@ -88,7 +97,7 @@ class App extends React.PureComponent<appProps, appState> {
 
       console.log(currentUser);
 
-      socket.emit('parseLink', currentUser.id);
+      socket.emit('parseLink');
     } else {
       this.props.dispatch(setOnline(false));
 
