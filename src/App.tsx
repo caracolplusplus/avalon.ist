@@ -74,14 +74,10 @@ class App extends React.PureComponent<appProps, appState> {
 
   authStateChange(id: string) {
     Parse.Cloud.run('authStateChange', { id });
-
-    console.log('what');
   }
 
   updateState() {
     const currentUser = Parse.User.current();
-
-    console.log('hello?');
 
     if (currentUser) {
       const username = currentUser.getUsername();
@@ -94,8 +90,6 @@ class App extends React.PureComponent<appProps, appState> {
         verified: true,
         loading: false,
       });
-
-      console.log(currentUser);
 
       socket.emit('parseLink');
     } else {

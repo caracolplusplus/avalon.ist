@@ -39,7 +39,7 @@ interface GameState {
   missionVotes: number[][][];
   missionTeams: number[][][];
   // Room Number
-  code: number;
+  code: string;
   // Game Settings
   playerMax: number;
   roleSettings: {

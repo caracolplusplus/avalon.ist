@@ -26,8 +26,9 @@ interface ChatSnapshot {
 }
 
 interface ChatProps {
-  code?: number;
+  code?: string;
   players: string[];
+  stage?: string;
 }
 
 interface ChatState {
@@ -58,7 +59,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   componentDidMount() {
     if (this.props.code === undefined) {
       this.startChat();
-    } else if (this.props.code > -1) {
+    } else if (this.props.code !== '-1') {
       this.toGameChat();
       this.startChat();
     }
@@ -69,7 +70,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   }
 
   componentDidUpdate(prevProps: ChatProps) {
-    if (prevProps.code !== this.props.code && this.props.code !== undefined && this.props.code > -1) {
+    if (prevProps.code !== this.props.code && this.props.code !== undefined && this.props.code !== '-1') {
       this.toGameChat();
       this.startChat();
     }
@@ -154,7 +155,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   render() {
     return (
       <div id="Chat" className="row">
-        {this.state.messages.length && (this.props.code === undefined || this.props.code > -1) ? (
+        {this.state.messages.length && (this.props.code === undefined || this.props.code !== '-1') ? (
           <AvalonScrollbars ref={this.scrollbars} key={'real'}>
             {this.state.messages.map((s, i) => (
               <this.chatMessage {...s} key={'message' + i} />
@@ -163,9 +164,11 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         ) : (
           <AvalonScrollbars ref={this.scrollbars} key={'fake'} />
         )}
-        <form className="message-input" onSubmit={this.handleSubmit}>
-          <ChatInput onChange={this.handleChange} value={this.state.content} />
-        </form>
+        {this.props.stage === 'REPLAY' ? null : (
+          <form className="message-input" onSubmit={this.handleSubmit}>
+            <ChatInput onChange={this.handleChange} value={this.state.content} />
+          </form>
+        )}
       </div>
     );
   }

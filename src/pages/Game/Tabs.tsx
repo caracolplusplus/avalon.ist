@@ -62,8 +62,8 @@ class Tabs extends React.PureComponent<TabContainerProps, TabContainerState> {
 
   render() {
     const routes = [
-      <Chat players={[]} key="genChat" />,
-      <Chat code={this.props.game.code} players={this.props.game.players} key="gameChat" />,
+      <Chat players={[]} stage={'NONE'} key="genChat" />,
+      <Chat code={this.props.game.code} players={this.props.game.players} stage={this.props.game.stage} key="gameChat" />,
       <Notes notes="" dispatch={useDispatch} />,
       <VoteHistory game={this.props.game} />,
       <PlayerList code={this.props.game.code} players={this.props.game.players} clients={this.props.game.clients} />,

@@ -44,7 +44,18 @@ module.exports = function (io, socket) {
 
 				socket.emit('gameChatResponse' + socket.room, result);
 			} catch (err) {
-				console.log(err);
+				const query = new Parse.Query('Game');
+				query.equalTo('code', socket.room);
+
+				query
+					.first({
+						useMasterKey: true,
+					})
+					.then((game) => {
+						if (!game) console.log(err);
+
+						socket.emit('gameChatResponse' + socket.room, game.get('chat'));
+					});
 			}
 		}
 	};

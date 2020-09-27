@@ -33,10 +33,11 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
     super(props);
     this.state = {
       // Player Info
-      username: 'Oken',
+      seat: -1,
+      username: 'NONAME',
+      // Players In Table
       players: [],
       clients: [],
-      seat: -1,
       imRes: false,
       // Game State Info
       started: undefined,
@@ -72,7 +73,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
       missionTeams: [[], [], [], [], []],
       missionLeader: [],
       // Room Number
-      code: -1,
+      code: '-1',
       // Game Settings
       playerMax: 0,
       roleSettings: {

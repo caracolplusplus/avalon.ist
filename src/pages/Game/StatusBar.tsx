@@ -348,6 +348,17 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     return message;
   }
 
+  onReplay(message: Message) {
+    const outcome = [0, 2, 3].includes(this.props.cause ? this.props.cause : 0) ? 'The Spies win.' : 'The Resistance wins.';
+
+    message.loading = false;
+    message.showButtonOne = false;
+    message.showButtonTwo = false;
+    message.text = 'Replay of game ' + this.props.code + '. ' + outcome;
+
+    return message;
+  }
+
   hideForm = () => this.setState({ showForm: FormType.None });
 
   message: Message = {
@@ -400,6 +411,10 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       this.message = this.onFreeze(this.message);
     }
 
+    if (this.props.stage === 'REPLAY') {
+      this.message = this.onReplay(this.message); 
+    }
+
     let form = null;
     if (!this.props.started && this.state.showForm !== FormType.None) {
       if (this.state.showForm === FormType.Kick && this.props.seat === 0) {
@@ -437,7 +452,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       }
     }
 
-    return this.props.code < 0 ? null : (
+    return this.props.code === '-1' ? null : (
       <>
         <p className="message">{this.message.text}</p>{' '}
         {this.message.showButtonOne ? (

@@ -19,7 +19,10 @@ module.exports = function (io, socket) {
 	};
 
 	const emissionProtocol = (updateRoomList, updateChat, roomHandler, startEndProtocol) => {
-		if (startEndProtocol) io.to(GEN_CHAT).emit('generalChatUpdate');
+		if (startEndProtocol) {
+			io.to(GEN_CHAT).emit('generalChatUpdate');
+			roomHandler.gameEndProtocol();
+		}
 
 		io.to(GAME_NAME + socket.room).emit('gameUpdate');
 
@@ -30,7 +33,7 @@ module.exports = function (io, socket) {
 	const afterLeave = () => {
 		const user = socket.user;
 
-		if (user) {
+		if (user && socket.room !== undefined) {
 			const username = user.get('username');
 			const handler = new RoomHandler(socket.room);
 
@@ -85,7 +88,6 @@ module.exports = function (io, socket) {
 
 	const roomJoin = (r) => {
 		const initialUpdate = () => {
-			socket.emit('gameUpdate');
 			socket.join(GAME_CHAT + r, afterJoin);
 		};
 
@@ -115,69 +117,28 @@ module.exports = function (io, socket) {
 					} else if (!game.clients[username].sockets.includes(socket.id)) {
 						game.clients[username].sockets.push(socket.id);
 
+						socket.emit('gameUpdate');
 						socket.emit('gameChatUpdate');
 					}
 
 					socket.on('disconnect', afterLeave);
 				} catch (err) {
-					console.log(err);
-					socket.emit('gameNotFound');
+					handler.retrieveFromDatabase(username).then((result) => {
+						if (result) {
+							socket.room = r;
+
+							socket.emit('gameResponse', result.client);
+							socket.emit('gameChatResponse' + socket.room, result.chat);
+						} else {
+							console.log(err);
+							socket.emit('gameNotFound');
+						}
+					});
 				}
 			}
 		};
 
 		socket.join(GAME_NAME + r, initialUpdate);
-	};
-
-	const voteHistoryParsing = (missions, actions) => {
-		return new Promise((resolve) => {
-			// Past Mission Info
-			let results = [];
-			let cardHolders = [];
-			const missionLeader = [[], [], [], [], []];
-			const missionVotes = [[], [], [], [], []];
-			const missionTeams = [[], [], [], [], []];
-
-			if (Object.keys(missions).length > 0) {
-				results = missions.missionResults;
-				cardHolders = missions.cardHolders;
-
-				for (let i = 0; i < 5; i++) {
-					const i_miss = i + 1;
-
-					const currentLeader = missions['m' + i_miss + 'leader'];
-					missionLeader[i] = currentLeader.length > 0 ? currentLeader : [];
-
-					for (let j = 0; j < 5; j++) {
-						const j_miss = j + 1;
-
-						const currentVotes = missions['m' + i_miss + j_miss + 'votes'];
-						const currentTeam = missions['m' + i_miss + j_miss + 'picks'];
-
-						if (currentVotes.length > 0) {
-							missionVotes[i][j] = currentVotes;
-							missionTeams[i][j] = currentTeam;
-						} else if (currentTeam.length > 0) {
-							missionTeams[i][j] = currentTeam;
-							missionVotes[i][j] = [];
-						}
-					}
-				}
-
-				if (actions.stage === 'PICKING') {
-					missionVotes[actions.mission][actions.round] = [];
-					missionTeams[actions.mission][actions.round] = [];
-				}
-			}
-
-			resolve({
-				results,
-				cardHolders,
-				missionLeader,
-				missionVotes,
-				missionTeams,
-			});
-		});
 	};
 
 	const gameRequest = async () => {
@@ -188,51 +149,7 @@ module.exports = function (io, socket) {
 			const handler = new RoomHandler(socket.room);
 
 			try {
-				const room = handler.getRoom();
-				const game = room.game;
-				const actions = room.actions;
-				const missions = room.missions;
-
-				const seat = game.players.indexOf(username);
-				const history = voteHistoryParsing(missions, actions);
-
-				let response = {
-					// Player Info
-					seat: seat,
-					username: username,
-					players: game.players,
-					clients: Object.keys(game.clients),
-					imRes: ['Resistance', 'Percival'].includes(game.roles[seat]),
-					// Don't include Merlin, this is for disallowing fail button on missions
-					// Game State Info
-					started: game.started,
-					ended: actions.ended,
-					frozen: actions.frozen,
-					stage: actions.stage,
-					cause: actions.cause,
-					assassination: actions.assassination,
-					// Game Pick Info
-					picks: actions.picks,
-					picksYetToVote: actions.picksYetToVote,
-					votesRound: actions.votesRound,
-					// Game Knowledge
-					publicKnowledge: game.publicKnowledge,
-					privateKnowledge: game.privateKnowledge[username] ? game.privateKnowledge[username] : [],
-					// Game Power Positions
-					leader: actions.leader,
-					hammer: actions.hammer,
-					card: actions.card,
-					assassin: game.roles[seat] === 'Assassin',
-					// Game Mission Info
-					mission: actions.mission,
-					round: actions.round,
-					// Room Number
-					code: game.roomName,
-					// Game Settings
-					roleSettings: game.roleSettings,
-					playerMax: game.maxPlayers,
-					...(await history),
-				};
+				const response = await handler.createRoomClient(username);
 
 				// Send to client
 				socket.emit('gameResponse', response);

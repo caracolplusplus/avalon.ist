@@ -32,7 +32,7 @@ interface PlayerTabState {
 }
 
 interface PlayerListProps {
-  code?: number;
+  code?: string;
   players: string[];
   clients: string[];
 }
@@ -194,7 +194,7 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
         <h3>
           <p>PLAYER LIST</p>
         </h3>
-        {this.state.loaded && (this.props.code === undefined || this.props.code > -1) ? (
+        {this.state.loaded && (this.props.code === undefined || this.props.code !== '-1') ? (
           <AvalonScrollbars>
             {this.props.code !== undefined ? (
               <>
