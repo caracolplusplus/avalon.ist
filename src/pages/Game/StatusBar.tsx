@@ -349,12 +349,10 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   }
 
   onReplay(message: Message) {
-    const outcome = [0, 2, 3].includes(this.props.cause ? this.props.cause : 0) ? 'The Spies win.' : 'The Resistance wins.';
-
     message.loading = false;
     message.showButtonOne = false;
     message.showButtonTwo = false;
-    message.text = 'Replay of game ' + this.props.code + '. ' + outcome;
+    message.text = 'Game Replay #' + this.props.code + '. ';
 
     return message;
   }

@@ -162,8 +162,8 @@ class Table extends React.PureComponent<
       this.avatarRef.push(createRef<AvatarUI>());
 
       // Avatars
-      const spyUrl = 'https://cdn.discordapp.com/attachments/612734001916018707/736446594936733786/base-spy.png';
-      const resUrl = 'https://cdn.discordapp.com/attachments/688596182758326313/732067339746541628/base-res.png';
+      const spyUrl = 'https://i.ibb.co/sJcthnM/base-spy.png';
+      const resUrl = 'https://i.ibb.co/M8RXC95/base-res.png';
 
       // Data
       const username = p;

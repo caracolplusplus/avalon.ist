@@ -9,12 +9,16 @@ const playerMatrix = [
   [3, 4, 4, 5, 5],
 ];
 
+// Holds Game Current State
 class Actions {
-  constructor(roomName, players, hasAssassin, hasCard, gameClass, missionClass, chatClass) {
+  constructor(roomname, game, missions, chat) {
+    const hasAssassin = game.roleSettings.assassin && game.roleSettings.merlin;
+    const hasCard = game.roleSettings.card;
+
+    const players = game.players.length;
     const leader = Math.floor(Math.random() * players);
 
-    // Holds Game Current State
-    this.roomName = roomName;
+    this.roomName = roomname;
     // Mission Vote Handlers
     this.picks = [];
     this.picksYetToVote = [];
@@ -23,6 +27,7 @@ class Actions {
     // Power Positions
     this.leader = leader;
     this.hammer = -1;
+    this.hammerDistance = 4;
     this.assassination = -1;
     this.card = hasCard ? (leader + players) % players : -1;
     // Mission Count
@@ -41,9 +46,9 @@ class Actions {
     this.hasAssassin = hasAssassin;
     this.hasCard = hasCard;
     // Other Game Components
-    this.gameClass = gameClass;
-    this.missionClass = missionClass;
-    this.chatClass = chatClass;
+    this.game = game;
+    this.missions = missions;
+    this.chat = chat;
   }
 
   // Methods for games
@@ -57,18 +62,18 @@ class Actions {
     this.votesMission = [];
 
     this.leader = (this.leader + 1) % this.players;
-    if (this.round === 0) this.hammer = (this.leader + 4) % this.players;
+    if (this.round === 0) this.hammer = (this.leader + this.hammerDistance) % this.players;
 
-    this.missionClass.addLeader(this.mission + 1, this.leader);
+    this.missions.addLeader(this.mission, this.leader);
 
     this.stage = 'PICKING';
 
-    this.chatClass.onPick(this.gameClass.players[this.leader]);
+    this.chat.onPick(this.game.players[this.leader]);
   }
 
   // Get pick names
   pickNames() {
-    return this.gameClass.players
+    return this.game.players
       .filter((p, i) => this.picks.includes(i))
       .toString()
       .replace(/,/g, ', ');
@@ -95,7 +100,7 @@ class Actions {
     )
       return false;
 
-    this.missionClass.addPicks(this.mission + 1, this.round + 1, picks);
+    this.missions.addPicks(this.mission, this.round, picks);
 
     this.picks = [...picks];
     this.picksYetToVote = [...picks];
@@ -104,7 +109,7 @@ class Actions {
 
     this.votesRound = new Array(this.players).fill(-1);
 
-    this.chatClass.afterPick(this.mission + 1, this.round + 1, this.pickNames());
+    this.chat.afterPick(this.mission + 1, this.round + 1, this.pickNames());
 
     return true;
   }
@@ -123,7 +128,7 @@ class Actions {
       let result = this.missionVoteChecker();
 
       if (result) {
-        this.chatClass.afterPassing(this.pickNames());
+        this.chat.afterPassing(this.pickNames());
         this.stage = 'MISSION';
       } else {
         this.newRound();
@@ -135,7 +140,7 @@ class Actions {
 
   // This method counts to see if there are enough votes to pass a mission
   missionVoteChecker() {
-    this.missionClass.addVotes(this.mission + 1, this.round + 1, this.votesRound);
+    this.missions.addVotes(this.mission, this.round, this.votesRound);
     let yes = 0;
 
     this.votesRound.forEach((v) => {
@@ -143,13 +148,13 @@ class Actions {
     });
 
     if (yes * 2 > this.players) {
-      this.chatClass.afterVote(this.mission + 1, this.round + 1, true);
+      this.chat.afterVote(this.mission + 1, this.round + 1, true);
       return true;
     }
 
-    this.chatClass.afterVote(this.mission + 1, this.round + 1, false);
+    this.chat.afterVote(this.mission + 1, this.round + 1, false);
 
-    if (this.round === 4) {
+    if (this.round === this.hammerDistance) {
       this.gameEnd(3);
     }
 
@@ -160,7 +165,7 @@ class Actions {
 
   // This method checks resistance vote validity
   voteIsInvalid(index, vote) {
-    const res = ['Resistance', 'Percival'].includes(this.gameClass.roles[index]);
+    const res = ['Resistance', 'Percival'].includes(this.game.roles[index]);
     return res && vote === 0;
   }
 
@@ -168,11 +173,7 @@ class Actions {
   voteForSuccess(index, vote) {
     if (this.stage !== 'MISSION') return false;
 
-    if (
-      this.picksYetToVote.includes(index) &&
-      (vote === 0 || vote === 1) &&
-      !this.voteIsInvalid(index, vote)
-    ) {
+    if (this.picksYetToVote.includes(index) && (vote === 0 || vote === 1) && !this.voteIsInvalid(index, vote)) {
       this.votesMission.push(vote);
 
       const i = this.picksYetToVote.indexOf(index);
@@ -182,17 +183,17 @@ class Actions {
     }
 
     if (!this.picksYetToVote.length) {
-      this.missionClass.missionResults.push(this.missionPasses());
+      this.missions.missionResults.push(this.missionPasses());
 
       if (this.mission - this.fails > 2) {
         if (this.hasAssassin) {
-          this.chatClass.waitingForShot(this.gameClass.players[this.gameClass.roles.indexOf('Assassin')]);
+          this.chat.waitingForShot(this.game.players[this.game.roles.indexOf('Assassin')]);
           this.stage = 'ASSASSINATION';
         } else {
           this.gameEnd(4);
         }
       } else if (this.hasCard && this.mission > 1 && !this.ended) {
-        this.chatClass.waitingForCard(this.gameClass.players[this.card]);
+        this.chat.waitingForCard(this.game.players[this.card]);
         this.stage = 'CARDING';
       } else {
         this.newRound();
@@ -215,14 +216,14 @@ class Actions {
     });
 
     if (fails === 0) {
-      this.chatClass.afterMission(this.mission, fails, true);
+      this.chat.afterMission(this.mission, fails, true);
       return true;
     } else if (fails === 1 && this.mission === 4 && this.players > 6) {
-      this.chatClass.afterMission(this.mission, fails, true);
+      this.chat.afterMission(this.mission, fails, true);
       return true;
     }
 
-    this.chatClass.afterMission(this.mission, fails, false);
+    this.chat.afterMission(this.mission, fails, false);
 
     if (this.fails === 2) {
       this.gameEnd(2);
@@ -234,46 +235,46 @@ class Actions {
 
   // Method for identifying roles with Lady of the Lake
   cardPlayer(index, carded) {
-    const players = this.gameClass.players;
-    const roles = this.gameClass.roles;
+    const players = this.game.players;
+    const roles = this.game.roles;
 
     if (
       this.stage !== 'CARDING' ||
-      this.missionClass.cardHolders.includes(carded) ||
+      this.missions.cardHolders.includes(carded) ||
       index !== this.card ||
       index === carded ||
       !roles[carded]
     )
       return false;
 
-    this.missionClass.cardHolders.push(index);
+    this.missions.cardHolders.push(index);
 
     this.card = carded;
     this.newRound();
 
     if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[carded])) {
-      this.gameClass.privateKnowledge[players[index]][carded] = 
-        this.gameClass.privateKnowledge[players[index]][carded] === 'Merlin?' ? 'Morgana' : 'Spy';
-      this.chatClass.afterCard(players[index], players[carded], true);
+      this.game.privateKnowledge[players[index]][carded] =
+        this.game.privateKnowledge[players[index]][carded] === 'Merlin?' ? 'Morgana' : 'Spy';
+      this.chat.afterCard(players[index], players[carded], true);
       return true;
     }
 
-    this.gameClass.privateKnowledge[players[index]][carded] = 
-      this.gameClass.privateKnowledge[players[index]][carded] === 'Merlin?' ? 'Merlin' : 'Resistance';
-    this.chatClass.afterCard(players[index], players[carded], false);
+    this.game.privateKnowledge[players[index]][carded] =
+      this.game.privateKnowledge[players[index]][carded] === 'Merlin?' ? 'Merlin' : 'Resistance';
+    this.chat.afterCard(players[index], players[carded], false);
     return true;
   }
 
   // This method checks to see who is shot
   // Returns true if the shot has happened, returns false if its not
   shootPlayer(index, shot) {
-    const players = this.gameClass.players;
-    const roles = this.gameClass.roles;
+    const players = this.game.players;
+    const roles = this.game.roles;
 
     if (this.stage !== 'ASSASSINATION' || !roles[shot] || roles[index] !== 'Assassin') return false;
 
     if (roles[shot] === 'Merlin') {
-      this.chatClass.afterShot(players[shot]);
+      this.chat.afterShot(players[shot]);
       this.assassination = shot;
       this.gameEnd(0);
       return true;
@@ -281,7 +282,7 @@ class Actions {
       return false;
     }
 
-    this.chatClass.afterShot(players[shot]);
+    this.chat.afterShot(players[shot]);
     this.assassination = shot;
     this.gameEnd(1);
     return true;
@@ -292,13 +293,13 @@ class Actions {
     this.ended = true;
     this.cause = ending;
     this.stage = '';
-    this.gameClass.publicKnowledge = this.gameClass.roles;
+    this.game.publicKnowledge = this.game.roles;
 
     this.winner = [1, 4].includes(ending) ? 1 : 0;
 
     GeneralChat.roomFinished(this.roomName, this.winner);
 
-    this.chatClass.onEnd(this.roomName, this.cause, this.winner);
+    this.chat.onEnd(this.roomName, this.cause, this.winner);
 
     // 0: "Merlin was shot! The Spies Win"
     // 1: "Merlin was not shot! The Resistance wins"

@@ -1,13 +1,12 @@
 class Game {
-  constructor(roomname, players, roles, maxPlayers) {
+  constructor(maxPlayers) {
     // Creates a Game Object
-    this.roomName = roomname;
     this.host = '';
     // Players and Roles
-    this.players = players;
+    this.players = [];
     this.clients = {};
     this.kickedPlayers = new Set();
-    this.roles = roles;
+    this.roles = [];
     this.roleSettings = {
       // Res
       merlin: true,

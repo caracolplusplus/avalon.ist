@@ -1,5 +1,4 @@
 const Parse = require('../parse/parse');
-const Profile = require('../profile/profile');
 const RoomHandler = require('./room-handler');
 const GeneralChat = require('../chat/general-chat');
 
@@ -123,12 +122,12 @@ module.exports = function (io, socket) {
 
 					socket.on('disconnect', afterLeave);
 				} catch (err) {
-					handler.retrieveFromDatabase(username).then((result) => {
-						if (result) {
+					handler.retrieveFromDatabase(username).then((client) => {
+						if (client) {
 							socket.room = r;
 
-							socket.emit('gameResponse', result.client);
-							socket.emit('gameChatResponse' + socket.room, result.chat);
+							socket.emit('gameResponse', client);
+							socket.emit('gameChatUpdate');
 						} else {
 							console.log(err);
 							socket.emit('gameNotFound');

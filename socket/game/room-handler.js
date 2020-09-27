@@ -1,4 +1,5 @@
 const Parse = require('../parse/parse');
+const Profile = require('../profile/profile');
 const GameClass = require('./room/game');
 const ActionsClass = require('./room/actions');
 const MissionsClass = require('./room/missions');
@@ -18,6 +19,9 @@ const replayAttributes = [
   'assassination',
   // Knowledge
   'publicKnowledge',
+  // Power Posts
+  'hammer',
+  'card',
   // Mission
   'mission',
   'round',
@@ -80,8 +84,6 @@ class RoomClient {
     const actions = room.actions;
     const missions = room.missions;
 
-    const history = this.createVoteHistory(missions, actions);
-
     this.seat = game.players.indexOf(username);
     this.username = username;
 
@@ -116,60 +118,21 @@ class RoomClient {
     this.roleSettings = game.roleSettings;
     this.playerMax = game.maxPlayers;
 
-    await history;
+    this.results = missions.missionResults;
+    this.cardHolders = missions.cardHolders;
+    this.missionLeader = missions.missionLeader;
+    this.missionVotes = missions.missionVotes;
+    this.missionTeams = missions.missionPicks;
+
+    if (actions.stage === 'PICKING') {
+      this.missionVotes = [...this.missionVotes];
+      this.missionTeams = [...this.missionTeams];
+
+      this.missionVotes[actions.mission][actions.round] = [];
+      this.missionTeams[actions.mission][actions.round] = [];
+    }
 
     return this;
-  }
-
-  createVoteHistory(missions, actions) {
-    return new Promise((resolve) => {
-      // Past Mission Info
-      let results = [];
-      let cardHolders = [];
-      const missionLeader = [[], [], [], [], []];
-      const missionVotes = [[], [], [], [], []];
-      const missionTeams = [[], [], [], [], []];
-
-      if (Object.keys(missions).length > 0) {
-        results = missions.missionResults;
-        cardHolders = missions.cardHolders;
-
-        for (let i = 0; i < 5; i++) {
-          const i_miss = i + 1;
-
-          const currentLeader = missions['m' + i_miss + 'leader'];
-          missionLeader[i] = currentLeader.length > 0 ? currentLeader : [];
-
-          for (let j = 0; j < 5; j++) {
-            const j_miss = j + 1;
-
-            const currentVotes = missions['m' + i_miss + j_miss + 'votes'];
-            const currentTeam = missions['m' + i_miss + j_miss + 'picks'];
-
-            if (currentVotes.length > 0) {
-              missionVotes[i][j] = currentVotes;
-              missionTeams[i][j] = currentTeam;
-            } else if (currentTeam.length > 0) {
-              missionTeams[i][j] = currentTeam;
-              missionVotes[i][j] = [];
-            }
-          }
-        }
-
-        if (actions.stage === 'PICKING') {
-          missionVotes[actions.mission][actions.round] = [];
-          missionTeams[actions.mission][actions.round] = [];
-        }
-      }
-
-      this.results = results;
-      this.cardHolders = cardHolders;
-      this.missionLeader = missionLeader;
-      this.missionVotes = missionVotes;
-      this.missionTeams = missionTeams;
-
-      resolve(true);
-    });
   }
 }
 
@@ -180,7 +143,7 @@ class RoomHandler {
 
   // Method to create a game
   createGame(maxPlayers) {
-    const game = new GameClass(this.roomName, [], [], maxPlayers);
+    const game = new GameClass(maxPlayers);
     const chat = new ChatClass();
 
     return this.setRoom(game, {}, {}, chat);
@@ -207,16 +170,11 @@ class RoomHandler {
 
     game.getRoleKnowledge();
 
-    // Get Game Variables
-    let playerCount = game.players.length;
-    let hasAssassin = game.roleSettings.assassin && game.roleSettings.merlin;
-    let hasCard = game.roleSettings.card;
-
     // New Missions
-    const missions = new MissionsClass(this.roomName);
+    const missions = new MissionsClass();
 
     // New Actions
-    const actions = new ActionsClass(this.roomName, playerCount, hasAssassin, hasCard, game, missions, chat);
+    const actions = new ActionsClass(this.roomName, game, missions, chat);
     actions.newRound();
 
     // Chat
@@ -366,10 +324,10 @@ class RoomHandler {
   }
 
   // Protocol for when games end
-  // Should save to database
-  // Should change player's stats and stuff
+  // Should save to database and update players' stats
   gameEndProtocol() {
     this.saveToDatabase();
+    this.updatePlayerStats();
   }
 
   async saveToDatabase() {
@@ -391,6 +349,43 @@ class RoomHandler {
     }
   }
 
+  async updatePlayerStats() {
+    try {
+      const room = this.getRoom();
+      const game = room.game;
+      const actions = room.actions;
+
+      const players = game.players;
+      const roles = game.roles;
+      const promises = [];
+
+      for (const x in players) {
+        const p = players[x];
+
+        promises.push(new Profile(p).getFromUser());
+      }
+
+      const profiles = await Promise.all(promises);
+
+      for (const y in profiles) {
+        const pr = profiles[y];
+
+        pr.addGameToProfile({
+          winner: actions.winner,
+          cause: actions.cause,
+          role: roles[y].toLowerCase(),
+          res: ['Resistance', 'Percival', 'Merlin'].includes(roles[y]) ? 1 : 0,
+          code: this.roomName,
+        });
+
+        pr.saveToUser();
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  // Retrieve a room from the database
   async retrieveFromDatabase(username) {
     const query = new Parse.Query('Game');
     query.equalTo('code', this.roomName);
@@ -409,13 +404,12 @@ class RoomHandler {
         }
 
         gc.stage = 'REPLAY';
+
         gc.username = username;
+        gc.clients = gc.players;
         gc.code = this.roomName;
 
-        return {
-          client: gc,
-          chat: game.get('chat'),
-        };
+        return gc;
       })
       .catch((err) => {
         console.log(err);

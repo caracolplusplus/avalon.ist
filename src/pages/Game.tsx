@@ -112,7 +112,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
     socket.off('gameResponse', this.parseGame);
     socket.off('gameNotFound', this.gameNotFound);
 
-    socket.emit('roomLeave');
+    if (this.state.stage !== 'REPLAY' || this.state.code !== '-1') socket.emit('roomLeave');
   }
 
   joinRoom() {

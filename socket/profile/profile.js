@@ -4,17 +4,17 @@ class Profile {
     this.user = id;
     // Personality
     this.avatarClassic = {
-      spy: 'to_define',
-      res: 'to_define',
+      spy: 'https://i.ibb.co/cNkZrBK/base-spy-c.png',
+      res: 'https://i.ibb.co/Xzpqy65/base-res-c.png',
     };
     this.avatarGummy = {
-      spy: 'to_define',
-      res: 'to_define',
+      spy: 'https://i.ibb.co/sJcthnM/base-spy.png',
+      res: 'https://i.ibb.co/M8RXC95/base-res.png',
     };
     this.bio = 'This is my account on Avalon.ist.';
     this.nationality = 'United Nations';
     // Game
-    this.games = 0;
+    this.games = [0, 0];
     this.gameStats = {
       merlin: [0, 0],
       percival: [0, 0],
@@ -45,12 +45,17 @@ class Profile {
     const query = new Parse.Query('_User');
     query.equalTo('username', this.user);
 
-    await query
+    return await query
       .first({
         useMasterKey: true,
       })
       .then((user) => {
-        if (user) this.writeUser(user);
+        if (user) {
+          this.writeUser(user);
+          return this;
+        }
+
+        return undefined;
       })
       .catch((err) => {
         console.log(err);
@@ -71,12 +76,17 @@ class Profile {
     const query = new Parse.Query('_User');
     query.equalTo('username', this.user);
 
-    await query
+    return await query
       .first({
         useMasterKey: true,
       })
       .then((user) => {
-        if (user) this.readUser(user);
+        if (user) {
+          this.readUser(user);
+          return this;
+        }
+
+        return undefined;
       })
       .catch((err) => {
         console.log(err);
@@ -99,6 +109,24 @@ class Profile {
           this[x] = got;
         }
       }
+    }
+  }
+
+  addGameToProfile(data) {
+    this.gameHistory.push(data.code);
+    
+    this.games[1]++;
+    this.gameStats[data.role][1]++;
+
+    if (data.winner === data.res) {
+      this.games[0]++;
+      this.gameStats[data.role][0]++;
+    }
+
+    if (data.cause < 2 && data.role === 'assassin') {
+      this.gameShots[1]++;
+
+      if (data.cause < 1) this.gameShots[0]++;
     }
   }
 }
