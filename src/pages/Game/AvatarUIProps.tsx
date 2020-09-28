@@ -1,3 +1,10 @@
+// External
+
+import { Dispatch } from 'redux';
+
+
+// Internal
+
 import Table from './Table';
 
 interface AvatarUIProps {
@@ -24,6 +31,7 @@ interface AvatarUIProps {
   avatarPosition: [number, number];
   avatarShow: boolean;
   avatarSize: number;
+  dispatch: Dispatch;
 }
 
 type AvatarUIPropsType = AvatarUIProps;

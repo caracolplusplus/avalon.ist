@@ -4,7 +4,7 @@ import { combineReducers } from "redux";
 
 // Types
 
-import { ADD_NOTES, SET_USERNAME, SET_ONLINE, SET_GAME_TAB_HIGHLIGHT, ActionTypes } from "./actions";
+import { ADD_NOTES, SET_USERNAME, SET_ONLINE, SET_GAME_TAB_HIGHLIGHT, UPDATE_CHAT_HIGHLIGHT, ActionTypes } from "./actions";
 
 // Reducers
 
@@ -45,11 +45,23 @@ function highlighted(state: boolean[] = [false, false, false, false, false], act
 	}
 }
 
+function chatHighlights(state: { [key: string]: string } = {}, action: ActionTypes): { [key: string]: string } {
+	switch (action.type) {
+		case UPDATE_CHAT_HIGHLIGHT:
+			const newState = { ...state };
+			newState[action.player] = action.color;
+			return newState;
+		default:
+			return state;
+	}
+}
+
 export const rootReducer = combineReducers({
 	notes,
 	username,
 	online,
-	highlighted
+	highlighted,
+	chatHighlights
 });
 
 export type rootType = ReturnType<typeof rootReducer>;
