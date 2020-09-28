@@ -7,6 +7,18 @@
         .username {
           color: white;
         }
+        &.negative {
+          color: Globals.$spy-dark;
+          .content {
+            font-weight: 600;
+          }
+        }
+        &.positive {
+          color: Globals.$res-dark;
+          .content {
+            font-weight: 600;
+          }
+        }
       }
       .chat-input {
         background: rgba(255, 255, 255, 0.03);
@@ -22,6 +34,18 @@
       .message {
         .username {
           color: Globals.$gray-1;
+        }
+        &.negative {
+          color: Globals.$spy-light;
+          .content {
+            font-weight: 600;
+          }
+        }
+        &.positive {
+          color: Globals.$res-light;
+          .content {
+            font-weight: 600;
+          }
         }
       }
       .chat-input {
@@ -62,23 +86,10 @@
           word-break: break-word;
         }
       }
-
       &.highlighted {
         color: Globals.$gold-1;
         .content {
           font-weight: 500;
-        }
-      }
-      &.negative {
-        color: Globals.$mission-red;
-        .content {
-          font-weight: 600;
-        }
-      }
-      &.positive {
-        color: Globals.$mission-blue;
-        .content {
-          font-weight: 600;
         }
       }
       &.spectator {

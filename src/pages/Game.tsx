@@ -171,7 +171,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
     }
 
     return this.state.notFound ? <Redirect to="/game-not-found" /> : (
-      <div id="Background-2" className="dark full">
+      <div id="Background-2" className="light full">
         <Navbar username="" />
         <AvalonScrollbars>
           <div id="Game" style={{ minHeight: this.initialHeight + 'px' }} className="section">

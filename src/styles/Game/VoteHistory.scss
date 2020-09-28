@@ -20,7 +20,7 @@
         background-color: #847062;
       }
       .vh-vote.false {
-        background-color: #6a493a;
+        background-color: #7d4736;
       }
       .vh-vote.true {
         background-color: #6f774e;
@@ -52,10 +52,10 @@
         background-color: #c9bdb6;
       }
       .vh-vote.false {
-        background-color: #c09782;
+        background-color: #c99382;
       }
       .vh-vote.true {
-        background-color: #a4b55f;
+        background-color: #9ba474;
       }
       .leader {
         border: 2px solid #2a2523;
@@ -82,7 +82,7 @@
         height: $svg-size;
         width: $svg-size;
         margin-left: 50%;
-        transform: translate(-50%, 0%);
+        transform: translate(-50%, 0);
       }
       th {
         text-align: center !important;
@@ -113,6 +113,7 @@
           height: 1.7em;
           padding: 10px;
           text-align: center;
+
         }
         .vh-vote:last-of-type {
           margin-right: 0;

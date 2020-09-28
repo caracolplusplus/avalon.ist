@@ -16,6 +16,17 @@
           color: white;
         }
       }
+      .tracker {
+        .mission {
+          background-color: Globals.$mission-gray;
+        }
+        .mission.true {
+          background-color: Globals.$res-dark;
+        }
+        .mission.false {
+          background-color: Globals.$spy-dark;
+        }
+      }
     }
   }
   .light {
@@ -31,6 +42,17 @@
         background: rgba(255, 255, 255, 0.2);
         p {
           color: Globals.$gray-1;
+        }
+      }
+      .tracker {
+        .mission {
+          background-color: Globals.$mission-gray;
+        }
+        .mission.true {
+          background-color: Globals.$res-light;
+        }
+        .mission.false {
+          background-color: Globals.$spy-light;
         }
       }
     }
@@ -110,18 +132,15 @@
           float: right;
           padding-left: $base-font-size * 0.5;
           padding-right: $base-font-size * 0.3;
-          clip-path: polygon(
-            0 0,
-            100% 0,
-            100% 100%,
-            0 100%,
-            $base-font-size * 0.25 50%
-          );
+          clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, $base-font-size * 0.25 50%);
         }
-        .waiting, .in-progress {
+        .waiting,
+        .in-progress {
           background-color: Globals.$green-1;
         }
-        .finished, .paused, .frozen {
+        .finished,
+        .paused,
+        .frozen {
           background-color: Globals.$spy-dark;
         }
       }
@@ -135,16 +154,9 @@
         .mission {
           border-radius: $base-font-size * 2.5;
           display: inline-block;
-          background-color: Globals.$mission-gray;
           margin-right: $base-font-size * 0.05;
           height: $base-font-size * 0.3;
           width: $base-font-size * 0.3;
-        }
-        .mission.true {
-          background-color: Globals.$mission-blue;
-        }
-        .mission.false {
-          background-color: Globals.$mission-red;
         }
       }
       p {

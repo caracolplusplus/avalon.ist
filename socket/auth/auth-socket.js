@@ -112,11 +112,11 @@ module.exports = function (io, socket) {
 	};
 
 	const authStateChange = () => {
-		socket.emit('connectionStarted', socket.id);
+		socket.emit('connectionStarted');
 	};
 
 	socket
-		.emit('connectionStarted', socket.id)
+		.emit('connectionStarted')
 		.on('authStateChange', authStateChange)
 		.on('parseLink', parseLink)
 		.on('parseUnlink', parseUnlink)

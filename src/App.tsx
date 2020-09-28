@@ -72,8 +72,8 @@ class App extends React.PureComponent<appProps, appState> {
     socket.disconnect();
   }
 
-  authStateChange(id: string) {
-    Parse.Cloud.run('authStateChange', { id });
+  authStateChange() {
+    Parse.Cloud.run('authStateChange', { id: socket.id });
   }
 
   updateState() {
