@@ -3,6 +3,7 @@
 import React, { createRef } from 'react';
 import { Redirect } from 'react-router-dom';
 import { RouteComponentProps } from 'react-router';
+import { useDispatch } from 'react-redux';
 
 // Internal
 
@@ -176,7 +177,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
         <AvalonScrollbars>
           <div id="Game" style={{ minHeight: this.initialHeight + 'px' }} className="section">
             <div className="column section" style={{ flex: '0 0 ' + (40 + this.state.scale * 20) + '%' }}>
-              <Table ref={this.tableRef} game={this.state} />
+              <Table ref={this.tableRef} game={this.state} dispatch={useDispatch}/>
             </div>
             <div className="column section">{tabs}</div>
           </div>

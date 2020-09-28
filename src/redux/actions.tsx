@@ -4,6 +4,7 @@ export const ADD_NOTES = "ADD_NOTES";
 export const SET_USERNAME = "SET_USERNAME";
 export const SET_ONLINE = "SET_ONLINE";
 export const SET_GAME_TAB_HIGHLIGHT = "SET_HIGHLIGHT";
+export const UPDATE_CHAT_HIGHLIGHT = "UPDATE_CHAT_HIGHLIGHT";
 
 interface AddNotesAction {
   type: typeof ADD_NOTES;
@@ -26,7 +27,13 @@ interface SetOnlineAction {
   value: boolean;
 }
 
-export type ActionTypes = AddNotesAction | SetGameTabHighlight | SetUsernameAction | SetOnlineAction;
+interface UpdateChatHighlight {
+  type: typeof UPDATE_CHAT_HIGHLIGHT;
+  player: string;
+  color: string;
+}
+
+export type ActionTypes = AddNotesAction | SetGameTabHighlight | SetUsernameAction | SetOnlineAction | UpdateChatHighlight;
 
 // Actions
 
@@ -56,5 +63,13 @@ export function setOnline(value: boolean): ActionTypes {
   return {
     type: SET_ONLINE,
     value,
+  };
+}
+
+export function updateChatHighlight(player: string, color: string) {
+  return {
+    type: UPDATE_CHAT_HIGHLIGHT,
+    player: player,
+    color: color,
   };
 }

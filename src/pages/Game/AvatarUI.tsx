@@ -4,6 +4,8 @@ import React, { createRef } from 'react';
 import { faStamp, faPen, faPaintBrush, faCheck, faGavel, faAddressCard } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SketchPicker, ColorResult, RGBColor } from 'react-color';
+import { connect } from "react-redux";
+import { updateChatHighlight } from "../../redux/actions";
 
 // Import Internal Components
 
@@ -16,11 +18,12 @@ import '../../styles/Game/AvatarUI.scss';
 
 // Class Definition
 
-class AvatarUI extends React.PureComponent<
+export class AvatarUI extends React.PureComponent<
   AvatarUIProps,
   {
     currentBackground: number;
     currentHighlight: RGBColor;
+    highlightChat: boolean,
     renderPicker: boolean;
     renderButtons: boolean;
     avatarSelected: boolean;
@@ -39,11 +42,13 @@ class AvatarUI extends React.PureComponent<
         b: 0,
         a: 100,
       },
+      highlightChat: false,
       renderPicker: false,
       renderButtons: false,
       avatarSelected: false,
     };
     this.handleHighlight = this.handleHighlight.bind(this);
+    this.toggleHighlightChat = this.toggleHighlightChat.bind(this);
   }
 
   componentDidUpdate(prevProps: AvatarUIProps) {
@@ -54,8 +59,31 @@ class AvatarUI extends React.PureComponent<
     }
   }
 
+  toggleHighlightChat() {
+    const enable = !this.state.highlightChat;
+    this.setState({highlightChat: enable});
+    if (enable) {
+      this.highlightChat();
+    } else {
+      this.props.dispatch(updateChatHighlight(this.props.username, 'transparent'));
+    }
+  }
+
+  toHtmlHex(color: RGBColor) {
+    const toHex = (num: number) => { return num.toString(16).padStart(2, '0'); }
+    return '#' + toHex(color.r) + toHex(color.g) + toHex(color.b);
+  }
+
+  highlightChat() {
+    const color = this.state.currentHighlight;
+    this.props.dispatch(updateChatHighlight(this.props.username, this.toHtmlHex(color)));
+  }
+
   handleHighlight(color: ColorResult) {
     this.setState({ currentHighlight: color.rgb });
+    if (this.state.highlightChat) {
+      this.highlightChat();
+    }
   }
 
   renderButtonsTrue = () => this.setState({ renderButtons: true });
@@ -152,9 +180,9 @@ class AvatarUI extends React.PureComponent<
                   <span className="tooltip-text">Mark this player's allegiance</span>
                   <FontAwesomeIcon icon={faStamp} />
                 </button>
-                <button className="tooltip">
+                <button onClick={this.toggleHighlightChat} className="tooltip">
                   <span className="tooltip-text">Highlight this player's chat messages</span>
-                  <FontAwesomeIcon icon={faPen} />
+                  <FontAwesomeIcon style={{backgroundColor: this.state.highlightChat ? this.toHtmlHex(this.state.currentHighlight) : ''}} icon={faPen} />
                 </button>
                 <button onClick={this.showColorPicker} className="tooltip">
                   <span className="tooltip-text">Change this player's highlight color</span>
@@ -201,4 +229,4 @@ class AvatarUI extends React.PureComponent<
   }
 }
 
-export default AvatarUI;
+export default connect(null, null, null, { forwardRef: true })(AvatarUI);

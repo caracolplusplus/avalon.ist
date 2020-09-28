@@ -2,13 +2,14 @@
 
 import React, { createRef, RefObject } from 'react';
 import { Redirect } from 'react-router-dom';
+import { Dispatch } from 'redux';
 
 // Internal
 
 import AvatarUIProps from './AvatarUIProps';
 import StatusBar from './StatusBar';
 import GameState from './GameState';
-import AvatarUI from './AvatarUI';
+import ConnectedAUI, { AvatarUI } from './AvatarUI';
 import Button from '../../components/utils/Button';
 
 // Styles
@@ -19,6 +20,7 @@ import '../../styles/Game/Table.scss';
 
 interface TableProps {
   game: GameState;
+  dispatch: Dispatch;
 }
 
 class MissionTracker extends React.PureComponent<{ count: number; results: boolean[]; round: number }, {}> {
@@ -204,6 +206,7 @@ class Table extends React.PureComponent<
         avatarShow: ave ? ave.avatarShow : false,
         avatarSize: ave ? ave.avatarSize : 350,
         tableWidth: ave ? ave.tableWidth : 0,
+        dispatch: this.props.dispatch,
       };
 
       avatars.push(output);
@@ -455,7 +458,7 @@ class Table extends React.PureComponent<
     this.setState({
       redirect: true,
     });
-  }; 
+  };
 
   render() {
     const avatars = this.state.avatars;
@@ -466,7 +469,7 @@ class Table extends React.PureComponent<
 
       mappedAvatars.push(
         <div className="table-seat" ref={this.seatRef[i]} key={'Seat' + i}>
-          <AvatarUI {...a} table={this} ref={this.avatarRef[i]} />
+          <ConnectedAUI {...a} table={this} ref={this.avatarRef[i]} />
         </div>
       );
     }
