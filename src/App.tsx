@@ -62,6 +62,13 @@ class App extends React.PureComponent<appProps, appState> {
   componentDidMount() {
     window.addEventListener('resize', this.updateDimensions);
 
+    socket.on('showModerationLogs', (data: any) => {
+      const logstring = JSON.stringify(data);
+      alert(logstring);
+
+      console.log(data);
+    })
+
     socket.on('connectionStarted', this.authStateChange);
     socket.on('connectionLinked', this.updateState);
   }

@@ -6,7 +6,6 @@ ADD . /parse
 WORKDIR /parse
 
 RUN yarn install
-RUN yarn build
 
 EXPOSE 1337
 VOLUME /parse/cloud               

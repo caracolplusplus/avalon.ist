@@ -96,6 +96,8 @@ module.exports = function (io, socket) {
 					default:
 						io.to(GEN_CHAT).emit('generalChatUpdate');
 						break;
+					case 'LOGS':
+						socket.emit('showModerationLogs', command.logs);
 					case 'NONE':
 						socket.emit('generalChatUpdate');
 						break;
@@ -137,6 +139,8 @@ module.exports = function (io, socket) {
 						default:
 							io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
 							break;
+						case 'LOGS':
+							socket.emit('showModerationLogs', command.logs);
 						case 'NONE':
 							socket.emit('gameChatUpdate');
 							break;
