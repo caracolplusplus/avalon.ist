@@ -80,7 +80,7 @@ class App extends React.PureComponent<appProps, appState> {
   }
 
   authStateChange() {
-    Parse.Cloud.run('authStateChange', { id: socket.id }).catch((err) => {
+    Parse.Cloud.run('authStateChange').catch((err) => {
       Parse.User.logOut().then(
         () => {
           window.location.reload();

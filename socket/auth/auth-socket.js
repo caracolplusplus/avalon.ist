@@ -8,7 +8,6 @@ module.exports = function (io, socket) {
 	const GEN_CHAT = 'GeneralChat';
 
 	SocketsOnline.push(socket);
-	console.log(socket.handshake.address, socket.conn.remoteAddress, socket.handshake.headers['x-forwarded-for'], socket.request.client._peername.address);
 
 	const parseLink = () => {
 		const afterJoin = async () => {
