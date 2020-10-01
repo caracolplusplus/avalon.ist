@@ -1,15 +1,9 @@
 // External
 
-import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { library } from "@fortawesome/fontawesome-svg-core";
-import {
-  faHome,
-  faLock,
-  faUser,
-  faEnvelope,
-  faPaperPlane,
-} from "@fortawesome/free-solid-svg-icons";
+import React, { ChangeEvent } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faHome, faLock, faUser, faEnvelope, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faLock, faUser, faEnvelope, faPaperPlane);
 
@@ -31,7 +25,7 @@ interface ChatInputProps {
 export const Input = (props: InputProps) => {
   return (
     <div className="input">
-      <FontAwesomeIcon icon={["fas", props.icon]} />
+      <FontAwesomeIcon icon={['fas', props.icon]} />
       <input
         name={props.name}
         placeholder={props.placeholder}
@@ -43,17 +37,28 @@ export const Input = (props: InputProps) => {
   );
 };
 
-export const ChatInput = (props: ChatInputProps) => {
-  return (
-    <div className="chat-input">
-      <input
-        onChange={props.onChange}
-        placeholder="Enter your message here."
-        value={props.value}
-      ></input>
-      <button type="submit">
-        <FontAwesomeIcon icon={["fas", "paper-plane"]} />
-      </button>
-    </div>
-  );
-};
+export class ChatInput extends React.PureComponent<{}, { content: string }> {
+  constructor(props: {}) {
+    super(props);
+    this.state = {
+      content: '',
+    };
+  }
+
+  changeInput =  (event: ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      content: event.target.value,
+    });
+  }
+
+  render() {
+    return (
+      <div className="chat-input">
+        <input onChange={this.changeInput} placeholder="Enter your message here." value={this.state.content}></input>
+        <button type="submit">
+          <FontAwesomeIcon icon={['fas', 'paper-plane']} />
+        </button>
+      </div>
+    );
+  }
+}

@@ -8,6 +8,7 @@ module.exports = function (io, socket) {
 	const GEN_CHAT = 'GeneralChat';
 
 	SocketsOnline.push(socket);
+	console.log(socket.request.connection.remoteAddress);
 
 	const parseLink = () => {
 		const afterJoin = async () => {
@@ -55,27 +56,31 @@ module.exports = function (io, socket) {
 			const user = socket.user;
 
 			if (user) {
-				const username = user.get('username');
+				try {
+					const username = user.get('username');
 
-				console.log(username + ' has disconnected!');
+					console.log(username + ' has disconnected!');
 
-				if (!ClientsOnline.hasOwnProperty(username)) {
-					console.log('Invalid Request');
-				} else {
-					const socketIndex = ClientsOnline[username].sockets.indexOf(socket.id);
-					ClientsOnline[username].sockets.splice(socketIndex, 1);
+					if (!ClientsOnline.hasOwnProperty(username)) {
+						throw new Error('No online client has been found.');
+					} else {
+						const socketIndex = ClientsOnline[username].sockets.indexOf(socket.id);
+						ClientsOnline[username].sockets.splice(socketIndex, 1);
+					}
+
+					if (ClientsOnline[username].sockets.length === 0) {
+						delete ClientsOnline[username];
+
+						GeneralChat.joinLeaveLobby(username, false);
+						io.to(GEN_CHAT).emit('generalChatUpdate');
+					}
+
+					clientsOnlineRequest();
+
+					socket.user = null;
+				} catch (err) {
+					console.log(err);
 				}
-
-				if (ClientsOnline[username].sockets.length === 0) {
-					delete ClientsOnline[username];
-
-					GeneralChat.joinLeaveLobby(username, false);
-					io.to(GEN_CHAT).emit('generalChatUpdate');
-				}
-
-				clientsOnlineRequest();
-
-				socket.user = null;
 			}
 		};
 

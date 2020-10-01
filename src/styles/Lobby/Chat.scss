@@ -92,6 +92,23 @@
           font-weight: 500;
         }
       }
+      &.command {
+        color: Globals.$green-1;
+        .content {
+          font-weight: 500;
+        }
+      }
+      &.client.command {
+        font-style: oblique;
+        .username {
+          color: Globals.$green-1;
+          font-weight: 600;
+        }
+      }
+      &.quote {
+        opacity: 0.5;
+        font-style: oblique;
+      }
       &.spectator {
         opacity: 0.5;
       }

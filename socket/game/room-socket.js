@@ -172,7 +172,7 @@ module.exports = function (io, socket) {
 			const games = main.get('games');
 			main.increment('games');
 
-			const handler = new RoomHandler(games);
+			const handler = new RoomHandler(games.toString());
 			const room = handler.createGame(data.maxPlayers);
 			const game = room.game;
 

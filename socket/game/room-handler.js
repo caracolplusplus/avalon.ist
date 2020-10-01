@@ -144,7 +144,7 @@ class RoomHandler {
   // Method to create a game
   createGame(maxPlayers) {
     const game = new GameClass(maxPlayers);
-    const chat = new ChatClass();
+    const chat = new ChatClass(100000000000000);
 
     return this.setRoom(game, {}, {}, chat);
   }
@@ -220,7 +220,7 @@ class RoomHandler {
 
   // Get room from room container
   getRoom() {
-    const id = this.roomName.toString();
+    const id = this.roomName;
 
     if (!activeRooms.hasOwnProperty(id)) {
       throw new Error('Room requested does not exist: ' + id);
@@ -231,7 +231,7 @@ class RoomHandler {
 
   // Set room to room container
   setRoom(game, actions, missions, chat) {
-    const id = this.roomName.toString();
+    const id = this.roomName;
 
     if (!activeRooms.hasOwnProperty(id)) {
       activeRooms[id] = {

@@ -12,6 +12,8 @@
         FROM_SERVER 1
         FROM_CLIENT 0
     Character
+    	QUOTE 4
+    	PRIVATE 3
         HIGHLIGHT 2
         POSITIVE 1
         NEUTRAL 0
@@ -19,11 +21,431 @@
     Timestamp
         MILLISECONDS
 } */
+const ClientsOnline = require('../auth/clients-online').clients;
+const Profile = require('../profile/profile');
+
 const AVALONIST_NAME = 'AvalonistServerMessage';
 
 class Chat {
-	constructor() {
+	constructor(limit) {
 		this.messages = [];
+		this.limit = limit;
+	}
+
+	// Delete messages past the message limit
+
+	deletePastMessageLimit() {
+		while (this.messages.length > this.limit) this.messages.shift();
+	}
+
+	// User Commands
+
+	async parseCommand(username, content) {
+		const splitContent = content.split(' ');
+
+		const hammer = ClientsOnline[username].profile;
+
+		switch (splitContent[0]) {
+			case '/help':
+				const helpMessages = [
+					'List of Commands:',
+					"/ss {player} {hours} - Enacts a temporary suspension on the given player's account.",
+					"/unss {player} - Lifts a temporary suspension from the given player's account.",
+					"/ban {player} - Enacts a permanent ban on the given player's account.",
+					"/unban {player} - Lifts a permanent ban from the given player's account.",
+					"/banip {player} - Enacts a permanent ban on the given player's account and its correspondent IPs.",
+					'/unbanip {ip} - Lifts a permanent ban on the given IP adress.',
+					'/dm {player} {message} - Sends a direct message to the given player. Direct messages are moderated.',
+					'/roll {sides?} - Rolls a die. Provide a number to change the number of sides.',
+					'/flip - Flips a coin.',
+					'/clear - Clears the chat.',
+				];
+				for (const x in helpMessages) {
+					this.messages.push({
+						public: false,
+						content: helpMessages[x],
+						author: AVALONIST_NAME,
+						to: [username],
+						type: 1,
+						character: 3,
+						timestamp: Date.now(),
+						id: Date.now(),
+					});
+				}
+				break;
+			case '/ss':
+				if (hammer.isMod || hammer.isAdmin) {
+					const profile = await new Profile(splitContent[1]).getFromUser();
+
+					if (profile && !profile.isAdmin && !profile.isMod) {
+						await profile.closeAllOpenSessions();
+
+						let hours = parseFloat(splitContent[2]);
+						hours = isNaN(hours) ? 1 : hours;
+						profile.suspensionDate = Date.now() + hours * 3600000;
+						profile.saveToUser();
+
+						this.messages.push({
+							public: false,
+							content: profile.user + ' has been suspended for ' + hours + ' hours.',
+							author: AVALONIST_NAME,
+							to: [username],
+							type: 1,
+							character: 3,
+							timestamp: Date.now(),
+							id: Date.now(),
+						});
+
+						const target = ClientsOnline[profile.user];
+
+						return {
+							type: 'BAN',
+							sockets: target ? target.sockets : [],
+						};
+					} else {
+						this.messages.push({
+							public: false,
+							content: 'No user exists with the provided username, or the user holds a power position.',
+							author: AVALONIST_NAME,
+							to: [username],
+							type: 1,
+							character: 3,
+							timestamp: Date.now(),
+							id: Date.now(),
+						});
+						break;
+					}
+				} else {
+					this.messages.push({
+						public: false,
+						content: 'You must be a member of the moderation team to perform this command.',
+						author: AVALONIST_NAME,
+						to: [username],
+						type: 1,
+						character: 3,
+						timestamp: Date.now(),
+						id: Date.now(),
+					});
+					break;
+				}
+			case '/unss':
+				if (hammer.isMod || hammer.isAdmin) {
+					const profile = await new Profile(splitContent[1]).getFromUser();
+
+					if (profile && !profile.isAdmin && !profile.isMod) {
+						profile.suspensionDate = 0;
+						profile.saveToUser();
+
+						this.messages.push({
+							public: false,
+							content: profile.user + ' has been unsuspended.',
+							author: AVALONIST_NAME,
+							to: [username],
+							type: 1,
+							character: 3,
+							timestamp: Date.now(),
+							id: Date.now(),
+						});
+
+						const target = ClientsOnline[profile.user];
+
+						return {
+							type: 'BAN',
+							sockets: target ? target.sockets : [],
+						};
+					} else {
+						this.messages.push({
+							public: false,
+							content: 'No user exists with the provided username, or the user holds a power position.',
+							author: AVALONIST_NAME,
+							to: [username],
+							type: 1,
+							character: 3,
+							timestamp: Date.now(),
+							id: Date.now(),
+						});
+						break;
+					}
+				} else {
+					this.messages.push({
+						public: false,
+						content: 'You must be a member of the moderation team to perform this command.',
+						author: AVALONIST_NAME,
+						to: [username],
+						type: 1,
+						character: 3,
+						timestamp: Date.now(),
+						id: Date.now(),
+					});
+					break;
+				}
+			case '/ban':
+				if (hammer.isMod || hammer.isAdmin) {
+					const profile = await new Profile(splitContent[1]).getFromUser();
+
+					if (profile && !profile.isAdmin && !profile.isMod) {
+						await profile.closeAllOpenSessions();
+
+						profile.isBanned = true;
+						profile.saveToUser();
+
+						this.messages.push({
+							public: false,
+							content: profile.user + ' has been banned.',
+							author: AVALONIST_NAME,
+							to: [username],
+							type: 1,
+							character: 3,
+							timestamp: Date.now(),
+							id: Date.now(),
+						});
+
+						const target = ClientsOnline[profile.user];
+
+						return {
+							type: 'BAN',
+							sockets: target ? target.sockets : [],
+						};
+					} else {
+						this.messages.push({
+							public: false,
+							content: 'No user exists with the provided username, or the user holds a power position.',
+							author: AVALONIST_NAME,
+							to: [username],
+							type: 1,
+							character: 3,
+							timestamp: Date.now(),
+							id: Date.now(),
+						});
+						break;
+					}
+				} else {
+					this.messages.push({
+						public: false,
+						content: 'You must be a member of the moderation team to perform this command.',
+						author: AVALONIST_NAME,
+						to: [username],
+						type: 1,
+						character: 3,
+						timestamp: Date.now(),
+						id: Date.now(),
+					});
+					break;
+				}
+			case '/unban':
+				if (hammer.isMod || hammer.isAdmin) {
+					const profile = await new Profile(splitContent[1]).getFromUser();
+
+					if (profile && !profile.isAdmin && !profile.isMod) {
+						profile.isBanned = false;
+						profile.saveToUser();
+
+						this.messages.push({
+							public: false,
+							content: profile.user + ' has been unbanned.',
+							author: AVALONIST_NAME,
+							to: [username],
+							type: 1,
+							character: 3,
+							timestamp: Date.now(),
+							id: Date.now(),
+						});
+
+						const target = ClientsOnline[profile.user];
+
+						return {
+							type: 'BAN',
+							sockets: target ? target.sockets : [],
+						};
+					} else {
+						this.messages.push({
+							public: false,
+							content: 'No user exists with the provided username, or the user holds a power position.',
+							author: AVALONIST_NAME,
+							to: [username],
+							type: 1,
+							character: 3,
+							timestamp: Date.now(),
+							id: Date.now(),
+						});
+						break;
+					}
+				} else {
+					this.messages.push({
+						public: false,
+						content: 'You must be a member of the moderation team to perform this command.',
+						author: AVALONIST_NAME,
+						to: [username],
+						type: 1,
+						character: 3,
+						timestamp: Date.now(),
+						id: Date.now(),
+					});
+					break;
+				}
+			case '/dm':
+				let dmContent = content.replace(splitContent[1], '');
+				dmContent = dmContent.slice(dmContent.indexOf(splitContent[2]));
+				this.messages.push({
+					public: false,
+					content: dmContent,
+					author: username,
+					to: [splitContent[1]],
+					type: 0,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+				return {
+					type: 'DM',
+				};
+			case '/roll':
+				let die = parseInt(splitContent[1]);
+				die = isNaN(die) ? 6 : die;
+				const roll = Math.floor(Math.random() * die) + 1;
+				this.messages.push({
+					public: false,
+					content: 'You have rolled a ' + roll + '!',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+				break;
+			case '/flip':
+				let coin = Math.random() > 0.5 ? 'heads!' : 'tails!';
+				this.messages.push({
+					public: false,
+					content: 'You flipped ' + coin,
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+				break;
+			case '/poggers':
+				this.messages.push({
+					public: false,
+					content: 'Babe, your avalon skills are poggers...',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+				break;
+			case '/bremus':
+				this.messages.push({
+					public: false,
+					content:
+						'My name is Maximus Bremus Menus Meridius, Commander of the Armies of the North, General of the Felix Legions, loyal servant to the true emperor, Marcus Aurelius. Father to a murdered son, husband to a murdered husband. And I will have my vengeance, in this life or the next.',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+				break;
+			case '/pingerus':
+				this.messages.push({
+					public: false,
+					content:
+						'My name is Maximus Imbaus Pingerus Meridius, Commander of the Armies of the North, General of the Felix Legions, loyal servant to the true emperor, Marcus Aurelius. Father to a murdered son, husband to a murdered wife. And I will have my vengeance, in this life or the next.',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+				break;
+			case '/fortysixpercent':
+				this.messages.push({
+					public: false,
+					content:
+						'Max 96 your win rate is same as me at 46%. -- when you are serious about the game, and I am not. And you choose to play with only good players, but how your win rate still low like mine - sorry to say that - I mean this game is not perfect as you expect mna',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+				break;
+			default:
+				this.messages.push({
+					public: false,
+					content: 'Invalid Command. Try /help for a list of commands.',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+				break;
+		}
+
+		this.deletePastMessageLimit();
+		return {
+			type: 'NONE',
+		};
+	}
+
+	findQuote(username, content) {
+		let hasFoundQuote = false;
+
+		for (const x in this.messages) {
+			const message = this.messages[x];
+
+			if (message.public && content.includes(message.content)) {
+				if (!hasFoundQuote) {
+					const quoteContent = '{username} quotes:';
+
+					this.messages.push({
+						public: true,
+						content: quoteContent.replace(/{username}/gi, username),
+						author: AVALONIST_NAME,
+						to: [],
+						type: 1,
+						character: 2,
+						timestamp: Date.now(),
+						id: Date.now(),
+					});
+
+					hasFoundQuote = true;
+				}
+
+				const quote = Object.assign({}, message);
+
+				content = content.replace(quote.content, '');
+				quote.character = 4;
+				quote.id = Date.now();
+
+				this.messages.push(quote);
+			}
+		}
+
+		if (!hasFoundQuote) {
+			this.messages.push({
+				public: false,
+				content: "Quote received doesn't exist.",
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
+		}
+
+		this.deletePastMessageLimit();
 	}
 
 	// User Messages
@@ -37,7 +459,10 @@ class Chat {
 			type: 0,
 			character: 0,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	// Lobby Messages
@@ -54,7 +479,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	roomCreated(username, no) {
@@ -68,7 +496,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	roomFinished(no, winner) {
@@ -83,7 +514,10 @@ class Chat {
 			type: 1,
 			character: winner ? 1 : -1,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	// Game Message
@@ -100,7 +534,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	onStart(roleSettings, no) {
@@ -126,7 +563,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	onPick(username) {
@@ -140,7 +580,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	afterPick(mission, round, team) {
@@ -159,6 +602,7 @@ class Chat {
 				type: 1,
 				character: 2,
 				timestamp: Date.now(),
+				id: Date.now(),
 			},
 			{
 				public: true,
@@ -168,8 +612,11 @@ class Chat {
 				type: 1,
 				character: 2,
 				timestamp: Date.now(),
+				id: Date.now(),
 			}
 		);
+
+		this.deletePastMessageLimit();
 	}
 
 	afterVote(mission, round, passes) {
@@ -187,7 +634,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	afterPassing(team) {
@@ -201,7 +651,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	afterMission(mission, fails, success) {
@@ -222,7 +675,10 @@ class Chat {
 			type: 1,
 			character: success ? 1 : -1,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	waitingForShot(player) {
@@ -236,7 +692,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	afterShot(player) {
@@ -250,7 +709,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	waitingForCard(player) {
@@ -264,7 +726,10 @@ class Chat {
 			type: 1,
 			character: 2,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 
 	afterCard(player, carded, isSpy) {
@@ -281,6 +746,7 @@ class Chat {
 				type: 1,
 				character: 2,
 				timestamp: Date.now(),
+				id: Date.now(),
 			},
 			{
 				public: false,
@@ -290,8 +756,11 @@ class Chat {
 				type: 1,
 				character: isSpy ? -1 : 1,
 				timestamp: Date.now(),
+				id: Date.now(),
 			}
 		);
+
+		this.deletePastMessageLimit();
 	}
 
 	onEnd(no, cause, winner) {
@@ -313,6 +782,7 @@ class Chat {
 				type: 1,
 				character: winner ? 1 : -1,
 				timestamp: Date.now(),
+				id: Date.now(),
 			},
 			{
 				public: true,
@@ -322,8 +792,11 @@ class Chat {
 				type: 1,
 				character: winner ? 1 : -1,
 				timestamp: Date.now(),
+				id: Date.now(),
 			}
 		);
+
+		this.deletePastMessageLimit();
 	}
 
 	kickPlayer(host, player) {
@@ -337,7 +810,10 @@ class Chat {
 			type: 1,
 			character: -1,
 			timestamp: Date.now(),
+			id: Date.now(),
 		});
+
+		this.deletePastMessageLimit();
 	}
 }
 

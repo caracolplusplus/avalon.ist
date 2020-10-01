@@ -73,7 +73,16 @@ class App extends React.PureComponent<appProps, appState> {
   }
 
   authStateChange() {
-    Parse.Cloud.run('authStateChange', { id: socket.id });
+    Parse.Cloud.run('authStateChange', { id: socket.id }).catch((err) => {
+      Parse.User.logOut().then(
+        () => {
+          window.location.reload();
+        },
+        (error) => {
+          window.location.reload();
+        }
+      );
+    });
   }
 
   updateState() {
@@ -116,10 +125,32 @@ class App extends React.PureComponent<appProps, appState> {
           <Switch>
             <LoggedOutOnly exact path="/" authenticated={this.state.authenticated} component={Login} />
             <LoggedOutOnly exact path="/signup" authenticated={this.state.authenticated} component={Signup} />
-            <UnverifiedOnly exact path="/verify" authenticated={this.state.authenticated} verified={false} component={Verify} />
-            <LoggedInOnly exact path="/lobby" authenticated={this.state.authenticated} verified={this.state.verified} component={Lobby} />
-            <LoggedInOnly path="/profile/:username" authenticated={this.state.authenticated} verified={this.state.verified} component={Profile} />
-            <LoggedInOnly path="/game/:id" authenticated={this.state.authenticated} verified={this.state.verified} component={Game} />
+            <UnverifiedOnly
+              exact
+              path="/verify"
+              authenticated={this.state.authenticated}
+              verified={false}
+              component={Verify}
+            />
+            <LoggedInOnly
+              exact
+              path="/lobby"
+              authenticated={this.state.authenticated}
+              verified={this.state.verified}
+              component={Lobby}
+            />
+            <LoggedInOnly
+              path="/profile/:username"
+              authenticated={this.state.authenticated}
+              verified={this.state.verified}
+              component={Profile}
+            />
+            <LoggedInOnly
+              path="/game/:id"
+              authenticated={this.state.authenticated}
+              verified={this.state.verified}
+              component={Game}
+            />
             <Route component={NoMatch} />
           </Switch>
         </Router>

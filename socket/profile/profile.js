@@ -39,6 +39,9 @@ class Profile {
     this.isAdmin = false;
     this.isMod = false;
     this.isContrib = false;
+    // Moderation
+    this.isBanned = false;
+    this.suspensionDate = 0;
   }
 
   async saveToUser() {
@@ -112,9 +115,37 @@ class Profile {
     }
   }
 
+  async closeAllOpenSessions() {
+    const userQuery = new Parse.Query('_User');
+    const sessQuery = new Parse.Query('_Session');
+    userQuery.equalTo('username', this.user);
+
+    await userQuery
+      .first({
+        useMasterKey: true,
+      })
+      .then(async (user) => {
+        sessQuery.equalTo('user', user);
+
+        await sessQuery
+          .find({
+            useMasterKey: true,
+          })
+          .then(async (sessList) => {
+            if (sessList.length) {
+              await Parse.Object.destroyAll(sessList, { useMasterKey: true });
+            }
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
   addGameToProfile(data) {
     this.gameHistory.push(data.code);
-    
+
     this.games[1]++;
     this.gameStats[data.role][1]++;
 
