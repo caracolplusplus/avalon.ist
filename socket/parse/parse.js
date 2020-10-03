@@ -1,4 +1,6 @@
 var Parse = require('parse/node');
+var IpTree = require('./ip-tree');
+var InitialBlacklist = require('./untrusted-ips');
 
 Parse.initialize(process.env.APP_ID || 'AVALONIST', 'not_in_use', process.env.MASTER_KEY || 'avalonist_key');
 Parse.serverURL = process.env.SERVER_URL || 'http://localhost:1337/parse';
@@ -9,24 +11,33 @@ const query = new Parse.Query(GlobalEnvironment);
 query.equalTo('env', 'Main');
 
 query
-	.find({
+	.first({
 		useMasterKey: true,
 	})
-	.then((environmentList) => {
-		if (environmentList.length === 0) {
-			const mainEnvironment = new GlobalEnvironment();
+	.then((mainEnvironment) => {
+		if (!mainEnvironment) {
+			mainEnvironment = new GlobalEnvironment();
 
 			mainEnvironment.set('env', 'Main');
 			mainEnvironment.set('games', 1);
+			mainEnvironment.set('ipBlacklist', InitialBlacklist);
 
-			mainEnvironment.save(
-				{},
-				{
-					useMasterKey: true,
-				}
-			);
+			IpTree.setBlacklistFromArray(InitialBlacklist);
+
+			mainEnvironment.save({}, { useMasterKey: true });
 		} else {
-			console.log("Global Environment already exists!");
+			if (!mainEnvironment.has('games')) mainEnvironment.set('games', 1);
+			if (!mainEnvironment.has('ipBlacklist')) {
+				mainEnvironment.set('ipBlacklist', InitialBlacklist);
+
+				IpTree.setBlacklistFromArray(InitialBlacklist);
+			} else {
+				const LaterBlacklist = mainEnvironment.get('ipBlacklist');
+
+				IpTree.setBlacklistFromArray(LaterBlacklist);
+			}
+
+			mainEnvironment.save({}, { useMasterKey: true });
 		}
 	})
 	.catch((err) => {

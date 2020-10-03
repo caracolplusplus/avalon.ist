@@ -67,7 +67,7 @@ class App extends React.PureComponent<appProps, appState> {
       alert(logstring);
 
       console.log(data);
-    })
+    });
 
     socket.on('connectionStarted', this.authStateChange);
     socket.on('connectionLinked', this.updateState);
@@ -79,17 +79,13 @@ class App extends React.PureComponent<appProps, appState> {
     socket.disconnect();
   }
 
-  authStateChange() {
-    Parse.Cloud.run('authStateChange').catch((err) => {
-      Parse.User.logOut().then(
-        () => {
-          window.location.reload();
-        },
-        (error) => {
-          window.location.reload();
-        }
-      );
-    });
+  async authStateChange() {
+    try {
+      await Parse.Cloud.run('authStateChange');
+    } catch (err) {
+      await Parse.User.logOut();
+      window.location.reload();
+    }
   }
 
   updateState() {

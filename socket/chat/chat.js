@@ -21,8 +21,12 @@
     Timestamp
         MILLISECONDS
 } */
+
 const ClientsOnline = require('../auth/clients-online').clients;
 const Profile = require('../profile/profile');
+
+const IpTree = require('../parse/ip-tree');
+const GlobalEnvironment = require('../parse/globals');
 
 const AVALONIST_NAME = 'AvalonistServerMessage';
 
@@ -60,7 +64,10 @@ class Chat {
 			case '/unss':
 			case '/ban':
 			case '/unban':
+			case '/banip':
 				return await this.commandModAction(username, splitContent);
+			case '/unbanip':
+				return await this.commandUnbanIp(username, splitContent);
 			case '/logs':
 				return this.commandModerationLogs(username);
 			case '/dm':
@@ -153,12 +160,13 @@ class Chat {
 			const profile = await new Profile(splitContent[1]).getFromUser();
 
 			if (profile && !profile.isAdmin && !profile.isMod) {
+				let target = ClientsOnline[profile.user];
+
 				let message = '';
+				let socketList = [];
 
 				switch (splitContent[0]) {
 					case '/ss':
-						await profile.closeAllOpenSessions();
-
 						let hours = parseFloat(splitContent[2]);
 						hours = isNaN(hours) ? 1 : hours;
 
@@ -195,8 +203,6 @@ class Chat {
 
 						break;
 					case '/ban':
-						await profile.closeAllOpenSessions();
-
 						profile.isBanned = true;
 						profile.saveToUser();
 
@@ -228,6 +234,72 @@ class Chat {
 						});
 
 						break;
+					case '/banip':
+						profile.isBanned = true;
+						profile.saveToUser();
+
+						const ips = profile.ips;
+
+						const main = await GlobalEnvironment();
+
+						const addIpToTree = async () => {
+							for (const x in ips) {
+								const ip = ips[x];
+
+								IpTree.readIp(ip, true);
+							}
+
+							return true;
+						};
+
+						const addIpToGlobals = async () => {
+							const ipList = main.get('ipBlacklist');
+
+							for (const x in ips) {
+								const ip = ips[x];
+
+								if (!ipList.includes(ip)) {
+									ipList.push(ip);
+								}
+							}
+
+							main.set('ipBlacklist', ipList);
+							main.save({}, { useMasterKey: true });
+
+							return true;
+						};
+
+						const disconnectAllPlayersWithIps = async () => {
+							target = false;
+
+							for (const x in ClientsOnline) {
+								const client = ClientsOnline[x];
+
+								if (client.profile.ips.some((y) => ips.indexOf(y) >= 0)) socketList = socketList.concat(client.sockets);
+							}
+
+							return true;
+						};
+
+						const prom0 = addIpToGlobals();
+						const prom1 = addIpToTree();
+						const prom2 = disconnectAllPlayersWithIps();
+
+						await prom1;
+						await prom2;
+
+						message = '{user} has been banned and all of their IP adresses have been locked.';
+						message = message.replace(/{user}/gi, profile.user);
+
+						ModLogs.push({
+							action: 'IP BAN',
+							moderator: username,
+							target: profile.user,
+							lasts: 'PERMANENT',
+							date: new Date().toUTCString(),
+						});
+
+						break;
 				}
 
 				this.messages.push({
@@ -241,16 +313,97 @@ class Chat {
 					id: Date.now(),
 				});
 
-				const target = ClientsOnline[profile.user];
-
 				return {
 					type: 'BAN',
-					sockets: target ? target.sockets : [],
+					sockets: target ? target.sockets : socketList,
 				};
 			} else {
 				this.messages.push({
 					public: false,
 					content: 'No user exists with the provided username, or the user holds a power position.',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+
+				this.deletePastMessageLimit();
+
+				return {
+					type: 'NONE',
+				};
+			}
+		} else {
+			return this.invalidCommand(username);
+		}
+	}
+
+	async commandUnbanIp(username, splitContent) {
+		const hammer = ClientsOnline[username].profile;
+
+		if (hammer.isMod || hammer.isAdmin) {
+			const ip = splitContent[1];
+
+			if (IpTree.testIp(ip)) {
+				const main = await GlobalEnvironment();
+
+				const removeIpFromTree = async () => {
+					IpTree.readIp(ip, false);
+
+					return true;
+				};
+
+				const removeIpFromGlobals = async () => {
+					const ipList = main.get('ipBlacklist');
+
+					const index = ipList.indexOf(ip);
+
+					if (index > -1) {
+						ipList.splice(index, 1);
+					}
+
+					main.set('ipBlacklist', ipList);
+					main.save({}, { useMasterKey: true });
+
+					return true;
+				};
+
+				const prom0 = removeIpFromGlobals();
+				const prom1 = removeIpFromTree();
+
+				await prom1;
+
+				let message = '{ip} has been removed from the IP blacklist.';
+				message = message.replace(/{ip}/gi, ip);
+
+				ModLogs.push({
+					action: 'REVOKE IP BAN',
+					moderator: username,
+					target: ip,
+					lasts: 'PERMANENT',
+					date: new Date().toUTCString(),
+				});
+
+				this.messages.push({
+					public: false,
+					content: message,
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+
+				return {
+					type: 'NONE',
+				};
+			} else {
+				this.messages.push({
+					public: false,
+					content: 'This IP is not registered in the blacklist.',
 					author: AVALONIST_NAME,
 					to: [username],
 					type: 1,

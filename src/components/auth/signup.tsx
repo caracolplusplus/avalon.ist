@@ -8,6 +8,7 @@ export async function signup(email: string, password: string, username: string, 
 	user.set('password', password);
 
 	try {
+		await Parse.Cloud.run('beforeSignUp');
 		await user.signUp();
 		socket.emit('authStateChange');
 	} catch (error) {

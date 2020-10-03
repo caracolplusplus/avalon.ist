@@ -42,6 +42,7 @@ class Profile {
     // Moderation
     this.isBanned = false;
     this.suspensionDate = 0;
+    this.ips = [];
   }
 
   async saveToUser() {
@@ -67,7 +68,7 @@ class Profile {
 
   writeUser(user) {
     for (let x in this) {
-      if (x === 'user') continue;
+      if (['user', 'ips'].includes(x)) continue;
 
       user.set(x, this[x]);
     }
@@ -86,6 +87,7 @@ class Profile {
       .then((user) => {
         if (user) {
           this.readUser(user);
+
           return this;
         }
 
@@ -113,34 +115,6 @@ class Profile {
         }
       }
     }
-  }
-
-  async closeAllOpenSessions() {
-    const userQuery = new Parse.Query('_User');
-    const sessQuery = new Parse.Query('_Session');
-    userQuery.equalTo('username', this.user);
-
-    await userQuery
-      .first({
-        useMasterKey: true,
-      })
-      .then(async (user) => {
-        sessQuery.equalTo('user', user);
-
-        await sessQuery
-          .find({
-            useMasterKey: true,
-          })
-          .then(async (sessList) => {
-            if (sessList.length) {
-              await Parse.Object.destroyAll(sessList, { useMasterKey: true });
-            }
-          })
-          .catch((err) => console.log(err));
-      })
-      .catch((err) => {
-        console.log(err);
-      });
   }
 
   addGameToProfile(data) {

@@ -1,4 +1,4 @@
-const Parse = require('../parse/parse');
+const GlobalEnvironment = require('../parse/globals');
 const RoomHandler = require('./room-handler');
 const GeneralChat = require('../chat/general-chat');
 
@@ -7,15 +7,6 @@ module.exports = function (io, socket) {
 	const GAME_CHAT = 'GameChat';
 	const GAME_LIST_NAME = 'RoomList';
 	const GAME_NAME = 'Room';
-
-	const getGlobals = async (data) => {
-		const query = new Parse.Query('Globals');
-		query.equalTo('env', 'Main');
-
-		return await query.find({
-			useMasterKey: true,
-		});
-	};
 
 	const emissionProtocol = (updateRoomList, updateChat, roomHandler, startEndProtocol) => {
 		if (startEndProtocol) {
@@ -166,9 +157,8 @@ module.exports = function (io, socket) {
 
 		if (user) {
 			const username = user.get('username');
-			const globals = await getGlobals();
+			const main = await GlobalEnvironment();
 
-			const main = globals[0];
 			const games = main.get('games');
 			main.increment('games');
 
