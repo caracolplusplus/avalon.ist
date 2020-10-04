@@ -87,40 +87,12 @@ module.exports = function (io, socket) {
 
 		if (user) {
 			const username = user.get('username');
-			const quote = /^[0-9]{2}:[0-9]{2} (.*)$/g;
 
-			if (data.content.startsWith('/')) {
-				const command = await GeneralChat.parseCommand(username, data.content);
-
-				switch (command.type) {
-					default:
-						io.to(GEN_CHAT).emit('generalChatUpdate');
-						break;
-					case 'LOGS':
-						socket.emit('showModerationLogs', command.logs);
-					case 'NONE':
-						socket.emit('generalChatUpdate');
-						break;
-					case 'BAN':
-						socket.emit('generalChatUpdate');
-						for (const x in command.sockets) {
-							const id = command.sockets[x];
-
-							io.to(id).emit('connectionStarted');
-						}
-						break;
-				}
-			} else if (quote.test(data.content)) {
-				GeneralChat.findQuote(username, data.content);
-				io.to(GEN_CHAT).emit('generalChatUpdate');
-			} else {
-				GeneralChat.sendMessage(username, data.content);
-				io.to(GEN_CHAT).emit('generalChatUpdate');
-			}
+			messageInterpreter(username, data.content, GeneralChat, GEN_CHAT, 'generalChatUpdate');
 		}
 	};
 
-	const messageToGame = async (data) => {
+	const messageToGame = (data) => {
 		// Data
 		// > roomNumber
 		// > content
@@ -130,39 +102,70 @@ module.exports = function (io, socket) {
 			try {
 				const username = user.get('username');
 				const room = new RoomHandler(socket.room).getRoom();
-				const quote = /^[0-9]{2}:[0-9]{2} (.*)$/g;
 
-				if (data.content.startsWith('/')) {
-					const command = await room.chat.parseCommand(username, data.content);
-
-					switch (command.type) {
-						default:
-							io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-							break;
-						case 'LOGS':
-							socket.emit('showModerationLogs', command.logs);
-						case 'NONE':
-							socket.emit('gameChatUpdate');
-							break;
-						case 'BAN':
-							socket.emit('gameChatUpdate');
-							for (const x in command.sockets) {
-								const id = command.sockets[x];
-
-								io.to(id).emit('connectionStarted');
-							}
-							break;
-					}
-				} else if (quote.test(data.content)) {
-					room.chat.findQuote(username, data.content);
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-				} else {
-					room.chat.sendMessage(username, data.content);
-					io.to(GAME_CHAT + socket.room).emit('gameChatUpdate');
-				}
+				messageInterpreter(username, data.content, room.chat, GAME_CHAT + socket.room, 'gameChatUpdate');
 			} catch (err) {
 				console.log(err);
 			}
+		}
+	};
+
+	const messageInterpreter = async (username, content, chat, room, emission) => {
+		const quote = /^[0-9]{2}:[0-9]{2} (.*)$/g;
+
+		if (content.startsWith('/')) {
+			const command = await chat.parseCommand(username, content);
+			const domain = room === GEN_CHAT ? 'Lobby' : 'Room #' + socket.room;
+
+			switch (command.type) {
+				case 'DM':
+					io.to(room).emit(emission);
+
+					io.to(command.socket).emit('notificationMessage', {
+						audio: 'notification',
+						title: 'Message from ' + username,
+						body: '«' + command.content + '»' + '\n\n-' + domain,
+					});
+
+					break;
+				case 'BUZZ':
+					io.to(room).emit(emission);
+
+					const message = {
+						slapped: 'You must be all dizzy after that slap! \nSuch a violent display...',
+						buzzed: 'You have been buzzed. \nPlease pay attention.',
+						licked: 'Well, someone has licked you... \nWhatever that means...',
+					}[command.action];
+
+					io.to(command.socket).emit('notificationMessage', {
+						audio: command.action,
+						title: 'You have been ' + command.action + ' by ' + username + '!',
+						body: '«' + message + '»' + '\n\n-' + domain,
+					});
+
+					break;
+				case 'LOGS':
+					socket.emit('showModerationLogs', command.logs);
+				case 'NONE':
+					socket.emit(emission);
+					break;
+				case 'BAN':
+					socket.emit(emission);
+
+					for (const x in command.sockets) {
+						const id = command.sockets[x];
+
+						io.to(id).emit('connectionStarted');
+					}
+
+					break;
+			}
+		} else if (quote.test(content)) {
+			chat.findQuote(username, content);
+			io.to(room).emit(emission);
+		} else {
+			chat.sendMessage(username, content);
+			io.to(room).emit(emission);
 		}
 	};
 

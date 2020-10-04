@@ -76,6 +76,10 @@ class Chat {
 				return this.commandRollDie(username, splitContent);
 			case '/flip':
 				return this.commandFlipCoin(username);
+			case '/slap':
+			case '/buzz':
+			case '/lick':
+				return this.commandBuzzes(username, splitContent);
 			case '/poggers':
 			case '/bremus':
 			case '/pingerus':
@@ -119,16 +123,23 @@ class Chat {
 						"/ban {player} - Enacts a permanent ban on the given player's account.",
 						"/unban {player} - Lifts a permanent ban from the given player's account.",
 						"/banip {player} - Enacts a permanent ban on the given player's account and its correspondent IPs.",
-						'/unbanip {ip} - Lifts a permanent ban on the given IP adress.',
+						'/unbanip {ip} - Lifts a permanent ban on the given IP address.',
 						'/logs - Retrieves moderation logs and prints them in browser console.',
-						'/dm {player} {message} - Sends a direct message to the given player.',
-						'/roll {sides?} - Rolls a die. Provide a number to change the number of sides.',
+						'/dm {player} {message} - Sends a direct message to the player specified. The direct message will send a notification to the player.',
+						'/lick {player} - Show your love to someone by licking them!',
+						'/slap {player} - If you prefer something more aggressive, try slapping them!',
+						'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
+						'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
 						'/flip - Flips a coin.',
 						'/clear - Clears the chat.',
 				  ]
 				: [
 						'List of Commands:',
-						'/roll {sides?} - Rolls a die. Provide a number to change the number of sides.',
+						'/dm {moderator} {message} - Sends a direct message to the moderator specified.',
+						'/lick {player} - Show your love to someone by licking them!',
+						'/slap {player} - If you prefer something more aggressive, try slapping them!',
+						'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
+						'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
 						'/flip - Flips a coin.',
 						'/clear - Clears the chat.',
 				  ];
@@ -320,7 +331,7 @@ class Chat {
 			} else {
 				this.messages.push({
 					public: false,
-					content: 'No user exists with the provided username, or the user holds a power position.',
+					content: 'No user exists with the provided username, or the user is part of the moderation team.',
 					author: AVALONIST_NAME,
 					to: [username],
 					type: 1,
@@ -448,50 +459,54 @@ class Chat {
 	}
 
 	commandDirectMessage(username, content, splitContent) {
-		const hammer = ClientsOnline[username].profile;
+		let hammer = ClientsOnline[username];
+		let target = ClientsOnline[splitContent[1]];
 
-		if (hammer.isMod || hammer.isAdmin) {
-			let dmContent = content.replace(splitContent[1], '');
-			dmContent = dmContent.slice(dmContent.indexOf(splitContent[2]));
+		let dmContent = content.replace(splitContent[1], '');
+		dmContent = splitContent[2] ? dmContent.slice(dmContent.indexOf(splitContent[2])) : '';
 
-			if (!ClientsOnline[splitContent[1]]) {
-				this.messages.push({
-					public: false,
-					content: 'User with username "' + splitContent[1] + '" is currently disconnected.',
-					author: AVALONIST_NAME,
-					to: [username],
-					type: 1,
-					character: 3,
-					timestamp: Date.now(),
-					id: Date.now(),
-				});
+		if (!target) {
+			this.messages.push({
+				public: false,
+				content: 'User with username "{user}" is currently disconnected.'.replace(/{user}/gi, splitContent[1]),
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
 
-				this.deletePastMessageLimit();
+			this.deletePastMessageLimit();
 
-				return {
-					type: 'NONE',
-				};
-			}
+			return {
+				type: 'NONE',
+			};
+		}
 
-			if (splitContent[2] === undefined) {
-				this.messages.push({
-					public: false,
-					content: 'The contents of a private message cannot be empty.',
-					author: AVALONIST_NAME,
-					to: [username],
-					type: 1,
-					character: 3,
-					timestamp: Date.now(),
-					id: Date.now(),
-				});
+		if (dmContent.length === 0) {
+			this.messages.push({
+				public: false,
+				content: 'The contents of a private message cannot be empty.',
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
 
-				this.deletePastMessageLimit();
+			this.deletePastMessageLimit();
 
-				return {
-					type: 'NONE',
-				};
-			}
+			return {
+				type: 'NONE',
+			};
+		}
 
+		const hammerProfile = hammer.profile;
+		const targetProfile = target.profile;
+
+		if (hammerProfile.isMod || hammerProfile.isAdmin || targetProfile.isMod || targetProfile.isAdmin) {
 			this.messages.push({
 				public: false,
 				content: dmContent,
@@ -505,10 +520,112 @@ class Chat {
 
 			return {
 				type: 'DM',
+				socket: target.sockets[0],
+				content: dmContent,
 			};
 		} else {
-			return this.invalidCommand(username);
+			this.messages.push({
+				public: false,
+				content: 'You must be part of the moderation team to message this player.',
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
+
+			this.deletePastMessageLimit();
+
+			return {
+				type: 'NONE',
+			};
 		}
+	}
+
+	commandBuzzes(username, splitContent) {
+		if (username === splitContent[1]) {
+			this.messages.push({
+				public: false,
+				content: 'You cannot do this to yourself.',
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
+
+			this.deletePastMessageLimit();
+
+			return {
+				type: 'NONE',
+			};
+		}
+
+		let target = ClientsOnline[splitContent[1]];
+
+		let action = { '/slap': 'slapped', '/buzz': 'buzzed', '/lick': 'licked' }[splitContent[0]];
+
+		if (!target) {
+			this.messages.push({
+				public: false,
+				content: 'No user online exists with the provided username.'.replace(/{user}/gi, splitContent[1]),
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
+
+			this.deletePastMessageLimit();
+
+			return {
+				type: 'NONE',
+			};
+		}
+
+		if (target.profile.dontBotherMeUntilThisTime > Date.now()) {
+			this.messages.push({
+				public: false,
+				content: 'This player has already been {action} recently by someone...'.replace(/{action}/gi, action),
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
+
+			this.deletePastMessageLimit();
+
+			return {
+				type: 'NONE',
+			};
+		}
+
+		this.messages.push({
+			public: true,
+			content: '{user} has {action} {target}!'
+				.replace(/{user}/gi, username)
+				.replace(/{target}/gi, splitContent[1])
+				.replace(/{action}/gi, action),
+			author: AVALONIST_NAME,
+			to: [],
+			type: 1,
+			character: 2,
+			timestamp: Date.now(),
+			id: Date.now(),
+		});
+
+		target.profile.dontBotherMeUntilThisTime = Date.now() + 15000;
+
+		return {
+			type: 'BUZZ',
+			action,
+			socket: target.sockets[0],
+		};
 	}
 
 	commandRollDie(username, splitContent) {
@@ -590,10 +707,19 @@ class Chat {
 	findQuote(username, content) {
 		let hasFoundQuote = false;
 
+		let splitContent = content.split(/[0-9]{2}:[0-9]{2} /).map((x) => x.trim());
+		splitContent = new Set(splitContent);
+
 		for (const x in this.messages) {
 			const message = this.messages[x];
 
-			if (message.public && content.includes(message.content)) {
+			if (message.public) {
+				const referent = [message.author + ':' + message.content, message.content][message.type];
+
+				if (!splitContent.has(referent)) continue;
+
+				splitContent.delete(referent);
+
 				if (!hasFoundQuote) {
 					const quoteContent = '{username} quotes:';
 

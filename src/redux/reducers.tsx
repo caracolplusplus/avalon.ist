@@ -1,14 +1,22 @@
 // External
 
-import { combineReducers } from "redux";
+import { combineReducers } from 'redux';
 
 // Types
 
-import { ADD_NOTES, SET_USERNAME, SET_ONLINE, SET_GAME_TAB_HIGHLIGHT, UPDATE_CHAT_HIGHLIGHT, ActionTypes } from "./actions";
+import {
+	ADD_NOTES,
+	SET_USERNAME,
+	SET_ONLINE,
+	SET_GAME_TAB_HIGHLIGHT,
+	UPDATE_CHAT_HIGHLIGHT,
+	SET_MESSAGE_DELAY,
+	ActionTypes,
+} from './actions';
 
 // Reducers
 
-function notes(state = "", action: ActionTypes): string {
+function notes(state = '', action: ActionTypes): string {
 	switch (action.type) {
 		case ADD_NOTES:
 			return action.text;
@@ -17,7 +25,7 @@ function notes(state = "", action: ActionTypes): string {
 	}
 }
 
-function username(state = "", action: ActionTypes): string {
+function username(state = '', action: ActionTypes): string {
 	switch (action.type) {
 		case SET_USERNAME:
 			return action.text;
@@ -56,12 +64,24 @@ function chatHighlights(state: { [key: string]: string } = {}, action: ActionTyp
 	}
 }
 
+function messageDelay(state: number[] = [0, 0, 0, 0, 0], action: ActionTypes): number[] {
+	switch (action.type) {
+		case SET_MESSAGE_DELAY:
+			state.push(action.timestamp);
+			state.shift();
+			return state;
+		default:
+			return state;
+	}
+}
+
 export const rootReducer = combineReducers({
 	notes,
 	username,
 	online,
 	highlighted,
-	chatHighlights
+	chatHighlights,
+	messageDelay,
 });
 
 export type rootType = ReturnType<typeof rootReducer>;

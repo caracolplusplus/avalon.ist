@@ -10,6 +10,7 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.8);
     display: flex;
+    z-index: 999;
     .view {
       display: flex;
       flex-direction: column;
@@ -22,6 +23,17 @@
       border-radius: $base-font-size * 0.125;
       padding: $base-font-size * 0.375 $base-font-size * 0.75;
       color: black;
+      h1, h2 {
+        text-align: center;
+      }
+      h2 {
+        margin-bottom: $base-font-size * 0.5;
+      }
+      .unnecessarily-huge-exclamation-mark {
+        color: Globals.$gold-1;
+        height: $base-font-size * 5;
+        width: 100%;
+      }
       .title {
         font-weight: 600;
         font-size: $base-font-size * 0.375;

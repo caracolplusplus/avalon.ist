@@ -27,6 +27,8 @@ import Profile from './pages/Profile';
 import Game from './pages/Game';
 import NoMatch from './pages/NoMatch';
 
+import Soundboard from './sounds/audio';
+
 // Types
 
 interface appProps {
@@ -63,10 +65,26 @@ class App extends React.PureComponent<appProps, appState> {
     window.addEventListener('resize', this.updateDimensions);
 
     socket.on('showModerationLogs', (data: any) => {
-      const logstring = JSON.stringify(data);
+      const logstring = JSON.stringify(data, null, 2);
       alert(logstring);
 
       console.log(data);
+    });
+
+    if (!('Notification' in window)) {
+      console.log('This browser does not support desktop notifications');
+    } else {
+      Notification.requestPermission();
+    }
+
+    socket.on('notificationMessage', (data: any) => {
+      if (Soundboard[data.audio]) Soundboard[data.audio].play();
+
+      new Notification(data.title, {
+        body: data.body,
+        icon: 'https://i.ibb.co/kGHXzYr/favicon-32x32.png',
+        dir: 'ltr',
+      });
     });
 
     socket.on('connectionStarted', this.authStateChange);

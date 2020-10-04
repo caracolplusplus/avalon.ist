@@ -1,10 +1,11 @@
 // Types
 
-export const ADD_NOTES = "ADD_NOTES";
-export const SET_USERNAME = "SET_USERNAME";
-export const SET_ONLINE = "SET_ONLINE";
-export const SET_GAME_TAB_HIGHLIGHT = "SET_HIGHLIGHT";
-export const UPDATE_CHAT_HIGHLIGHT = "UPDATE_CHAT_HIGHLIGHT";
+export const ADD_NOTES = 'ADD_NOTES';
+export const SET_USERNAME = 'SET_USERNAME';
+export const SET_ONLINE = 'SET_ONLINE';
+export const SET_GAME_TAB_HIGHLIGHT = 'SET_HIGHLIGHT';
+export const UPDATE_CHAT_HIGHLIGHT = 'UPDATE_CHAT_HIGHLIGHT';
+export const SET_MESSAGE_DELAY = 'SET_MESSAGE_DELAY';
 
 interface AddNotesAction {
   type: typeof ADD_NOTES;
@@ -33,7 +34,18 @@ interface UpdateChatHighlight {
   color: string;
 }
 
-export type ActionTypes = AddNotesAction | SetGameTabHighlight | SetUsernameAction | SetOnlineAction | UpdateChatHighlight;
+interface SetMessageDelay {
+  type: typeof SET_MESSAGE_DELAY;
+  timestamp: number;
+}
+
+export type ActionTypes =
+  | AddNotesAction
+  | SetGameTabHighlight
+  | SetUsernameAction
+  | SetOnlineAction
+  | UpdateChatHighlight
+  | SetMessageDelay;
 
 // Actions
 
@@ -48,8 +60,8 @@ export function setGameTabHighlight(value: boolean, index: number): ActionTypes 
   return {
     type: SET_GAME_TAB_HIGHLIGHT,
     value,
-    index
-  }
+    index,
+  };
 }
 
 export function setUsername(text: string): ActionTypes {
@@ -66,10 +78,17 @@ export function setOnline(value: boolean): ActionTypes {
   };
 }
 
-export function updateChatHighlight(player: string, color: string) {
+export function updateChatHighlight(player: string, color: string): ActionTypes {
   return {
     type: UPDATE_CHAT_HIGHLIGHT,
     player: player,
     color: color,
+  };
+}
+
+export function setMessageDelay(): ActionTypes {
+  return {
+    type: SET_MESSAGE_DELAY,
+    timestamp: Date.now() + 5000,
   };
 }

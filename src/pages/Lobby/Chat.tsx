@@ -7,9 +7,12 @@ import { connect } from 'react-redux';
 // Internal
 
 import socket from '../../socket-io/socket-io';
+import Soundboard from '../../sounds/audio';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 import { ChatInput } from '../../components/utils/Input';
 import { rootType } from '../../redux/reducers';
+import { setMessageDelay } from '../../redux/actions';
+import TooFast from './ChatTooFast';
 
 // Styles
 
@@ -29,6 +32,8 @@ interface ChatSnapshot {
 }
 
 interface ChatProps {
+  dispatch?: any;
+  messageDelay?: any;
   code?: string;
   players: string[];
   stage?: string;
@@ -38,12 +43,12 @@ interface ChatProps {
 
 interface ChatState {
   messages: ChatSnapshot[];
-  content: string;
+  tooFast: boolean;
 }
 
 const mapState = (state: rootType) => {
-  const { chatHighlights, username } = state;
-  return { chatHighlights, username };
+  const { chatHighlights, username, messageDelay } = state;
+  return { chatHighlights, username, messageDelay };
 };
 
 class Chat extends React.PureComponent<ChatProps, ChatState> {
@@ -57,7 +62,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     super(props);
     this.state = {
       messages: [],
-      content: '',
+      tooFast: false,
     };
     this.toGameChat = this.toGameChat.bind(this);
     this.startChat = this.startChat.bind(this);
@@ -142,12 +147,14 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.setState({ messages });
   }
 
+  cancelTooFast = () => this.setState({ tooFast: false });
+
   handleSubmit(event: FormEvent) {
     event.preventDefault();
 
     const content = this.refInput.current!.state.content;
 
-    if (!content || content === '') return;
+    if (!content || content === '' || this.state.tooFast) return;
 
     if (/^\/clear(.*)$/.test(content)) {
       const messagesLength = this.state.messages.length;
@@ -155,6 +162,14 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
       this.setState({ messages: [] });
     } else {
+      if (this.props.messageDelay[0] > Date.now()) {
+        Soundboard.rejected.play();
+        this.setState({ tooFast: true });
+        return;
+      }
+
+      this.props.dispatch(setMessageDelay());
+
       socket.emit(this.eventNames[3], {
         content: content,
         roomNumber: this.props.code,
@@ -229,6 +244,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
             <ChatInput ref={this.refInput} />
           </form>
         )}
+        {this.state.tooFast ? <TooFast onExit={this.cancelTooFast} /> : null}
       </div>
     );
   }

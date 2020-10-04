@@ -43,6 +43,8 @@ class Profile {
     this.isBanned = false;
     this.suspensionDate = 0;
     this.ips = [];
+    // For Slaps and shit
+    this.dontBotherMeUntilThisTime = Date.now();
   }
 
   async saveToUser() {
@@ -68,7 +70,7 @@ class Profile {
 
   writeUser(user) {
     for (let x in this) {
-      if (['user', 'ips'].includes(x)) continue;
+      if (['user', 'ips', 'dontBotherMeUntilThisTime'].includes(x)) continue;
 
       user.set(x, this[x]);
     }
@@ -100,7 +102,7 @@ class Profile {
 
   readUser(user) {
     for (let x in this) {
-      if (x === 'user') continue;
+      if (['user', 'dontBotherMeUntilThisTime'].includes(x)) continue;
 
       const got = user.get(x);
 
