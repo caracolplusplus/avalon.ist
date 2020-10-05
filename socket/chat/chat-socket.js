@@ -164,7 +164,7 @@ module.exports = function (io, socket) {
 			chat.findQuote(username, content);
 			io.to(room).emit(emission);
 		} else {
-			chat.sendMessage(username, content);
+			chat.sendMessage(username, content.substr(0, 250).trim());
 			io.to(room).emit(emission);
 		}
 	};

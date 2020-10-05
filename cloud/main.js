@@ -1,5 +1,6 @@
 const SocketsOnline = require('../socket/auth/clients-online').sockets;
 const IpTree = require('../socket/parse/ip-tree');
+const EmailTree = require('../socket/parse/email-tree');
 
 Parse.Cloud.define('authStateChange', async (request) => {
 	let currentAddress = request.headers['x-forwarded-for'];
@@ -88,6 +89,29 @@ Parse.Cloud.define('beforeSignUp', async (request) => {
 	}
 
 	return true;
+});
+
+Parse.Cloud.beforeSave(Parse.User, async (request) => {
+	const user = request.object;
+
+	const usernameValidator = /^[0-9a-zA-Z]{3,15}$/;
+	const username = user.get('username');
+	const email = user.get('email');
+	const splitEmail = email.split('@');
+
+	if (!usernameValidator.test(username)) {
+		throw new Error(
+			'Username must have 3 to 15 characters. The characters must be part of the english alphabet, or be digits from 0 to 9.'
+		);
+	}
+
+	if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(email)) {
+		throw new Error('Email must be in valid email format.');
+	}
+
+	if (!EmailTree.test(splitEmail[1])) {
+		throw new Error('Email adress is not from a trusted service. Make sure to not use disposable email accounts.');
+	}
 });
 
 Parse.Cloud.beforeLogin(async (request) => {

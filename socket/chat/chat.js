@@ -766,6 +766,25 @@ class Chat {
 	// User Messages
 
 	sendMessage(username, content) {
+		const zalgo = /%CC%/g;
+
+		if (zalgo.test(encodeURIComponent(content))) {
+			this.messages.push({
+				public: false,
+				content: 'You are trying to post a message with invalid characters. Please, refrain from doing it.',
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
+
+			this.deletePastMessageLimit();
+
+			return;
+		}
+
 		this.messages.push({
 			public: true,
 			content: content,
