@@ -46,6 +46,27 @@ class Chat {
 		ChatList.push(this);
 	}
 
+	removeFromChatList() {
+		const index = ChatList.indexOf(this);
+
+		if (index > -1) {
+			ChatList.splice(index, 1);
+		}
+	}
+
+	async addModLog(log) {
+		ModLogs.push(log);
+
+		const main = await GlobalEnvironment();
+
+		const logs = main.get('modLogs');
+		logs.push(log);
+
+		main.set('modLogs', logs);
+
+		main.save({}, { useMasterKey: true });
+	}
+
 	// Delete messages past the message limit
 
 	deletePastMessageLimit() {
@@ -66,6 +87,12 @@ class Chat {
 			case '/unban':
 			case '/banip':
 				return await this.commandModAction(username, splitContent);
+			case '/close':
+			case '/freeze':
+			case '/unfreeze':
+			case '/learnroles':
+			case '/end':
+				return this.commandGameAction(username, splitContent);
 			case '/unbanip':
 				return await this.commandUnbanIp(username, splitContent);
 			case '/logs':
@@ -188,7 +215,7 @@ class Chat {
 							hours === 1 ? '{user} has been suspended for 1 hour.' : '{user} has been for suspended for {n} hours.';
 						message = message.replace(/{user}/gi, profile.user).replace(/{n}/gi, hours);
 
-						ModLogs.push({
+						this.addModLog({
 							action: 'SUSPENSION',
 							moderator: username,
 							target: profile.user,
@@ -204,7 +231,7 @@ class Chat {
 						message = '{user} has been unsuspended.';
 						message = message.replace(/{user}/gi, profile.user);
 
-						ModLogs.push({
+						this.addModLog({
 							action: 'REVOKE SUSPENSION',
 							moderator: username,
 							target: profile.user,
@@ -220,7 +247,7 @@ class Chat {
 						message = '{user} has been banned.';
 						message = message.replace(/{user}/gi, profile.user);
 
-						ModLogs.push({
+						this.addModLog({
 							action: 'BAN',
 							moderator: username,
 							target: profile.user,
@@ -236,7 +263,7 @@ class Chat {
 						message = '{user} has been unbanned.';
 						message = message.replace(/{user}/gi, profile.user);
 
-						ModLogs.push({
+						this.addModLog({
 							action: 'REVOKE BAN',
 							moderator: username,
 							target: profile.user,
@@ -302,11 +329,12 @@ class Chat {
 						message = '{user} has been banned and all of their IP adresses have been locked.';
 						message = message.replace(/{user}/gi, profile.user);
 
-						ModLogs.push({
+						this.addModLog({
 							action: 'IP BAN',
 							moderator: username,
 							target: profile.user,
 							lasts: 'PERMANENT',
+							ips,
 							date: new Date().toUTCString(),
 						});
 
@@ -332,6 +360,216 @@ class Chat {
 				this.messages.push({
 					public: false,
 					content: 'No user exists with the provided username, or the user is part of the moderation team.',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+
+				this.deletePastMessageLimit();
+
+				return {
+					type: 'NONE',
+				};
+			}
+		} else {
+			return this.invalidCommand(username);
+		}
+	}
+
+	commandGameAction(username, splitContent) {
+		const hammer = ClientsOnline[username].profile;
+
+		if (hammer.isMod || hammer.isAdmin) {
+			try {
+				const handler = new RoomHandler(splitContent[1]);
+				const room = handler.getRoom();
+				let message = '';
+
+				switch (splitContent[0]) {
+					case '/close':
+						handler.deleteRoom();
+
+						message = 'Room #{no} has been closed.';
+						message = message.replace(/{no}/gi, splitContent[1]);
+
+						this.addModLog({
+							action: 'CLOSE ROOM',
+							moderator: username,
+							target: 'Room #' + splitContent[1],
+							date: new Date().toUTCString(),
+						});
+
+						break;
+					case '/freeze':
+						if (!room.game.started) {
+							this.messages.push({
+								public: false,
+								content: "Game hasn't started yet.",
+								author: AVALONIST_NAME,
+								to: [username],
+								type: 1,
+								character: 3,
+								timestamp: Date.now(),
+								id: Date.now(),
+							});
+
+							this.deletePastMessageLimit();
+
+							return {
+								type: 'NONE',
+							};
+						}
+
+						room.actions.frozen = true;
+
+						message = 'Room #{no} has been frozen.';
+						message = message.replace(/{no}/gi, splitContent[1]);
+
+						this.addModLog({
+							action: 'FREEZE ROOM',
+							moderator: username,
+							target: 'Room #' + splitContent[1],
+							date: new Date().toUTCString(),
+						});
+
+						break;
+					case '/unfreeze':
+						if (!room.game.started) {
+							this.messages.push({
+								public: false,
+								content: "Game hasn't started yet.",
+								author: AVALONIST_NAME,
+								to: [username],
+								type: 1,
+								character: 3,
+								timestamp: Date.now(),
+								id: Date.now(),
+							});
+
+							this.deletePastMessageLimit();
+
+							return {
+								type: 'NONE',
+							};
+						}
+
+						room.actions.frozen = false;
+
+						message = 'Room #{no} has been unfrozen.';
+						message = message.replace(/{no}/gi, splitContent[1]);
+
+						this.addModLog({
+							action: 'UNFREEZE ROOM',
+							moderator: username,
+							target: 'Room #' + splitContent[1],
+							date: new Date().toUTCString(),
+						});
+
+						break;
+					case '/learnroles':
+						if (!room.game.started) {
+							this.messages.push({
+								public: false,
+								content: "Game hasn't started yet.",
+								author: AVALONIST_NAME,
+								to: [username],
+								type: 1,
+								character: 3,
+								timestamp: Date.now(),
+								id: Date.now(),
+							});
+
+							this.deletePastMessageLimit();
+
+							return {
+								type: 'NONE',
+							};
+						}
+
+						room.game.privateKnowledge[username] = room.game.roles;
+
+						message = 'Learned roles in Room #{no}.';
+						message = message.replace(/{no}/gi, splitContent[1]);
+
+						this.addModLog({
+							action: 'LEARN ROLES',
+							moderator: username,
+							target: 'Room #' + splitContent[1],
+							date: new Date().toUTCString(),
+						});
+
+						break;
+					case '/end':
+						if (!room.game.started) {
+							this.messages.push({
+								public: false,
+								content: "Game hasn't started yet.",
+								author: AVALONIST_NAME,
+								to: [username],
+								type: 1,
+								character: 3,
+								timestamp: Date.now(),
+								id: Date.now(),
+							});
+
+							this.deletePastMessageLimit();
+
+							return {
+								type: 'NONE',
+							};
+						}
+
+						let outcome = -1;
+
+						if (splitContent[2] === '1') outcome = 4;
+						if (splitContent[2] === '0') outcome = 2;
+
+						if (outcome !== -1) {
+							room.actions.gameEnd(outcome);
+							handler.gameEndProtocol();
+						} else {
+							room.actions.voidGame(outcome);
+						}
+
+						message = 'Room #{no} has been ended.';
+						message = message.replace(/{no}/gi, splitContent[1]);
+
+						this.addModLog({
+							action: 'END ROOM',
+							moderator: username,
+							target: 'Room #' + splitContent[1],
+							date: new Date().toUTCString(),
+						});
+
+						break;
+				}
+
+				this.messages.push({
+					public: false,
+					content: message,
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+
+				this.deletePastMessageLimit();
+
+				return {
+					type: 'GAME',
+					room: splitContent[1],
+				};
+			} catch (err) {
+				console.log(err);
+
+				this.messages.push({
+					public: false,
+					content: 'No game was found.',
 					author: AVALONIST_NAME,
 					to: [username],
 					type: 1,
@@ -389,7 +627,7 @@ class Chat {
 				let message = '{ip} has been removed from the IP blacklist.';
 				message = message.replace(/{ip}/gi, ip);
 
-				ModLogs.push({
+				this.addModLog({
 					action: 'REVOKE IP BAN',
 					moderator: username,
 					target: ip,
@@ -465,6 +703,27 @@ class Chat {
 		let dmContent = content.replace(splitContent[1], '');
 		dmContent = splitContent[2] ? dmContent.slice(dmContent.indexOf(splitContent[2])) : '';
 
+		const zalgo = /%CC%/g;
+
+		if (zalgo.test(encodeURIComponent(content))) {
+			this.messages.push({
+				public: false,
+				content: 'You are trying to post a message with invalid characters. Please, refrain from doing it.',
+				author: AVALONIST_NAME,
+				to: [username],
+				type: 1,
+				character: 3,
+				timestamp: Date.now(),
+				id: Date.now(),
+			});
+
+			this.deletePastMessageLimit();
+
+			return {
+				type: 'NONE',
+			};
+		}
+
 		if (!target) {
 			this.messages.push({
 				public: false,
@@ -516,6 +775,14 @@ class Chat {
 				character: 3,
 				timestamp: Date.now(),
 				id: Date.now(),
+			});
+
+			this.addModLog({
+				action: 'DM',
+				sender: username,
+				target: splitContent[1],
+				content: dmContent,
+				date: new Date().toUTCString(),
 			});
 
 			return {
@@ -1133,6 +1400,23 @@ class Chat {
 		this.deletePastMessageLimit();
 	}
 
+	onVoid(no) {
+		const content = 'Room #{no} has been voided!';
+
+		this.messages.push({
+			public: true,
+			content: content.replace(/{no}/gi, no),
+			author: AVALONIST_NAME,
+			to: [],
+			type: 1,
+			character: -1,
+			timestamp: Date.now(),
+			id: Date.now(),
+		});
+
+		this.deletePastMessageLimit();
+	}
+
 	kickPlayer(host, player) {
 		const content = '{player} has been kicked by {host}!';
 
@@ -1152,3 +1436,5 @@ class Chat {
 }
 
 module.exports = Chat;
+
+const RoomHandler = require('../game/room-handler');

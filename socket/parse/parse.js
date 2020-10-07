@@ -21,6 +21,7 @@ query
 			mainEnvironment.set('env', 'Main');
 			mainEnvironment.set('games', 1);
 			mainEnvironment.set('ipBlacklist', InitialBlacklist);
+			mainEnvironment.set('modLogs', []);
 
 			IpTree.setBlacklistFromArray(InitialBlacklist);
 
@@ -36,6 +37,7 @@ query
 
 				IpTree.setBlacklistFromArray(LaterBlacklist);
 			}
+			if (!mainEnvironment.has('modLogs')) mainEnvironment.set('modLogs', []);
 
 			mainEnvironment.save({}, { useMasterKey: true });
 		}

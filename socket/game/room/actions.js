@@ -1,5 +1,3 @@
-const GeneralChat = require('../../chat/general-chat');
-
 const playerMatrix = [
   [2, 3, 2, 3, 3],
   [2, 3, 4, 3, 4],
@@ -290,6 +288,8 @@ class Actions {
 
   // Method for ending the game when a shot is made
   gameEnd(ending) {
+    const GeneralChat = require('../../chat/general-chat');
+
     this.ended = true;
     this.cause = ending;
     this.stage = '';
@@ -306,6 +306,16 @@ class Actions {
     // 2: "Three missions have failed! The Spies Win"
     // 3: "The hammer was rejected! The Spies Win"
     // 4: "Three missions have succeeded! The Resistance Wins"
+  }
+
+  voidGame() {
+    this.ended = true;
+    this.cause = -1;
+    this.stage = '';
+
+    this.game.publicKnowledge = this.game.roles;
+
+    this.chat.onVoid(this.roomName);
   }
 }
 

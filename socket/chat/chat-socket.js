@@ -4,8 +4,10 @@ const ClientsOnline = require('../auth/clients-online').clients;
 const GeneralChat = require('./general-chat');
 
 module.exports = function (io, socket) {
-	const GAME_CHAT = 'GameChat';
 	const GEN_CHAT = 'GeneralChat';
+	const GAME_CHAT = 'GameChat';
+	const GAME_LIST_NAME = 'RoomList';
+	const GAME_NAME = 'Room';
 
 	const generalChatRequest = (id) => {
 		const user = socket.user;
@@ -142,6 +144,14 @@ module.exports = function (io, socket) {
 						title: 'You have been ' + command.action + ' by ' + username + '!',
 						body: '«' + message + '»' + '\n\n-' + domain,
 					});
+
+					break;
+				case 'GAME':
+					socket.emit(emission);
+
+					io.to(GAME_LIST_NAME).emit('roomListUpdate');
+					io.to(GAME_NAME + command.room).emit('gameUpdate');
+					io.to(GAME_CHAT + command.room).emit('gameChatUpdate');
 
 					break;
 				case 'LOGS':

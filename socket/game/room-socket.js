@@ -145,6 +145,7 @@ module.exports = function (io, socket) {
 				socket.emit('gameResponse', response);
 			} catch (err) {
 				console.log(err);
+				socket.emit('gameNotFound');
 			}
 		}
 	};

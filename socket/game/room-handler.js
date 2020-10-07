@@ -317,6 +317,8 @@ class RoomHandler {
   deleteRoom() {
     const id = this.roomName;
     if (id in activeRooms) {
+      activeRooms[id].chat.removeFromChatList();
+
       delete activeRooms[id];
     } else {
       console.log('ERROR: Room ' + id + ' does not exist.');
