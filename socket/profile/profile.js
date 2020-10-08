@@ -29,10 +29,10 @@ class Profile {
     this.gameShots = [0, 0];
     this.gameRating = 1500;
     // Customizing
-    this.playArea = 0;
+    this.playArea = 1;
     this.playTabs = 2;
-    this.playFontSize = 14;
-    this.avatarSize = 140;
+    this.playFontSize = 12;
+    this.avatarSize = 92;
     this.avatarStyle = true;
     this.themeLight = false;
     // Roles
@@ -94,6 +94,38 @@ class Profile {
         }
 
         return undefined;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  async getAvatar() {
+    const query = new Parse.Query('_User');
+    query.equalTo('username', this.user);
+
+    return await query
+      .first({
+        useMasterKey: true,
+      })
+      .then((user) => {
+        if (user) {
+          return {
+            avatarClassic: user.get('avatarClassic'),
+            avatarGummy: user.get('avatarGummy'),
+          };
+        }
+
+        return {
+          avatarClassic: {
+            spy: 'https://i.ibb.co/cNkZrBK/base-spy-c.png',
+            res: 'https://i.ibb.co/Xzpqy65/base-res-c.png',
+          },
+          avatarGummy: {
+            spy: 'https://i.ibb.co/sJcthnM/base-spy.png',
+            res: 'https://i.ibb.co/M8RXC95/base-res.png',
+          },
+        };
       })
       .catch((err) => {
         console.log(err);

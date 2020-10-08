@@ -2,7 +2,6 @@
 
 import { Dispatch } from 'redux';
 
-
 // Internal
 
 import Table from './Table';
@@ -31,6 +30,7 @@ interface AvatarUIProps {
   avatarPosition: [number, number];
   avatarShow: boolean;
   avatarSize: number;
+  fontSize: number;
   dispatch: Dispatch;
 }
 

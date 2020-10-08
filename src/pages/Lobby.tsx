@@ -1,6 +1,8 @@
 // External
 
 import React from 'react';
+import { connect } from 'react-redux';
+import { rootType } from '../redux/reducers';
 
 // Internal
 
@@ -17,14 +19,25 @@ import GameList from './Lobby/GameList';
 
 import '../styles/Lobby.scss';
 
+interface PageProps {
+  style?: any;
+}
+
+const mapState = (state: rootType) => {
+  const { style } = state;
+  return { style };
+};
+
 // Declaration
 
-class Lobby extends React.PureComponent {
+class Lobby extends React.PureComponent<PageProps> {
   initialHeight = Math.max(window.innerHeight, 630);
 
   render() {
+    const theme = this.props.style.themeLight ? 'light' : 'dark';
+
     return (
-      <div id="Background-2" className={'full light'}>
+      <div id="Background-2" className={'full ' + theme}>
         <Navbar username="" />
         <AvalonScrollbars>
           <div id="Lobby" className="section" style={{ minHeight: this.initialHeight + 'px' }}>
@@ -35,7 +48,7 @@ class Lobby extends React.PureComponent {
               <PlayerList players={[]} clients={[]} />
             </div>
             <div className="column section">
-              <Chat chatHighlights={{}} players={[]} username='' stage='NONE'/>
+              <Chat chatHighlights={{}} players={[]} username="" stage="NONE" />
             </div>
             <div className="column section">
               <GameList />
@@ -47,4 +60,4 @@ class Lobby extends React.PureComponent {
   }
 }
 
-export default Lobby;
+export default connect(mapState, null)(Lobby);

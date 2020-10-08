@@ -114,6 +114,8 @@ export class AvatarUI extends React.PureComponent<
     });
 
   render() {
+    const fontSize = Math.min(this.props.tableWidth * 0.04, this.props.fontSize);
+
     return (
       <>
         <div
@@ -131,8 +133,8 @@ export class AvatarUI extends React.PureComponent<
             style={{
               width: this.props.avatarSize + 'px',
               height: this.props.avatarSize + 'px',
-              maxHeight: Math.max(this.props.tableWidth * 0.06, 45) + 'px',
-              maxWidth: Math.max(this.props.tableWidth * 0.06, 45) + 'px',
+              maxHeight: Math.max(this.props.tableWidth * 0.08, 45) + 'px',
+              maxWidth: Math.max(this.props.tableWidth * 0.08, 45) + 'px',
               opacity: this.props.afk ? '0.5' : '1',
             }}
           >
@@ -195,7 +197,7 @@ export class AvatarUI extends React.PureComponent<
             className={'ave-username ' + (this.props.isMe ? 'me' : '')}
             style={{
               width: Math.max(this.props.tableWidth * 0.15, 40) + 'px',
-              fontSize: Math.max(this.props.tableWidth * 0.01, 10) + 'px',
+              fontSize: Math.max(fontSize, 10) + 'px',
             }}
           >
             {this.props.card ? <FontAwesomeIcon icon={faAddressCard} /> : null}{' '}
@@ -205,7 +207,7 @@ export class AvatarUI extends React.PureComponent<
             className={'ave-role ' + this.props.isRes}
             style={{
               opacity: this.props.role !== 'Spy?' && this.props.role !== 'Resistance?' ? '1' : '0',
-              fontSize: Math.max(this.props.tableWidth * 0.008, 8) + 'px',
+              fontSize: Math.max(fontSize * 0.8, 8) + 'px',
             }}
           >
             {this.props.role}

@@ -11,6 +11,7 @@ import {
 	SET_GAME_TAB_HIGHLIGHT,
 	UPDATE_CHAT_HIGHLIGHT,
 	SET_MESSAGE_DELAY,
+	UPDATE_STYLE,
 	ActionTypes,
 } from './actions';
 
@@ -75,6 +76,26 @@ function messageDelay(state: number[] = [0, 0, 0, 0, 0], action: ActionTypes): n
 	}
 }
 
+function style(
+	state: any = {
+		playArea: 0,
+		playTabs: 2,
+		playFontSize: 14,
+		avatarSize: 140,
+		avatarStyle: true,
+		themeLight: false,
+	},
+	action: ActionTypes
+): any {
+	switch (action.type) {
+		case UPDATE_STYLE:
+			state = action.style;
+			return state;
+		default:
+			return state;
+	}
+}
+
 export const rootReducer = combineReducers({
 	notes,
 	username,
@@ -82,6 +103,7 @@ export const rootReducer = combineReducers({
 	highlighted,
 	chatHighlights,
 	messageDelay,
+	style
 });
 
 export type rootType = ReturnType<typeof rootReducer>;

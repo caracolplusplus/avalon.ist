@@ -13,6 +13,14 @@ Parse.Cloud.define('authStateChange', async (request) => {
 	const currentId = request.headers.cookie.match(new RegExp('(^| )io=([^;]+)'))[2];
 
 	let currentSocket = undefined;
+	let style = {
+		playArea: 0,
+		playTabs: 2,
+		playFontSize: 14,
+		avatarSize: 140,
+		avatarStyle: true,
+		themeLight: false,
+	};
 
 	const l = SocketsOnline.length;
 
@@ -54,6 +62,17 @@ Parse.Cloud.define('authStateChange', async (request) => {
 				}
 			}
 
+			if (currentUser.has('themeLight')) {
+				style = {
+					playArea: currentUser.get('playArea'),
+					playTabs: currentUser.get('playTabs'),
+					playFontSize: currentUser.get('playFontSize'),
+					avatarSize: currentUser.get('avatarSize'),
+					avatarStyle: currentUser.get('avatarStyle'),
+					themeLight: currentUser.get('themeLight'),
+				};
+			}
+
 			const addressList = currentUser.get('ips');
 
 			if (Array.isArray(addressList)) {
@@ -69,7 +88,7 @@ Parse.Cloud.define('authStateChange', async (request) => {
 			currentSocket.user = currentUser;
 		}
 
-		currentSocket.emit('connectionLinked');
+		currentSocket.emit('connectionLinked', style);
 	}
 
 	return true;

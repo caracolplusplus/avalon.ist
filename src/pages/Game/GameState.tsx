@@ -13,8 +13,7 @@ interface GameState {
   cause: number | undefined;
   assassination: number;
   // Game UI Info
-  tabs: number;
-  scale: number;
+  style: any;
   highlighted: boolean[];
   notFound: boolean;
   // Game Pick Info

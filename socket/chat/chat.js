@@ -80,7 +80,7 @@ class Chat {
 
 		switch (splitContent[0]) {
 			case '/help':
-				return this.commandHelp(username);
+				return this.commandHelp(username, splitContent[1]);
 			case '/ss':
 			case '/unss':
 			case '/ban':
@@ -88,15 +88,17 @@ class Chat {
 			case '/banip':
 				return await this.commandModAction(username, splitContent);
 			case '/close':
-			case '/freeze':
-			case '/unfreeze':
+			case '/pause':
+			case '/unpause':
 			case '/learnroles':
 			case '/end':
 				return this.commandGameAction(username, splitContent);
 			case '/unbanip':
 				return await this.commandUnbanIp(username, splitContent);
 			case '/logs':
-				return this.commandModerationLogs(username);
+				return await this.commandModerationLogs(username, false);
+			case '/logsall':
+				return await this.commandModerationLogs(username, true);
 			case '/dm':
 				return this.commandDirectMessage(username, content, splitContent);
 			case '/roll':
@@ -122,7 +124,7 @@ class Chat {
 	invalidCommand(username) {
 		this.messages.push({
 			public: false,
-			content: 'Invalid Command. Try /help for a list of commands.',
+			content: 'Invalid Command. Try /help {page} for a list of commands.',
 			author: AVALONIST_NAME,
 			to: [username],
 			type: 1,
@@ -138,46 +140,76 @@ class Chat {
 		};
 	}
 
-	commandHelp(username) {
+	commandHelp(username, page) {
 		const caller = ClientsOnline[username].profile;
+		const mod = caller.isMod || caller.isAdmin;
+		const pageMax = mod ? 4 : 2;
 
-		const helpMessages =
-			caller.isMod || caller.isAdmin
-				? [
-						'List of Commands:',
-						"/ss {player} {hours?} - Enacts a temporary suspension on the given player's account.",
-						"/unss {player} - Lifts a temporary suspension from the given player's account.",
-						"/ban {player} - Enacts a permanent ban on the given player's account.",
-						"/unban {player} - Lifts a permanent ban from the given player's account.",
-						"/banip {player} - Enacts a permanent ban on the given player's account and its correspondent IPs.",
-						'/unbanip {ip} - Lifts a permanent ban on the given IP address.',
-						'/logs - Retrieves moderation logs and prints them in browser console.',
-						'/dm {player} {message} - Sends a direct message to the player specified. The direct message will send a notification to the player.',
-						'/lick {player} - Show your love to someone by licking them!',
-						'/slap {player} - If you prefer something more aggressive, try slapping them!',
-						'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
-						'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
-						'/flip - Flips a coin.',
-						'/clear - Clears the chat.',
-				  ]
-				: [
-						'List of Commands:',
-						'/dm {moderator} {message} - Sends a direct message to the moderator specified.',
-						'/lick {player} - Show your love to someone by licking them!',
-						'/slap {player} - If you prefer something more aggressive, try slapping them!',
-						'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
-						'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
-						'/flip - Flips a coin.',
-						'/clear - Clears the chat.',
-				  ];
+		page = parseInt(page);
+		page = isNaN(page) || page < 1 || page > pageMax ? 1 : page;
+
+		const helpMod = {
+			1: [
+				'Moderation Actions',
+				"/ss {player} {hours?} - Enacts a temporary suspension on the given player's account.",
+				"/unss {player} - Lifts a temporary suspension from the given player's account.",
+				"/ban {player} - Enacts a permanent ban on the given player's account.",
+				"/unban {player} - Lifts a permanent ban from the given player's account.",
+				"/banip {player} - Enacts a permanent ban on the given player's account and its correspondent IPs.",
+				'/unbanip {ip} - Lifts a permanent ban on the given IP address.',
+				'/logs - Retrieves moderation logs of the current session and prints them in browser console.',
+				'/logsall - Retrieves a full history of moderation logs and prints them in browser console.',
+			],
+			2: [
+				'Game Moderation Actions',
+				'/pause {room code} - Pauses the specified game and no actions can be performed while the game is paused.',
+				'/unpause {room code} - Unpauses the specified game and actions can be performed again.',
+				'/end {room code} {outcome?} - Ends the specified game with the specified outcome. Entering 1 will make Resistance win, entering 0 will make Spy win. Not entering any outcome will void the game.',
+				'/close {room code} - Closes the specified game and kicks every player in the room.',
+				'/learnroles {room code} - Shows the roles of all the players in the specified game.',
+			],
+			3: [
+				'Buzzes',
+				'/dm {player} {message} - Sends a direct message to the player specified. The direct message will send a notification to the player.',
+				'/lick {player} - Show your love to someone by licking them!',
+				'/slap {player} - If you prefer something more aggressive, try slapping them!',
+				'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
+			],
+			4: [
+				'Miscelaneous',
+				'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
+				'/flip - Flips a coin.',
+				'/clear - Clears the chat.',
+			],
+		};
+
+		const helpClient = {
+			1: [
+				'Buzzes',
+				'/dm {moderator} {message} - Sends a direct message to the moderator specified.',
+				'/lick {player} - Show your love to someone by licking them!',
+				'/slap {player} - If you prefer something more aggressive, try slapping them!',
+				'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
+			],
+			2: [
+				'Miscelaneous',
+				'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
+				'/flip - Flips a coin.',
+				'/clear - Clears the chat.',
+			],
+		};
+
+		const helpMessages = mod ? helpMod[page] : helpClient[page];
+
+		const author = 'Command Help > Page {p}/{m}'.replace(/{p}/gi, page).replace(/{m}/gi, pageMax);
 
 		for (const x in helpMessages) {
 			this.messages.push({
 				public: false,
 				content: helpMessages[x],
-				author: AVALONIST_NAME,
+				author,
 				to: [username],
-				type: 1,
+				type: x === '0' ? 0 : 1,
 				character: 3,
 				timestamp: Date.now(),
 				id: Date.now(),
@@ -403,7 +435,7 @@ class Chat {
 						});
 
 						break;
-					case '/freeze':
+					case '/pause':
 						if (!room.game.started) {
 							this.messages.push({
 								public: false,
@@ -425,18 +457,18 @@ class Chat {
 
 						room.actions.frozen = true;
 
-						message = 'Room #{no} has been frozen.';
+						message = 'Room #{no} has been paused.';
 						message = message.replace(/{no}/gi, splitContent[1]);
 
 						this.addModLog({
-							action: 'FREEZE ROOM',
+							action: 'PAUSE ROOM',
 							moderator: username,
 							target: 'Room #' + splitContent[1],
 							date: new Date().toUTCString(),
 						});
 
 						break;
-					case '/unfreeze':
+					case '/unpause':
 						if (!room.game.started) {
 							this.messages.push({
 								public: false,
@@ -458,11 +490,11 @@ class Chat {
 
 						room.actions.frozen = false;
 
-						message = 'Room #{no} has been unfrozen.';
+						message = 'Room #{no} has been unpaused.';
 						message = message.replace(/{no}/gi, splitContent[1]);
 
 						this.addModLog({
-							action: 'UNFREEZE ROOM',
+							action: 'UNPAUSE ROOM',
 							moderator: username,
 							target: 'Room #' + splitContent[1],
 							date: new Date().toUTCString(),
@@ -672,7 +704,7 @@ class Chat {
 		}
 	}
 
-	commandModerationLogs(username) {
+	async commandModerationLogs(username, all) {
 		const hammer = ClientsOnline[username].profile;
 
 		if (hammer.isMod || hammer.isAdmin) {
@@ -689,7 +721,7 @@ class Chat {
 
 			return {
 				type: 'LOGS',
-				logs: ModLogs,
+				logs: all ? (await GlobalEnvironment()).get('modLogs') : ModLogs,
 			};
 		} else {
 			return this.invalidCommand(username);

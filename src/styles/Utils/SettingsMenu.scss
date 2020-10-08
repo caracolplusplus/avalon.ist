@@ -23,7 +23,8 @@
       border-radius: $base-font-size * 0.125;
       padding: $base-font-size * 0.375 $base-font-size * 0.75;
       color: black;
-      h1, h2 {
+      h1,
+      h2 {
         text-align: center;
       }
       h2 {
@@ -35,6 +36,7 @@
         width: 100%;
       }
       .title {
+        text-transform: uppercase;
         font-weight: 600;
         font-size: $base-font-size * 0.375;
         text-align: center;

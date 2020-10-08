@@ -204,7 +204,8 @@ class Table extends React.PureComponent<
         avatarInitialPosition: ave ? ave.avatarInitialPosition : [0, 0],
         avatarPosition: ave ? ave.avatarPosition : [0, 0],
         avatarShow: ave ? ave.avatarShow : false,
-        avatarSize: ave ? ave.avatarSize : 350,
+        avatarSize: ave ? ave.avatarSize : game.style.avatarSize,
+        fontSize: ave ? ave.fontSize : game.style.playFontSize,
         tableWidth: ave ? ave.tableWidth : 0,
         dispatch: this.props.dispatch,
       };

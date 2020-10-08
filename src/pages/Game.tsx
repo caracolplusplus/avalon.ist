@@ -3,7 +3,8 @@
 import React, { createRef } from 'react';
 import { Redirect } from 'react-router-dom';
 import { RouteComponentProps } from 'react-router';
-import { useDispatch } from 'react-redux';
+import { useDispatch, connect } from 'react-redux';
+import { rootType } from '../redux/reducers';
 
 // Internal
 
@@ -25,12 +26,21 @@ interface GameProps {
   id: string;
 }
 
-class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState> {
+interface PageProps extends RouteComponentProps<GameProps> {
+  style?: any;
+}
+
+const mapState = (state: rootType) => {
+  const { style } = state;
+  return { style };
+};
+
+class Game extends React.PureComponent<PageProps, GameState> {
   initialHeight = Math.max(window.innerHeight, 540);
   tableRef = createRef<Table>();
   tabsRef = [createRef<Tabs>(), createRef<Tabs>(), createRef<Tabs>()];
 
-  constructor(props: RouteComponentProps<GameProps>) {
+  constructor(props: PageProps) {
     super(props);
     this.state = {
       // Player Info
@@ -48,8 +58,7 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
       cause: undefined,
       assassination: -1,
       // Game UI Info
-      tabs: 2,
-      scale: 1,
+      style: props.style,
       highlighted: [false, false],
       notFound: false,
       // Game Pick Info
@@ -91,7 +100,6 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
     this.joinRoom = this.joinRoom.bind(this);
     this.triggerRequest = this.triggerRequest.bind(this);
     this.parseGame = this.parseGame.bind(this);
-    this.setTableHeight = this.setTableHeight.bind(this);
   }
 
   componentDidMount() {
@@ -139,27 +147,20 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
   }
 
   parseGame(data: GameState) {
-    data.tabs = this.state.tabs;
-    data.scale = this.state.scale;
+    data.style = this.props.style;
     data.highlighted = this.state.highlighted;
     data.notFound = this.state.notFound;
 
     this.setState(data);
   }
 
-  setTableHeight() {
-    this.setState({
-      scale: (this.state.scale + 0.1) % 1.1,
-    });
-
-    this.tableRef.current!.initAvatars();
-  }
-
   render() {
     const tabs = [];
     const initialTabArray = [1, 3, 2];
 
-    for (let i = 0; i < this.state.tabs; i++) {
+    const theme = this.props.style.themeLight ? 'light' : 'dark';
+
+    for (let i = 0; i < this.props.style.playTabs; i++) {
       tabs.push(
         <Tabs
           key={'Tab' + i}
@@ -171,13 +172,19 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
       );
     }
 
-    return this.state.notFound ? <Redirect to="/game-not-found" /> : (
-      <div id="Background-2" className="light full">
+    return this.state.notFound ? (
+      <Redirect to="/game-not-found" />
+    ) : (
+      <div id="Background-2" className={'full ' + theme}>
         <Navbar username="" />
         <AvalonScrollbars>
           <div id="Game" style={{ minHeight: this.initialHeight + 'px' }} className="section">
-            <div className="column section" style={{ flex: '0 0 ' + (40 + this.state.scale * 20) + '%' }}>
-              <Table ref={this.tableRef} game={this.state} dispatch={useDispatch}/>
+            <div className="column section" style={{ flex: '0 0 ' + (40 + this.props.style.playArea * 20) + '%' }}>
+              <Table
+                ref={this.tableRef}
+                game={this.state}
+                dispatch={useDispatch}
+              />
             </div>
             <div className="column section">{tabs}</div>
           </div>
@@ -187,6 +194,4 @@ class Game extends React.PureComponent<RouteComponentProps<GameProps>, GameState
   }
 }
 
-export default Game;
-
-// <GameForm title="" onExit={() => {}}/>
+export default connect(mapState, null)(Game);

@@ -6,6 +6,7 @@ export const SET_ONLINE = 'SET_ONLINE';
 export const SET_GAME_TAB_HIGHLIGHT = 'SET_HIGHLIGHT';
 export const UPDATE_CHAT_HIGHLIGHT = 'UPDATE_CHAT_HIGHLIGHT';
 export const SET_MESSAGE_DELAY = 'SET_MESSAGE_DELAY';
+export const UPDATE_STYLE = 'UPDATE_STYLE';
 
 interface AddNotesAction {
   type: typeof ADD_NOTES;
@@ -39,13 +40,19 @@ interface SetMessageDelay {
   timestamp: number;
 }
 
+interface UpdateStyle {
+  type: typeof UPDATE_STYLE;
+  style: any;
+}
+
 export type ActionTypes =
   | AddNotesAction
   | SetGameTabHighlight
   | SetUsernameAction
   | SetOnlineAction
   | UpdateChatHighlight
-  | SetMessageDelay;
+  | SetMessageDelay
+  | UpdateStyle;
 
 // Actions
 
@@ -91,4 +98,11 @@ export function setMessageDelay(): ActionTypes {
     type: SET_MESSAGE_DELAY,
     timestamp: Date.now() + 5000,
   };
+}
+
+export function updateStyle(style: any): ActionTypes {
+  return {
+    type: UPDATE_STYLE,
+    style,
+  }
 }

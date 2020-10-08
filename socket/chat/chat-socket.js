@@ -47,8 +47,8 @@ module.exports = function (io, socket) {
 
 		if (user) {
 			try {
-				const username = user.get('username');
 				const room = new RoomHandler(socket.room).getRoom();
+				const username = user.get('username');
 				const profile = ClientsOnline[username].profile;
 
 				const isMod = profile.isMod || profile.isAdmin;
@@ -66,7 +66,17 @@ module.exports = function (io, socket) {
 
 				if (result.length > 0) socket.emit('gameChatResponse' + socket.room, result);
 			} catch (err) {
+				const username = user.get('username');
+				const client = ClientsOnline[username];
+
+				if (!client) return;
+
+				const profile = client.profile;
+
 				const query = new Parse.Query('Game');
+
+				const isMod = profile.isMod || profile.isAdmin;
+
 				query.equalTo('code', socket.room);
 
 				query
@@ -76,7 +86,18 @@ module.exports = function (io, socket) {
 					.then((game) => {
 						if (!game) console.log(err);
 
-						socket.emit('gameChatResponse' + socket.room, game.get('chat'));
+						socket.emit(
+							'gameChatResponse' + socket.room,
+							game
+								.get('chat')
+								.filter(
+									(m) =>
+										m.public ||
+										m.to.includes(username) ||
+										m.author === username ||
+										(isMod && m.type === 0 && m.character === 3)
+								)
+						);
 					});
 			}
 		}

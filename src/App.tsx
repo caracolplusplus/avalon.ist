@@ -15,7 +15,7 @@ import UnverifiedOnly from './components/routes/UnverifiedOnly';
 
 // Redux
 
-import { setUsername, setOnline } from './redux/actions';
+import { setUsername, setOnline, updateStyle } from './redux/actions';
 
 // Pages
 
@@ -77,6 +77,10 @@ class App extends React.PureComponent<appProps, appState> {
       Notification.requestPermission();
     }
 
+    socket.on('updateUISettings', (style: any) => {
+      this.props.dispatch(updateStyle(style));
+    })
+
     socket.on('notificationMessage', (data: any) => {
       if (Soundboard[data.audio]) Soundboard[data.audio].play();
 
@@ -87,7 +91,16 @@ class App extends React.PureComponent<appProps, appState> {
       });
     });
 
-    socket.on('connectionStarted', this.authStateChange);
+    socket.on('connectionStarted', async () => {
+      try {
+        await Parse.Cloud.run('authStateChange');
+      } catch (err) {
+        await Parse.User.logOut();
+        socket.disconnect();
+        window.location.reload(true);
+      }
+    });
+
     socket.on('connectionLinked', this.updateState);
   }
 
@@ -97,17 +110,10 @@ class App extends React.PureComponent<appProps, appState> {
     socket.disconnect();
   }
 
-  async authStateChange() {
-    try {
-      await Parse.Cloud.run('authStateChange');
-    } catch (err) {
-      await Parse.User.logOut();
-      window.location.reload();
-    }
-  }
-
-  updateState() {
+  updateState(style: any) {
     const currentUser = Parse.User.current();
+
+    this.props.dispatch(updateStyle(style));
 
     if (currentUser) {
       const username = currentUser.getUsername();
