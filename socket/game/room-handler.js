@@ -42,6 +42,7 @@ class RoomClient {
     this.username = 'NONAME';
 
     this.players = [];
+    this.avatars = [];
     this.clients = [];
     this.imRes = true;
 
@@ -88,6 +89,7 @@ class RoomClient {
     this.username = username;
 
     this.players = game.players;
+    this.avatars = game.avatars;
     this.clients = Object.keys(game.clients);
     this.imRes = ['Resistance', 'Percival'].includes(game.roles[this.seat]);
 
@@ -151,6 +153,8 @@ class RoomHandler {
 
   // Method to call in a room once everyone is ready to start a game
   initGame(username) {
+    const ClientsOnline = require('../auth/clients-online').clients;
+
     // Get room
     const room = this.getRoom();
     const game = room.game;
@@ -164,9 +168,29 @@ class RoomHandler {
     const shuffle = this.createRoles(game.players, game.roles);
 
     // Start the game
+    game.started = true;
     game.players = shuffle[0];
     game.roles = shuffle[1];
-    game.started = true;
+
+    game.avatars = game.players.map((p) => {
+      const profile = ClientsOnline[p].profile;
+
+      return profile
+        ? {
+            avatarClassic: profile.avatarClassic,
+            avatarGummy: profile.avatarGummy,
+          }
+        : {
+            avatarClassic: {
+              spy: 'https://i.ibb.co/cNkZrBK/base-spy-c.png',
+              res: 'https://i.ibb.co/Xzpqy65/base-res-c.png',
+            },
+            avatarGummy: {
+              spy: 'https://i.ibb.co/sJcthnM/base-spy.png',
+              res: 'https://i.ibb.co/M8RXC95/base-res.png',
+            },
+          };
+    });
 
     game.getRoleKnowledge();
 
@@ -396,7 +420,7 @@ class RoomHandler {
       .first({
         useMasterKey: true,
       })
-      .then((game) => {
+      .then(async (game) => {
         if (!game) return undefined;
 
         const gc = new RoomClient();
@@ -405,17 +429,34 @@ class RoomHandler {
           if (replayAttributes.includes(x)) gc[x] = game.get(x);
         }
 
+        const aves = this.getAvatarsFromPlayers(gc.players);
+
         gc.stage = 'REPLAY';
 
         gc.username = username;
         gc.clients = gc.players;
         gc.code = this.roomName;
+        gc.avatars = await aves;
+
+        console.log(gc.avatars);
 
         return gc;
       })
       .catch((err) => {
         console.log(err);
       });
+  }
+
+  async getAvatarsFromPlayers(players) {
+    const promises = [];
+
+    for (const x in players) {
+      const p = players[x];
+
+      promises.push(new Profile(p).getAvatar());
+    }
+
+    return await Promise.all(promises);
   }
 }
 

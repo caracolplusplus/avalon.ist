@@ -2,6 +2,7 @@ interface GameState {
   // Player Info
   username: string | null;
   players: string[];
+  avatars: any[];
   clients: string[];
   seat: number;
   imRes: boolean;

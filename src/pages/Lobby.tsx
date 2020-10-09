@@ -38,7 +38,7 @@ class Lobby extends React.PureComponent<PageProps> {
 
     return (
       <div id="Background-2" className={'full ' + theme}>
-        <Navbar username="" />
+        <Navbar username="" key={'Navbar'}/>
         <AvalonScrollbars>
           <div id="Lobby" className="section" style={{ minHeight: this.initialHeight + 'px' }}>
             <div className="column section">

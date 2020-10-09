@@ -1,0 +1,62 @@
+@use '../Globals';
+
+@mixin rangeSlider($base-font-size, $scale) {
+  .range-container {
+    flex: 0 0 50%;
+    display: flex;
+    flex-direction: row;
+    p {
+      flex: 0 0 $base-font-size;
+      height: 1em;
+      margin: auto;
+      text-align: center;
+    }
+  }
+
+  .range-slider {
+    margin: auto 0;
+    appearance: none;
+    flex: 0 0 50%;
+    height: $base-font-size * 0.1;
+    border-radius: $base-font-size * 0.5;
+    background: Globals.$light-2; 
+    outline: none;
+  }
+
+  .range-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: $base-font-size * 0.45; /* Set a specific slider handle width */
+    height: $base-font-size * 0.45; /* Slider handle height */
+    background: white;/* Green background */
+    border: $base-font-size * 0.05 solid Globals.$light-3;
+    border-radius: $base-font-size;
+    cursor: pointer; /* Cursor on hover */
+    transition: 1s;
+    &:hover {
+      border-color: Globals.$green-1;
+    }
+  }
+
+  .slider::-moz-range-thumb {
+    width: 25px; /* Set a specific slider handle width */
+    height: 25px; /* Slider handle height */
+    background: #4caf50; /* Green background */
+    cursor: pointer; /* Cursor on hover */
+  }
+}
+
+@media screen and (min-width: Globals.$min-res) {
+  @include rangeSlider(Globals.$initial-font-size * 0.9, 0.15);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include rangeSlider(Globals.$initial-font-size, 0.25);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include rangeSlider(Globals.$initial-font-size * 1.2, 0.4);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include rangeSlider(Globals.$initial-font-size * 1.4, 0.6);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include rangeSlider(Globals.$initial-font-size * 2.5, 1);
+}

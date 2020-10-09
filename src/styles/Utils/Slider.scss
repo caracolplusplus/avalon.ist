@@ -30,6 +30,9 @@
     -webkit-transition: 0.4s;
     transition: 0.4s;
     border-radius: $base-font-size * 0.9;
+    &.always {
+      background-color: Globals.$green-1 !important;
+    }
   }
 
   .slider:before {

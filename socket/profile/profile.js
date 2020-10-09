@@ -32,7 +32,7 @@ class Profile {
     this.playArea = 1;
     this.playTabs = 2;
     this.playFontSize = 12;
-    this.avatarSize = 92;
+    this.avatarSize = 75;
     this.avatarStyle = true;
     this.themeLight = false;
     // Roles

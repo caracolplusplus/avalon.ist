@@ -60,10 +60,19 @@
           text-align: left;
           font-weight: 300;
           height: 1em;
+          &.selected {
+            font-weight: 600;
+          }
         }
         .list {
           display: inline-block;
           float: right;
+        }
+        &.dual {
+          justify-content: center;
+          .handle {
+            text-align: center;
+          }
         }
       }
       .buttons {

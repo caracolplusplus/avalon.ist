@@ -126,7 +126,8 @@ class Table extends React.PureComponent<
 
       if (
         prevProps.game.players.length !== this.props.game.players.length ||
-        prevProps.game.started !== this.props.game.started
+        prevProps.game.started !== this.props.game.started ||
+        prevProps.game.style !== this.props.game.style
       )
         this.animationCallback = this.initAvatars;
 
@@ -164,8 +165,7 @@ class Table extends React.PureComponent<
       this.avatarRef.push(createRef<AvatarUI>());
 
       // Avatars
-      const spyUrl = 'https://i.ibb.co/sJcthnM/base-spy.png';
-      const resUrl = 'https://i.ibb.co/M8RXC95/base-res.png';
+      const avatarUrls = game.style.avatarStyle ? game.avatars[i].avatarGummy : game.avatars[i].avatarClassic;
 
       // Data
       const username = p;
@@ -182,8 +182,8 @@ class Table extends React.PureComponent<
       const isMe = game.seat === i;
 
       const output: AvatarUIProps = {
-        spyUrl,
-        resUrl,
+        spyUrl: avatarUrls.spy,
+        resUrl: avatarUrls.res,
         username,
         role,
         vote,
@@ -204,8 +204,8 @@ class Table extends React.PureComponent<
         avatarInitialPosition: ave ? ave.avatarInitialPosition : [0, 0],
         avatarPosition: ave ? ave.avatarPosition : [0, 0],
         avatarShow: ave ? ave.avatarShow : false,
-        avatarSize: ave ? ave.avatarSize : game.style.avatarSize,
-        fontSize: ave ? ave.fontSize : game.style.playFontSize,
+        avatarSize: game.style.avatarSize,
+        fontSize: game.style.playFontSize,
         tableWidth: ave ? ave.tableWidth : 0,
         dispatch: this.props.dispatch,
       };

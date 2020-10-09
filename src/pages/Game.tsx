@@ -49,6 +49,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
       // Players In Table
       players: [],
       clients: [],
+      avatars: [],
       imRes: false,
       // Game State Info
       started: undefined,
@@ -121,7 +122,15 @@ class Game extends React.PureComponent<PageProps, GameState> {
     socket.off('gameResponse', this.parseGame);
     socket.off('gameNotFound', this.gameNotFound);
 
+    socket.off('roomJoinBack', this.joinRoom);
+
     if (this.state.stage !== 'REPLAY' || this.state.code !== '-1') socket.emit('roomLeave');
+  }
+
+  componentDidUpdate(prevProps: PageProps) {
+    if (prevProps.style !== this.props.style) {
+      this.setState({ ...this.state, style: this.props.style});
+    }
   }
 
   joinRoom() {
@@ -176,7 +185,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
       <Redirect to="/game-not-found" />
     ) : (
       <div id="Background-2" className={'full ' + theme}>
-        <Navbar username="" />
+        <Navbar username="" key={'Navbar'}/>
         <AvalonScrollbars>
           <div id="Game" style={{ minHeight: this.initialHeight + 'px' }} className="section">
             <div className="column section" style={{ flex: '0 0 ' + (40 + this.props.style.playArea * 20) + '%' }}>

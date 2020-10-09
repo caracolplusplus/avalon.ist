@@ -3,6 +3,7 @@ class Game {
     // Creates a Game Object
     this.host = '';
     // Players and Roles
+    this.avatars = [];
     this.players = [];
     this.clients = {};
     this.kickedPlayers = new Set();
@@ -67,12 +68,44 @@ class Game {
   // Method to call when u sit and stand up from a game
   switchSeatOnGame(player, canSit) {
     this.players.includes(player)
-      ? this.players.splice(this.players.indexOf(player), 1)
+      ? this.removePlayer(player)
       : this.players.length < this.maxPlayers && canSit
-      ? this.players.push(player)
+      ? this.addPlayer(player)
       : null;
 
     if (this.players.length > 0) this.host = this.players[0];
+  }
+
+  removePlayer(player) {
+    const index = this.players.indexOf(player);
+
+    this.players.splice(index, 1);
+    this.avatars.splice(index, 1);
+  }
+
+  addPlayer(player) {
+    const ClientsOnline = require('../../auth/clients-online').clients;
+
+    const profile = ClientsOnline[player].profile;
+
+    this.players.push(player);
+    this.avatars.push(
+      profile
+        ? {
+            avatarClassic: profile.avatarClassic,
+            avatarGummy: profile.avatarGummy,
+          }
+        : {
+            avatarClassic: {
+              spy: 'https://i.ibb.co/cNkZrBK/base-spy-c.png',
+              res: 'https://i.ibb.co/Xzpqy65/base-res-c.png',
+            },
+            avatarGummy: {
+              spy: 'https://i.ibb.co/sJcthnM/base-spy.png',
+              res: 'https://i.ibb.co/M8RXC95/base-res.png',
+            },
+          }
+    );
   }
 
   // Method to get role knowledge for each player seated

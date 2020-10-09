@@ -33,7 +33,7 @@ class NoMatch extends React.PureComponent<PageProps> {
 
     return (
       <div id="Background-2" className={'full ' + theme}>
-        <Navbar username="" />
+        <Navbar username="" key={'Navbar'}/>
         <AvalonScrollbars>
           <div id="Verify" style={{ minHeight: this.initialHeight + 'px' }} className="section">
             <div className="not-found" />

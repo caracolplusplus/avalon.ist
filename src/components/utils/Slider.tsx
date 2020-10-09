@@ -7,6 +7,7 @@ import React from "react";
 import "../../styles/Utils/Slider.scss";
 
 interface SliderProps {
+	alwaysOn?: boolean;
 	value: boolean;
 	onClick: (...args: any[]) => void;
 }
@@ -20,7 +21,7 @@ const Slider = (props: SliderProps) => {
 				onClick={props.onClick}
 				type="checkbox"
 			/>
-			<span className="slider"></span>
+			<span className={"slider" + (props.alwaysOn ? ' always' : '')}></span>
 		</label>
 	);
 };
