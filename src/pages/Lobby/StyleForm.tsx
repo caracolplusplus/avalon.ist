@@ -11,7 +11,6 @@ import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 import socket from '../../socket-io/socket-io';
 import Slider from '../../components/utils/Slider';
 import RangeSlider from '../../components/utils/RangeSlider';
-import List from '../../components/utils/ListInput';
 
 // Styles
 
@@ -68,6 +67,7 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
   handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
+    socket.emit('saveTheme', this.state);
     this.props.dispatch(updateStyle(this.state));
     this.props.onExit();
   };
@@ -81,15 +81,13 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
           <form autoComplete="off" onSubmit={this.handleSubmit}>
             <p className="title">theme settings</p>
             <p className="subtitle">Aesthetic</p>
-            <div className="input-container dual">
-              <p className={"handle " + (!this.state.themeLight ? "selected" : "")}>Dark Theme</p>
-              <Slider value={this.state.themeLight} alwaysOn={true} onClick={this.switchTheme} />
-              <p className={"handle " + (this.state.themeLight ? "selected" : "")}>Light Theme</p>
+            <div className="input-container">
+              <Slider value={this.state.themeLight} onClick={this.switchTheme} />
+              <p className="handle">{this.state.themeLight ? 'Light Theme' : 'Dark Theme'}</p>
             </div>
-            <div className="input-container dual">
-              <p className={"handle " + (!this.state.avatarStyle ? "selected" : "")}>Classic Avatars</p>
-              <Slider value={this.state.avatarStyle} alwaysOn={true} onClick={this.switchAvatarStyle} />
-              <p className={"handle " + (this.state.avatarStyle ? "selected" : "")}>Gummy Avatars</p>
+            <div className="input-container">
+              <Slider value={this.state.avatarStyle} onClick={this.switchAvatarStyle} />
+              <p className="handle">{this.state.avatarStyle ? 'New Avatars' : 'Classic Avatars'}</p>
             </div>
             <p className="subtitle">Accessibility</p>
             <div className="input-container">
@@ -103,7 +101,7 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
                 onChange={this.handleTabs}
               />
             </div>
-                        <div className="input-container">
+            <div className="input-container">
               <p className="handle">Avatar Size</p>
               <RangeSlider
                 currentDisplay={this.state.avatarSize}

@@ -76,6 +76,10 @@ class Navbar extends React.PureComponent<{ username: string, style?: any, dispat
     this.setState({ showSettings: !this.state.showSettings });
   };
 
+  hideSidebarToSettings = () => {
+    this.setState({ showSidebar: false, showSettings: true });
+  }
+
   hideSettings = () => {
     this.setState({ showSettings: false });
   };
@@ -151,7 +155,7 @@ class Navbar extends React.PureComponent<{ username: string, style?: any, dispat
               <Link to="/dev">DEVELOPMENT</Link>
               <div />
               <Link to={'/profile/' + this.props.username}>PROFILE</Link>
-              <button onClick={this.toggleSettings}>SETTINGS</button>
+              <button onClick={this.hideSidebarToSettings}>SETTINGS</button>
               <button onClick={this.handleLogout}>LOG OUT</button>
             </div>
           </AvalonScrollbars>

@@ -103,6 +103,30 @@ module.exports = function (io, socket) {
 		);
 	};
 
+	const saveTheme = async (style) => {
+		const user = socket.user;
+
+		if (user) {
+			try {
+				const username = user.get('username');
+				const profile = ClientsOnline[username].profile;
+
+				await profile.getFromUser();
+
+				profile.playArea = style.playArea;
+				profile.playTabs = style.playTabs;
+				profile.playFontSize = style.playFontSize;
+				profile.avatarSize = style.avatarSize;
+				profile.avatarStyle = style.avatarStyle;
+				profile.themeLight = style.themeLight;
+
+				profile.saveToUser();
+			} catch (err) {
+				console.log(err);
+			}
+		}
+	};
+
 	const clientsOnlineRequest = async () => {
 		const usersOnline = [];
 
@@ -121,6 +145,7 @@ module.exports = function (io, socket) {
 
 	socket
 		.emit('connectionStarted')
+		.on('saveTheme', saveTheme)
 		.on('authStateChange', authStateChange)
 		.on('parseLink', parseLink)
 		.on('parseUnlink', parseUnlink)

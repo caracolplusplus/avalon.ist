@@ -93,6 +93,8 @@ class Chat {
 			case '/learnroles':
 			case '/end':
 				return this.commandGameAction(username, splitContent);
+			case '/aveset':
+				return await this.commandAveSet(username, splitContent, true);
 			case '/unbanip':
 				return await this.commandUnbanIp(username, splitContent);
 			case '/logs':
@@ -143,7 +145,7 @@ class Chat {
 	commandHelp(username, page) {
 		const caller = ClientsOnline[username].profile;
 		const mod = caller.isMod || caller.isAdmin;
-		const pageMax = mod ? 4 : 2;
+		const pageMax = mod ? 5 : 2;
 
 		page = parseInt(page);
 		page = isNaN(page) || page < 1 || page > pageMax ? 1 : page;
@@ -169,13 +171,17 @@ class Chat {
 				'/learnroles {room code} - Shows the roles of all the players in the specified game.',
 			],
 			3: [
+				'Avatars',
+				'/aveset {user} {res url} {spy url} - Sets the URLs for the Avatars of this player.',
+			],
+			4: [
 				'Buzzes',
 				'/dm {player} {message} - Sends a direct message to the player specified. The direct message will send a notification to the player.',
 				'/lick {player} - Show your love to someone by licking them!',
 				'/slap {player} - If you prefer something more aggressive, try slapping them!',
 				'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
 			],
-			4: [
+			5: [
 				'Miscelaneous',
 				'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
 				'/flip - Flips a coin.',
@@ -392,6 +398,76 @@ class Chat {
 				this.messages.push({
 					public: false,
 					content: 'No user exists with the provided username, or the user is part of the moderation team.',
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+
+				this.deletePastMessageLimit();
+
+				return {
+					type: 'NONE',
+				};
+			}
+		} else {
+			return this.invalidCommand(username);
+		}
+	}
+
+	async commandAveSet(username, splitContent, gummy) {
+		const hammer = ClientsOnline[username].profile;
+
+		if (hammer.isMod || hammer.isAdmin) {
+			const profile = await new Profile(splitContent[1]).getFromUser();
+
+			if (profile) {
+				let target = ClientsOnline[profile.user];
+
+				profile.avatarGummy = {
+					res: splitContent[2],
+					spy: splitContent[3],
+				};
+				profile.avatarClassic = {
+					res: splitContent[2],
+					spy: splitContent[3],
+				};
+
+				profile.saveToUser();
+
+				let message = "{user}'s avatars have been set.";
+				message = message.replace(/{user}/gi, profile.user);
+
+				this.addModLog({
+					action: 'AVATAR SET',
+					moderator: username,
+					target: profile.user,
+					avatarType: 'All Avatars',
+					resLink: splitContent[2],
+					spyLink: splitContent[3],
+					date: new Date().toUTCString(),
+				});
+
+				this.messages.push({
+					public: false,
+					content: message,
+					author: AVALONIST_NAME,
+					to: [username],
+					type: 1,
+					character: 3,
+					timestamp: Date.now(),
+					id: Date.now(),
+				});
+
+				return {
+					type: 'NONE',
+				};
+			} else {
+				this.messages.push({
+					public: false,
+					content: 'No user exists with the provided username.',
 					author: AVALONIST_NAME,
 					to: [username],
 					type: 1,
