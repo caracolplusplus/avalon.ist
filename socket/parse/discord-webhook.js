@@ -16,8 +16,8 @@ class DiscordReports {
 	newReport(user, room, motive, description) {
 		const embed = new MessageBuilder()
 			.setTitle('New Player Report')
-			.setAuthor('Avalon.ist', imageUrl, 'https://www.avalon.ist')
-			.setURL('https://www.avalon.ist')
+			.setAuthor('Avalon.ist', imageUrl, 'https://avalon.ist/')
+			.setURL('https://avalon.ist/')
 			.addField('Player', user + ' » ' + room)
 			.addField('Motive', motive)
 			.addField('Description', description)

@@ -667,7 +667,7 @@ class ChatCommands extends Chat {
 				content: helpMessages[x],
 				author,
 				to: [username],
-				type: x === '0' ? 0 : 1,
+				type: x === '0' ? 2 : 1,
 				character: 3,
 				timestamp: Date.now(),
 				id: Date.now(),

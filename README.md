@@ -1,9 +1,11 @@
-# Avalonist Development Server
+# Avalon.ist Development Server
 
-This repository hosts the development build of **Avalon.ist:** The Resistance: Avalon online. 
+This repository hosts the development build of **Avalon.ist: The Resistance: Avalon online.**
 
 The Resistance: Avalon is a social deduction game created by Don Eskridge.
 Based on Arthurian legend, the loyal servants of Arthur work together to find the members of the Resistance while protecting the identity of Merlin. The minions of Mordred attempt to sneak onto the Resistance team in order to deduce the identity of Merlin and assassinate him. Will the minions of Mordred kill Merlin, or will the loyal servants triumph over evil?
+
+Production build is running at https://avalon.ist/
 
 Project constructed using the [parse-server](https://github.com/ParsePlatform/parse-server) module on Express.
 Read the full Parse Server guide here: https://github.com/ParsePlatform/parse-server/wiki/Parse-Server-Guide

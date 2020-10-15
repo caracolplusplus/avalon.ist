@@ -188,7 +188,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       !this.props.players.includes(snap.author) && this.props.code !== undefined && snap.type === 0 ? 'spectator' : '';
 
     const messageClass = classType + classCharacter + classSpectator;
-    const messageAuthor = snap.type < 1 ? snap.author : undefined;
+    const messageAuthor = snap.type !== 1 ? snap.author : undefined;
     const messageContent = snap.content;
     const messageHighlight =
       messageAuthor && messageAuthor in this.props.chatHighlights ? this.props.chatHighlights[messageAuthor] : '';

@@ -98,7 +98,7 @@
           font-weight: 500;
         }
       }
-      &.client.command {
+      &.client.command, &.broadcast.command {
         font-style: oblique;
         .username {
           color: Globals.$green-1;

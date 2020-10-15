@@ -1,11 +1,11 @@
 {
-  "name": "AVALON.IST",
+  "name": "Avalon.ist",
   "version": "0.1.0",
-  "description": "Client for playing Resistance Online",
+  "description": "Avalon.ist — Play The Resistance: Avalon online!",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ParsePlatform/parse-server-example"
+    "url": "https://github.com/LoveOken/avalon.ist"
   },
   "license": "MIT",
   "dependencies": {
