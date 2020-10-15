@@ -52,7 +52,6 @@ const Player = (props: PlayerProps) => {
       <Link className="player-name" to={'/profile/' + props.username}>
         {props.username}
       </Link>
-      <span className="player-elo">{props.rating}</span>
     </p>
   );
 };

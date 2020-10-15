@@ -104,8 +104,8 @@ class Game extends React.PureComponent<PageProps, GameState> {
   }
 
   componentDidMount() {
-    socket.on('generalChatUpdate', () => this.setHighlight(0, true));
-    socket.on('gameChatUpdate', () => this.setHighlight(1, true));
+    socket.on('generalChatUpdate', this.setHighlightGeneral);
+    socket.on('gameChatUpdate', this.setHighlightGame);
     socket.on('gameUpdate', this.triggerRequest);
     socket.on('gameResponse', this.parseGame);
     socket.on('gameNotFound', this.gameNotFound);
@@ -116,8 +116,8 @@ class Game extends React.PureComponent<PageProps, GameState> {
   }
 
   componentWillUnmount() {
-    socket.off('generalChatUpdate', () => this.setHighlight(0, true));
-    socket.off('gameChatUpdate', () => this.setHighlight(1, true));
+    socket.off('generalChatUpdate', this.setHighlightGeneral);
+    socket.off('gameChatUpdate', this.setHighlightGame);
     socket.off('gameUpdate', this.triggerRequest);
     socket.off('gameResponse', this.parseGame);
     socket.off('gameNotFound', this.gameNotFound);
@@ -140,6 +140,10 @@ class Game extends React.PureComponent<PageProps, GameState> {
   gameNotFound() {
     this.setState({ notFound: true });
   }
+
+  setHighlightGeneral = () => this.setHighlight(0, true);
+
+  setHighlightGame = () => this.setHighlight(1, true);
 
   setHighlight = (no: number, value: boolean) => {
     const tabsSelected = this.tabsRef.map((r) => (r.current ? r.current.state.tab : -1));

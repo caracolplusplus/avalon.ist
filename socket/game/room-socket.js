@@ -1,4 +1,5 @@
 const GlobalEnvironment = require('../parse/globals');
+const DiscordReports = require('../parse/discord-webhook');
 const RoomHandler = require('./room-handler');
 const GeneralChat = require('../chat/general-chat');
 
@@ -426,6 +427,33 @@ module.exports = function (io, socket) {
 		return false;
 	};
 
+	const reportPlayer = (data) => {
+		const user = socket.user;
+
+		if (
+			user &&
+			typeof data.selected === 'string' &&
+			typeof data.cause === 'string' &&
+			typeof data.description === 'string'
+		) {
+			const room = socket.room ? 'Room #' + socket.room : 'Lobby';
+
+			try {
+				DiscordReports.newReport(data.selected, room, data.cause, data.description);
+				GeneralChat.addModLog({
+					action: 'REPORT',
+					user: user.get('username'),
+					target: data.selected,
+					motive: data.cause,
+					description: data.description,
+					date: new Date().toUTCString(),
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+	};
+
 	socket
 		.on('roomJoin', roomJoin)
 		.on('roomLeave', roomLeave)
@@ -439,5 +467,6 @@ module.exports = function (io, socket) {
 		.on('voteForSuccess', voteForSuccess)
 		.on('cardPlayer', cardPlayer)
 		.on('shootPlayer', shootPlayer)
-		.on('kickPlayer', kickPlayer);
+		.on('kickPlayer', kickPlayer)
+		.on('reportPlayer', reportPlayer);
 };

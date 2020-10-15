@@ -1,4 +1,5 @@
 const SocketsOnline = require('../socket/auth/clients-online').sockets;
+const GlobalEnvironment = require('../socket/parse/globals');
 const IpTree = require('../socket/parse/ip-tree');
 const EmailTree = require('../socket/parse/email-tree');
 
@@ -14,10 +15,10 @@ Parse.Cloud.define('authStateChange', async (request) => {
 
 	let currentSocket = undefined;
 	let style = {
-		playArea: 0,
+		playArea: 1,
 		playTabs: 2,
-		playFontSize: 14,
-		avatarSize: 140,
+		playFontSize: 12,
+		avatarSize: 75,
 		avatarStyle: true,
 		themeLight: false,
 	};
@@ -55,6 +56,12 @@ Parse.Cloud.define('authStateChange', async (request) => {
 				!currentUser.get('isMod') &&
 				!currentUser.get('isAdmin')
 			) {
+				const main = await GlobalEnvironment();
+
+				if (main.get('adminMode')) {
+					throw new Error('Access denied, the server is currently on maintenance');
+				}
+
 				if (IpTree.testIp(currentAddress)) {
 					throw new Error(
 						'Access denied, you are trying to access the site from a blacklisted IP adress. Contact the moderation team if you think this is a mistake.'
@@ -107,6 +114,12 @@ Parse.Cloud.define('beforeSignUp', async (request) => {
 		);
 	}
 
+	const main = await GlobalEnvironment();
+
+	if (main.get('adminMode')) {
+		throw new Error('Access denied, the server is currently on maintenance');
+	}
+
 	return true;
 });
 
@@ -153,7 +166,13 @@ Parse.Cloud.beforeLogin(async (request) => {
 		);
 	}
 
+	const main = await GlobalEnvironment();
+
 	if (!currentUser.get('isMod') && !currentUser.get('isAdmin')) {
+		if (main.get('adminMode')) {
+			throw new Error('Access denied, the server is currently on maintenance');
+		}
+
 		if (IpTree.testIp(currentAddress)) {
 			throw new Error(
 				'Access denied, you are trying to access the site from a blacklisted IP adress. Contact the moderation team if you think this is a mistake.'

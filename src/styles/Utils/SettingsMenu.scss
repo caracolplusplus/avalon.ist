@@ -30,6 +30,15 @@
       h2 {
         margin-bottom: $base-font-size * 0.5;
       }
+      textarea {
+        border: $base-font-size * 0.025 solid Globals.$light-2;
+        border-radius: $base-font-size * 0.2;
+        padding: $base-font-size * 0.125;
+        font-size: $base-font-size * 0.33;
+        resize: none;
+        width: 100%;
+        height: $base-font-size * 2;
+      }
       .unnecessarily-huge-exclamation-mark {
         color: Globals.$gold-1;
         height: $base-font-size * 5;
@@ -52,6 +61,7 @@
       .input-container {
         display: flex;
         height: $base-font-size * 0.625;
+        margin-bottom: $base-font-size * 0.1;
         flex-direction: row;
         .handle {
           flex: 0 1 100%;

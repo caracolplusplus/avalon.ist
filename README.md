@@ -10,15 +10,22 @@ Read the full Parse Server guide here: https://github.com/ParsePlatform/parse-se
 
 ### For Local Development
 
-* Make sure you have at least Node 4.3. `node --version`
-* Make sure you have yarn installed https://classic.yarnpkg.com/en/docs/install/
+* Make sure your node version corresponds with the project. `node --version`
+* Make sure you have yarn installed at https://classic.yarnpkg.com/en/docs/install/
 * Clone this repo to your computer.
-* Run `yarn install` in the current directory.
-* Install mongo locally using http://docs.mongodb.org/master/tutorial/install-mongodb-on-os-x/
-* Run `mongo` to connect to your database, just to make sure it's working. Once you see a mongo prompt, exit with Control-D
+* Run `yarn install` in the current directory. You should run this in any case of dependency differences with the master branch.
+* Install mongo locally using https://docs.mongodb.com/master/administration/install-community/
+* Make sure mongo is running on your computer before starting the server.
 * Run the server with: `yarn start`
-* By default it will use a path of /parse for the API routes.  To change this, or use older client SDKs, run `export PARSE_MOUNT=/1` before launching the server.
 * You now have a database named "dev" that contains your Parse data.
+
+### Use of The Parse Dashboard
+
+The Parse Dashboard is a technology developed by Parse, which allows you to make easy interactions with the database. The next steps will allow you to use the technology with this project.
+
+* Run `npm install -g parse-dashboard` to install the dashboard.
+* Run `parse-dashboard --dev --appId AVALONIST --masterKey avalonist_key --serverURL "http://localhost:1337/parse" --appName Avalon.ist` every time you want to have access to the dashboard.
+* Navigate to `localhost:4040`
 
 ### Contributing
 

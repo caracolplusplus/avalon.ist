@@ -1,6 +1,8 @@
 // External
 
 import React, { createRef } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 
 // Internal
 
@@ -10,6 +12,7 @@ import GameForm from '../Lobby/GameForm';
 import GameState from './GameState';
 import Button from '../../components/utils/Button';
 import SelectablePlayerList from './SelectablePlayerList';
+import ReportPlayer from './ReportPlayer';
 
 // Types
 
@@ -18,6 +21,7 @@ enum FormType {
   Settings = 1,
   Kick = 2,
   Info = 3,
+  Report = 4,
 }
 
 interface Message {
@@ -74,6 +78,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     this.showSettings = this.showSettings.bind(this);
     this.showInfo = this.showInfo.bind(this);
     this.showKick = this.showKick.bind(this);
+    this.showReport = this.showReport.bind(this);
     this.sitAndStand = this.sitAndStand.bind(this);
     this.startGame = this.startGame.bind(this);
     this.pickTeam = this.pickTeam.bind(this);
@@ -94,6 +99,10 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
 
   showInfo() {
     this.setState({ showForm: FormType.Info });
+  }
+
+  showReport() {
+    this.setState({ showForm: FormType.Report });
   }
 
   sitAndStand() {
@@ -140,6 +149,10 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     socket.emit('kickPlayer', {
       kick: player,
     });
+  }
+
+  reportPlayer(data: any) {
+    socket.emit('reportPlayer', data);
   }
 
   onWaiting(message: Message) {
@@ -410,7 +423,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     }
 
     if (this.props.stage === 'REPLAY') {
-      this.message = this.onReplay(this.message); 
+      this.message = this.onReplay(this.message);
     }
 
     let form = null;
@@ -449,9 +462,39 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
         );
       }
     }
+    if (this.state.showForm === FormType.Report) {
+      const arr = [...this.props.players];
+      if (this.props.seat > -1) arr.splice(this.props.seat, 1);
+
+      form = (
+        <>
+          {' '}
+          <ReportPlayer
+            title="report player"
+            text="Report"
+            players={arr}
+            onExit={this.hideForm}
+            onSelect={this.reportPlayer}
+          />{' '}
+        </>
+      );
+    }
 
     return this.props.code === '-1' ? null : (
       <>
+        <div className="nice-bar-above">
+          <div className="players">
+            <p>
+              {this.props.players.length}/{this.props.playerMax}
+            </p>
+          </div>
+          <button className="report-someone-with-this" type="button" onClick={this.showReport}>
+            <p>
+              <FontAwesomeIcon icon={faExclamationTriangle} className="exclamation-mark" />
+              Report
+            </p>
+          </button>
+        </div>
         <p className="message">{this.message.text}</p>{' '}
         {this.message.showButtonOne ? (
           <div className="button-cont">

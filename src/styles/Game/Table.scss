@@ -132,6 +132,42 @@
       align-items: center;
       flex-direction: row !important;
       z-index: 6;
+      .nice-bar-above {
+        width: 100%;
+        position: absolute;
+        display: block;
+        bottom: $base-font-size * 1;
+        .players,
+        .report-someone-with-this {
+          float: right;
+          background-color: black;
+          border-radius: $base-font-size * 0.4;
+          display: flex;
+          width: $base-font-size * 1.2;
+          height: $base-font-size * 0.5;
+          p {
+            color: white;
+            margin: auto;
+            font-weight: 600;
+            height: 1.1em;
+            line-height: 100%;
+          }
+        }
+        .report-someone-with-this {
+          width: $base-font-size * 2;
+          transition: 0.5s;
+          margin-right: 0.3em;
+          .exclamation-mark {
+            margin: auto;
+            margin-bottom: 0.05em;
+            margin-right: 0.2em;
+            height: $base-font-size * 0.25;
+          }
+          &:hover {
+            background-color: Globals.$spy-dark;
+          }
+        }
+      }
       .message {
         flex: 0 1 auto !important;
         margin-right: $base-font-size * 0.3;

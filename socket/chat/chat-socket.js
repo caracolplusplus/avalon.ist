@@ -190,6 +190,10 @@ module.exports = function (io, socket) {
 					}
 
 					break;
+				case 'RECONNECT':
+					socket.emit(emission);
+
+					io.emit('connectionStarted');
 			}
 		} else if (quote.test(content)) {
 			chat.findQuote(username, content);
