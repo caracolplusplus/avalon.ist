@@ -11,7 +11,7 @@
       background-color: Globals.$light-2;
     }
   }
-  #Lobby {
+  #Lobby, #Article {
     height: 100%;
     margin: auto;
     padding-top: $base-font-size;
@@ -32,7 +32,7 @@
         margin-bottom: 0px;
       }
     }
-    .column:last-of-type {
+    .column:nth-of-type(3) {
       margin-right: 0;
     }
     .column:first-of-type {
@@ -67,12 +67,12 @@
         }
       }
       .column:first-of-type,
-      .column:last-of-type {
+      .column:nth-of-type(3) {
         display: flex;
         flex: 0 0 20%;
         min-width: $base-font-size * 5;
       }
-      .column:last-of-type {
+      .column:nth-of-type(3) {
         min-width: $base-font-size * 6;
       }
       #Welcome {

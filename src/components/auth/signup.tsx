@@ -1,5 +1,4 @@
 import Parse from '../../parse/parse';
-import socket from '../../socket-io/socket-io';
 
 export async function signup(email: string, password: string, username: string, onerror: (...args: any[]) => any) {
 	var user = new Parse.User();
@@ -10,7 +9,7 @@ export async function signup(email: string, password: string, username: string, 
 	try {
 		await Parse.Cloud.run('beforeSignUp');
 		await user.signUp();
-		socket.emit('authStateChange');
+		window.location.reload(true);
 	} catch (error) {
 		onerror(error.message);
 	}

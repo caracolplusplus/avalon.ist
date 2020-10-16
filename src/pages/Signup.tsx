@@ -82,7 +82,7 @@ class Signup extends React.PureComponent<
               </p>
               <p className="last">
                 Upon completing this registration, you have agreed to follow the{" "}
-                <Link to="/tou">terms of use.</Link>
+                <Link to="/article/terms-of-use">terms of use.</Link>
               </p>
               {this.state.error ? (
                 <p className="error">Error: {this.state.error}</p>

@@ -1,14 +1,9 @@
-import Parse from "../../parse/parse";
-import socket from "../../socket-io/socket-io";
+import Parse from '../../parse/parse';
 
-export async function login(
-	username: string,
-	password: string,
-	onerror: (...args: any[]) => any
-) {
+export async function login(username: string, password: string, onerror: (...args: any[]) => any) {
 	try {
 		await Parse.User.logIn(username, password);
-		socket.emit("authStateChange");
+		window.location.reload(true);
 	} catch (error) {
 		onerror(error.message);
 	}

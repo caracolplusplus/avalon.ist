@@ -139,14 +139,9 @@ module.exports = function (io, socket) {
 		io.emit('clientsOnlineResponse', result);
 	};
 
-	const authStateChange = () => {
-		socket.emit('connectionStarted');
-	};
-
 	socket
 		.emit('connectionStarted')
 		.on('saveTheme', saveTheme)
-		.on('authStateChange', authStateChange)
 		.on('parseLink', parseLink)
 		.on('parseUnlink', parseUnlink)
 		.on('disconnect', parseUnlink)

@@ -25,11 +25,20 @@ import Verify from './pages/Verify';
 import Lobby from './pages/Lobby';
 import Profile from './pages/Profile';
 import Game from './pages/Game';
+import Article from './pages/Article';
 import NoMatch from './pages/NoMatch';
 
 import Soundboard from './sounds/audio';
 
 // Types
+
+declare global {
+  interface Window {
+    msRequestAnimationFrame: any;
+    mozRequestAnimationFrame: any;
+    mozCancelAnimationFrame: any;
+  }
+}
 
 interface appProps {
   dispatch: Dispatch;
@@ -79,7 +88,7 @@ class App extends React.PureComponent<appProps, appState> {
 
     socket.on('updateUISettings', (style: any) => {
       this.props.dispatch(updateStyle(style));
-    })
+    });
 
     socket.on('notificationMessage', (data: any) => {
       if (Soundboard[data.audio]) Soundboard[data.audio].play();
@@ -156,7 +165,7 @@ class App extends React.PureComponent<appProps, appState> {
               exact
               path="/verify"
               authenticated={this.state.authenticated}
-              verified={false}
+              verified={this.state.verified}
               component={Verify}
             />
             <LoggedInOnly
@@ -178,6 +187,7 @@ class App extends React.PureComponent<appProps, appState> {
               verified={this.state.verified}
               component={Game}
             />
+            <Route path="/article/:id" component={Article} />
             <Route component={NoMatch} />
           </Switch>
         </Router>

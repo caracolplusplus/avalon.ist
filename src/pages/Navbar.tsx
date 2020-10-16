@@ -33,7 +33,7 @@ interface NavbarState {
 
 // Declaration
 
-class Navbar extends React.PureComponent<{ username: string, style?: any, dispatch?: any }, NavbarState> {
+class Navbar extends React.PureComponent<{ username: string; style?: any; dispatch?: any }, NavbarState> {
   constructor(props: { username: string }) {
     super(props);
     this.state = {
@@ -78,7 +78,7 @@ class Navbar extends React.PureComponent<{ username: string, style?: any, dispat
 
   hideSidebarToSettings = () => {
     this.setState({ showSidebar: false, showSettings: true });
-  }
+  };
 
   hideSettings = () => {
     this.setState({ showSettings: false });
@@ -87,6 +87,8 @@ class Navbar extends React.PureComponent<{ username: string, style?: any, dispat
   handleLogout() {
     logout();
   }
+
+  navbarLinks = ['/lobby', '/article/start-here', '/article/community', '/article/statistics', '/article/development'];
 
   render() {
     return (
@@ -114,20 +116,32 @@ class Navbar extends React.PureComponent<{ username: string, style?: any, dispat
                 className="links inner"
               >
                 <div>
-                  <Link to="/lobby">LOBBY</Link>
-                  <Link to="/start-here">START HERE</Link>
-                  <Link to="/community">COMMUNITY</Link>
-                  <Link to="/stats">STATS</Link>
-                  <Link to="/dev">DEVELOPMENT</Link>
+                  <Link to={this.navbarLinks[0]}>LOBBY</Link>
+                  <Link to={this.navbarLinks[1]}>START HERE</Link>
+                  <Link to={this.navbarLinks[2]}>COMMUNITY</Link>
+                  <Link to={this.navbarLinks[3]}>STATS</Link>
+                  <Link to={this.navbarLinks[4]}>DEVELOPMENT</Link>
                 </div>
                 <div>
-                  <Link to={'/profile/' + this.props.username}>{this.props.username}</Link>
-                  <button onClick={this.toggleSettings}>
-                    <FontAwesomeIcon icon={faCog} />
-                  </button>
-                  <button onClick={this.handleLogout}>
-                    <FontAwesomeIcon icon={faSignOutAlt} />
-                  </button>
+                  {this.props.username.length > 0 ? (
+                    <>
+                      <Link className="username" to={'/profile/' + this.props.username}>
+                        {this.props.username}
+                      </Link>
+                      <button onClick={this.toggleSettings}>
+                        <FontAwesomeIcon icon={faCog} />
+                      </button>
+                      <button onClick={this.handleLogout}>
+                        <FontAwesomeIcon icon={faSignOutAlt} />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/">LOG IN</Link>
+                      <p className="or">/</p>
+                      <Link to="/signup">SIGN UP</Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -139,7 +153,9 @@ class Navbar extends React.PureComponent<{ username: string, style?: any, dispat
             </button>
           </div>
         </div>
-        {this.state.showSettings ? <StyleForm onExit={this.hideSettings} style={this.props.style} dispatch={this.props.dispatch} /> : null}
+        {this.state.showSettings ? (
+          <StyleForm onExit={this.hideSettings} style={this.props.style} dispatch={this.props.dispatch} />
+        ) : null}
         <div
           className="links list"
           style={{
@@ -148,15 +164,25 @@ class Navbar extends React.PureComponent<{ username: string, style?: any, dispat
         >
           <AvalonScrollbars>
             <div className="links container">
-              <Link to="/lobby">LOBBY</Link>
-              <Link to="/start-here">START HERE</Link>
-              <Link to="/community">COMMUNITY</Link>
-              <Link to="/stats">STATS</Link>
-              <Link to="/dev">DEVELOPMENT</Link>
+              <Link to={this.navbarLinks[0]}>LOBBY</Link>
+              <Link to={this.navbarLinks[1]}>START HERE</Link>
+              <Link to={this.navbarLinks[2]}>COMMUNITY</Link>
+              <Link to={this.navbarLinks[3]}>STATS</Link>
+              <Link to={this.navbarLinks[4]}>DEVELOPMENT</Link>
               <div />
-              <Link to={'/profile/' + this.props.username}>PROFILE</Link>
-              <button onClick={this.hideSidebarToSettings}>SETTINGS</button>
-              <button onClick={this.handleLogout}>LOG OUT</button>
+              {this.props.username.length > 0 ? (
+                <>
+                  {' '}
+                  <Link to={'/profile/' + this.props.username}>PROFILE</Link>
+                  <button onClick={this.hideSidebarToSettings}>SETTINGS</button>
+                  <button onClick={this.handleLogout}>LOG OUT</button>
+                </>
+              ) : (
+                <>
+                  <Link to="/">LOG IN</Link>
+                  <Link to="/signup">SIGN UP</Link>
+                </>
+              )}
             </div>
           </AvalonScrollbars>
         </div>

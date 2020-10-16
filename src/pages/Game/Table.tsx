@@ -77,8 +77,13 @@ class Table extends React.PureComponent<
   avatarRef: RefObject<AvatarUI>[] = [];
 
   animationCallback: (...args: any[]) => void = () => {};
-  animationFrame = (window.requestAnimationFrame || window.webkitRequestAnimationFrame).bind(window);
-  animationFrameCancel = window.cancelAnimationFrame.bind(window);
+  animationFrame = (
+    window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    window.mozRequestAnimationFrame
+  ).bind(window);
+  animationFrameCancel = (window.cancelAnimationFrame || window.mozCancelAnimationFrame).bind(window);
 
   animationStart: (number | null)[] = [];
   animationState: number[] = [];
@@ -155,7 +160,7 @@ class Table extends React.PureComponent<
     const imVoting = game.stage === 'VOTING';
 
     const avatars: AvatarUIProps[] = [];
-    const l = players.length
+    const l = players.length;
 
     for (let i = 0; i < l; i++) {
       const p = players[i];
@@ -477,15 +482,12 @@ class Table extends React.PureComponent<
 
     const sortedAvatars = this.sortAvatars(mappedAvatars);
 
-    return this.state.redirect ? <Redirect to="/lobby" /> : (
+    return this.state.redirect ? (
+      <Redirect to="/lobby" />
+    ) : (
       <div id="Table" className="tab">
         <div className="table-row table-buttons">
-          <Button
-            type="button"
-            text="Exit"
-            onClick={this.redirectToLobby}
-            className=""
-          />
+          <Button type="button" text="Exit" onClick={this.redirectToLobby} className="" />
           <Button type="button" text="Claim" onClick={undefined} className="" />
         </div>
         <div className="table-row table-display" ref={this.tableRef} style={{ width: '95%' }}>
