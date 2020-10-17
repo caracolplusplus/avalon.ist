@@ -1227,7 +1227,9 @@ class ChatCommands extends Chat {
 		const hammer = ClientsOnline[username].profile;
 
 		if (hammer.isMod || hammer.isAdmin) {
+			const mainPromise = GlobalEnvironment();
 			const profile = await new Profile(splitContent[1]).getFromUser();
+			const main = await mainPromise;
 
 			if (profile) {
 				let target = ClientsOnline[profile.user];
@@ -1242,6 +1244,14 @@ class ChatCommands extends Chat {
 				};
 
 				profile.saveToUser();
+
+				const aves = main.get('latestAvatars');
+
+				aves.push(splitContent[2]);
+				aves.shift();
+
+				main.set('latestAvatars', aves);
+				main.save({}, { useMasterKey: true });
 
 				let message = "{user}'s avatars have been set.";
 				message = message.replace(/{user}/gi, profile.user);

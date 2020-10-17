@@ -1,10 +1,9 @@
 const Parse = require('../parse/parse');
 const RoomHandler = require('./room-handler');
 
-module.exports = function (io, socket) {
-	const GAME_LIST_NAME = 'RoomList';
-	const LINK_NAME = 'RoomLink';
+const { GAME_LIST_NAME, LINK_NAME } = require('../room-names');
 
+module.exports = function (io, socket) {
 	const roomListJoin = () => {
 		// Data
 

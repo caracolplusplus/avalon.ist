@@ -1,35 +1,70 @@
 // External
 
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 // Internal
 
-import AvalonScrollbars from '../../components/utils/AvalonScrollbars'
+import socket from '../../socket-io/socket-io';
+import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
 // Styles
 
-import '../../styles/Lobby/Announcements.scss'
+import '../../styles/Lobby/Announcements.scss';
 
 // Types
 
+interface AnnouncementsState {
+  articles: any[];
+}
+
 interface AnnouncementProps {
-  date: string
-  text: string
+  date: number;
+  text: string;
+  id: string;
 }
 
 // Declaration
 
 const Announcement = (props: AnnouncementProps) => {
+  const dateObj = new Date(props.date);
+  const month = dateObj.getUTCMonth() + 1; //months from 1-12
+  const day = dateObj.getUTCDate();
+  const year = dateObj.getUTCFullYear();
+
   return (
     <p className="announcement">
-      <span className="date">{props.date}</span>
-      <Link to="/announcement">{props.text}</Link>
+      <span className="date">
+        {year}/{month}/{day}
+      </span>
+      <Link to={'/article/' + props.id}>{props.text}</Link>
     </p>
-  )
-}
+  );
+};
 
-class Announcements extends React.PureComponent {
+class Announcements extends React.PureComponent<{}, AnnouncementsState> {
+  constructor(props: {}) {
+    super(props);
+    this.state = {
+      articles: [],
+    };
+  }
+
+  componentDidMount() {
+    socket.on('announcementResponse', this.onResponse);
+
+    socket.emit('announcementRequest');
+  }
+
+  componentWillUnmount() {
+    socket.off('announcementResponse', this.onResponse);
+  }
+
+  onResponse = (articles: any[]) => {
+    articles = articles.reverse();
+    this.setState({ articles });
+  };
+
   render() {
     return (
       <div id="Announcements" className="row">
@@ -37,23 +72,13 @@ class Announcements extends React.PureComponent {
           <p>LATEST ANNOUNCEMENTS</p>
         </h3>
         <AvalonScrollbars>
-          <Announcement date="7/11/2020" text="This is an announcement" />
-          <Announcement
-            date="2/28/2019"
-            text="This is a larger announcement to test paragraph dimensions"
-          />
-          <Announcement
-            date="2/28/2019"
-            text="This is a larger announcement to test paragraph dimensions"
-          />
-          <Announcement
-            date="2/28/2019"
-            text="This is a larger announcement to test paragraph dimensions"
-          />
+          {this.state.articles.map((a, i) => (
+            <Announcement date={a.timestamp} text={a.title} id={a.id} key={a.id} />
+          ))}
         </AvalonScrollbars>
       </div>
-    )
+    );
   }
 }
 
-export default Announcements
+export default Announcements;

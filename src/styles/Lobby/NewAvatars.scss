@@ -33,6 +33,7 @@
       align-items: center;
       padding: 0 $base-font-size * 0.4;
       .avatar {
+        animation: wake 0.5s 1;
         flex: 0 1 28%;
         height: 80%;
         background-size: contain;

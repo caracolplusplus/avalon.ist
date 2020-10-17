@@ -120,7 +120,8 @@ button:focus {
       font-size: $base-font-size * 0.5;
       font-weight: 100;
     }
-    p {
+    p,
+    li {
       font-size: $base-font-size * 0.333;
       font-weight: 300;
     }
@@ -216,7 +217,8 @@ button:focus {
       font-size: $base-font-size * 0.5;
       font-weight: 100;
     }
-    p {
+    p,
+    li {
       font-size: $base-font-size * 0.333;
       font-weight: 300;
     }
@@ -299,6 +301,70 @@ button:focus {
       border-radius: $base-font-size * 0.25;
       opacity: 0.1 !important;
       z-index: 1000;
+    }
+  }
+  .markdown {
+    padding: $base-font-size * 0.5;
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: $base-font-size * 0.25;
+    }
+    h1 {
+      font-size: $base-font-size * 1.5;
+      color: $gold-1;
+    }
+    h2 {
+      font-size: $base-font-size * 1;
+    }
+    h3 {
+      font-size: $base-font-size * 0.9;
+    }
+    h4 {
+      font-size: $base-font-size * 0.8;
+    }
+    h5 {
+      font-size: $base-font-size * 0.7;
+    }
+    h6 {
+      font-size: $base-font-size * 0.6;
+    }
+    hr {
+      margin: $base-font-size * 0.5 0;
+      border: 1px solid $gold-1;
+    }
+    a {
+      color: $gold-1;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    blockquote {
+      border-left: $base-font-size * 0.15 solid #ccc;
+      border-radius: $base-font-size * 0.1;
+      margin: 0.75em;
+      padding: 0.75em;
+      p {
+        display: inline;
+      }
+    }
+    p,
+    li {
+      font-size: $base-font-size * 0.35;
+    }
+    ul,
+    ol {
+      margin-left: $base-font-size;
+    }
+    img {
+      display: block;
+      margin-bottom: $base-font-size * 0.25;
+      margin-left: 5%;
+      max-width: 60%;
     }
   }
 }

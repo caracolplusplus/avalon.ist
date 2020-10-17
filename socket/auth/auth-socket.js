@@ -4,9 +4,9 @@ const GeneralChat = require('../chat/general-chat');
 const ClientsOnline = require('./clients-online').clients;
 const SocketsOnline = require('./clients-online').sockets;
 
-module.exports = function (io, socket) {
-	const GEN_CHAT = 'GeneralChat';
+const { GEN_CHAT }  = require('../room-names');
 
+module.exports = function (io, socket) {
 	SocketsOnline.push(socket);
 
 	const parseLink = () => {

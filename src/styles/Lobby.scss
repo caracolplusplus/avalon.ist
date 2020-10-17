@@ -11,7 +11,8 @@
       background-color: Globals.$light-2;
     }
   }
-  #Lobby, #Article {
+  #Lobby,
+  #Article {
     height: 100%;
     margin: auto;
     padding-top: $base-font-size;
@@ -42,6 +43,9 @@
       .row:last-of-type {
         flex: 1 0 40%;
       }
+    }
+    .row.clean {
+      background-color: transparent;
     }
     @media screen and (min-width: Globals.$min-res) {
       flex-direction: column;

@@ -3,12 +3,9 @@ const DiscordReports = require('../parse/discord-webhook');
 const RoomHandler = require('./room-handler');
 const GeneralChat = require('../chat/general-chat');
 
-module.exports = function (io, socket) {
-	const GEN_CHAT = 'GeneralChat';
-	const GAME_CHAT = 'GameChat';
-	const GAME_LIST_NAME = 'RoomList';
-	const GAME_NAME = 'Room';
+const { GEN_CHAT, GAME_CHAT, GAME_LIST_NAME, GAME_NAME } = require('../room-names');
 
+module.exports = function (io, socket) {
 	const emissionProtocol = (updateRoomList, updateChat, roomHandler, startEndProtocol) => {
 		if (startEndProtocol) {
 			io.to(GEN_CHAT).emit('generalChatUpdate');

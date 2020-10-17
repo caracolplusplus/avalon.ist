@@ -3,12 +3,9 @@ const RoomHandler = require('../game/room-handler');
 const ClientsOnline = require('../auth/clients-online').clients;
 const GeneralChat = require('./general-chat');
 
-module.exports = function (io, socket) {
-	const GEN_CHAT = 'GeneralChat';
-	const GAME_CHAT = 'GameChat';
-	const GAME_LIST_NAME = 'RoomList';
-	const GAME_NAME = 'Room';
+const { GEN_CHAT, GAME_CHAT, GAME_LIST_NAME, GAME_NAME } = require('../room-names');
 
+module.exports = function (io, socket) {
 	const generalChatRequest = (id) => {
 		const user = socket.user;
 
