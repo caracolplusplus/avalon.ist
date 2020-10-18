@@ -1,0 +1,77 @@
+@use 'Globals';
+
+@mixin init-profile($base-font-size) {
+  #Profile {
+    height: 100%;
+    margin: auto;
+    padding-top: $base-font-size;
+    width: 100%;
+    .thumb-vertical {
+      z-index: 0 !important;
+    }
+    .bubble {
+      position: relative;
+      background: #00aabb;
+      border-radius: .4em;
+    }
+    .bubble:after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 0;
+      height: 0;
+      border: 33px solid transparent;
+      border-right-color: #00aabb;
+      border-left: 0;
+      border-bottom: 0;
+      margin-top: -50px;
+      margin-left: -33px;
+    }
+    .tooltip {
+      background: #aaaaaa;
+      border-radius: .4em;
+      p {
+        margin: 0.5em;
+      }
+    }
+    .row {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      padding-bottom: 5em;
+      padding-left: 5em;
+    }
+    .row:last-of-type {
+      padding-bottom: 0em;
+    }
+    #user {
+      margin-right: 5em;
+    }
+    #stats {
+      margin-right: 5em;
+    }
+    #bio {
+      position: relative;
+      min-width: 45%;
+      p {
+        margin: 1em;
+      }
+    }
+  }
+}
+@media screen and (min-width: Globals.$min-res) {
+  @include init-profile(Globals.$initial-font-size * 0.9);
+}
+@media screen and (min-width: Globals.$small-res) {
+  @include init-profile(Globals.$initial-font-size);
+}
+@media screen and (min-width: Globals.$large-res) {
+  @include init-profile(Globals.$initial-font-size * 1.2);
+}
+@media screen and (min-width: Globals.$max-res) {
+  @include init-profile(Globals.$initial-font-size * 1.4);
+}
+@media screen and (min-width: Globals.$insane-res) {
+  @include init-profile(Globals.$initial-font-size * 2.5);
+}
