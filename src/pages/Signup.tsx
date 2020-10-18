@@ -1,19 +1,19 @@
 // External
 
-import React, { ChangeEvent, FormEvent } from "react";
-import { Link } from "react-router-dom";
+import React, { ChangeEvent, FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 
 // Internal
 
-import AvalonScrollbars from "../components/utils/AvalonScrollbars";
-import Button from "../components/utils/Button";
-import { Input } from "../components/utils/Input";
+import AvalonScrollbars from '../components/utils/AvalonScrollbars';
+import Button from '../components/utils/Button';
+import { Input } from '../components/utils/Input';
 
-import { signup } from "../components/auth/signup";
+import { signup } from '../components/auth/signup';
 
 // Styles
 
-import "../styles/Login.scss";
+import '../styles/Login.scss';
 
 // Declaration
 
@@ -30,9 +30,9 @@ class Signup extends React.PureComponent<
     super(props);
     this.state = {
       error: null,
-      username: "",
-      email: "",
-      password: "",
+      username: '',
+      email: '',
+      password: '',
     };
     this.handleUsernameChange = this.handleUsernameChange.bind(this);
     this.handleEmailChange = this.handleEmailChange.bind(this);
@@ -61,9 +61,7 @@ class Signup extends React.PureComponent<
   handleSubmit(event: FormEvent) {
     event.preventDefault();
     this.setState({ error: null });
-    signup(this.state.email, this.state.password, this.state.username, (err) =>
-      this.setState({ error: err })
-    );
+    signup(this.state.email, this.state.password, this.state.username, (err) => this.setState({ error: err }));
   }
 
   render() {
@@ -77,16 +75,13 @@ class Signup extends React.PureComponent<
               <h1>THE RESISTANCE: AVALON</h1>
               <h2>WILL GOOD TRIUMPH OVER EVIL?</h2>
               <p>
-                You are about to join <strong>avalon.ist.</strong> Enter your
-                login information in the form below.
+                You are about to join <strong>avalon.ist.</strong> Enter your login information in the form below.
               </p>
               <p className="last">
-                Upon completing this registration, you have agreed to follow the{" "}
+                Upon completing this registration, you have agreed to follow the{' '}
                 <Link to="/article/terms-of-use">terms of use.</Link>
               </p>
-              {this.state.error ? (
-                <p className="error">Error: {this.state.error}</p>
-              ) : null}
+              {this.state.error ? <p className="error">Error: {this.state.error}</p> : null}
               <div className="glow" />
               <div className="after-glow">
                 <Input
@@ -110,15 +105,11 @@ class Signup extends React.PureComponent<
                   icon="lock"
                   onChange={this.handlePasswordChange}
                 />
-                <Button
-                  type="submit"
-                  text="Sign up"
-                  onClick={undefined}
-                  className=""
-                />
+                <Button type="submit" text="Sign up" onClick={undefined} className="" />
                 <p>
                   <Link to="/">Log In</Link>
                 </p>
+                <p className="footnote">Avalon.ist 1.0.0.</p>
               </div>
             </form>
           </div>

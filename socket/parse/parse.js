@@ -45,7 +45,14 @@ query
 				? mainEnvironment.set('discordWebhook', '/')
 				: DiscordReports.newHook(mainEnvironment.get('discordWebhook'));
 			!mainEnvironment.has('latestAvatars') ? mainEnvironment.set('latestAvatars', InitialAvatars) : null;
-			!mainEnvironment.has('articles') ? mainEnvironment.set('articles', InitialArticles) : null;
+			!mainEnvironment.has('articles')
+				? mainEnvironment.set('articles', InitialArticles)
+				: mainEnvironment.set(
+						'articles',
+						InitialArticles.concat(
+							mainEnvironment.get('articles').filter((obj) => !InitialArticles.some((o) => o.id === obj.id))
+						)
+				  );
 
 			if (!mainEnvironment.has('ipBlacklist')) {
 				mainEnvironment.set('ipBlacklist', InitialBlacklist);

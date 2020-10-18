@@ -37,6 +37,29 @@ const mapState = (state: rootType) => {
   return { style };
 };
 
+const renderers: any = {
+  code: ({ language, value }: { language: string; value: string }) => {
+    if (language === 'video') {
+      return (
+        <figure className="video_container">
+          <iframe
+            width="560"
+            height="315"
+            title='Youtube Video'
+            src={value}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </figure>
+      );
+    }
+    const className = language && `language-${language}`;
+    const code = React.createElement('code', className ? { className: className } : null, value);
+    return React.createElement('pre', {}, code);
+  },
+};
+
 // Declaration
 
 class Article extends React.PureComponent<PageProps, ArticleState> {
@@ -64,7 +87,6 @@ class Article extends React.PureComponent<PageProps, ArticleState> {
 
   componentDidUpdate(prevProps: PageProps) {
     if (this.props.match.params.id !== prevProps.match.params.id) {
-      this.forceUpdate();
       socket.emit('articleRequest', this.props.match.params.id);
     }
   }
@@ -96,7 +118,7 @@ class Article extends React.PureComponent<PageProps, ArticleState> {
             <div className="column section">
               <div className="row clean">
                 <AvalonScrollbars>
-                  <ReactMarkdown className="markdown">
+                  <ReactMarkdown className="markdown" renderers={renderers}>
                     {this.state.article
                       ? articleFormat
                           .replace(/{title}/, this.state.article.title)

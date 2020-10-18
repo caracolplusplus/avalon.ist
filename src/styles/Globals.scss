@@ -356,6 +356,10 @@ button:focus {
     li {
       font-size: $base-font-size * 0.35;
     }
+    p {
+      text-indent: 2em;
+      margin: 1em 0;
+    }
     ul,
     ol {
       margin-left: $base-font-size;
@@ -365,6 +369,15 @@ button:focus {
       margin-bottom: $base-font-size * 0.25;
       margin-left: 5%;
       max-width: 60%;
+    }
+    table {
+      width: 100%;
+      th, td {
+        font-size:  $base-font-size * 0.35;
+        line-height: $base-font-size * 0.5;
+        background-color: rgba(0,0,0,0.1);
+        padding-left: $base-font-size * 0.25;
+      }
     }
   }
 }
