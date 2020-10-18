@@ -149,13 +149,16 @@ module.exports = function (io, socket) {
 		socket.emit('saveProfile', profile);
 	};
 
-	const saveProfile = async (data) => {
-		const profile = new Profile(data.username);
-		await profile.getFromUser();
-		profile.bio = data.bio;
-		profile.saveToUser();
-		socket.emit('saveProfile', profile);
-    }
+	const saveBio = async (data) => {
+		const user = socket.user;
+		if (user) {
+			const profile = new Profile(user);
+			await profile.getFromUser();
+			profile.bio = data.bio;
+			profile.saveToUser();
+			socket.emit('saveProfile', profile);
+		}
+	}
 
 	socket
 		.emit('connectionStarted')
@@ -167,5 +170,5 @@ module.exports = function (io, socket) {
 		.on('disconnect', removeFromSocketsOnline)
 		.on('clientsOnlineRequest', clientsOnlineRequest)
 		.on('getProfile', getProfile)
-		.on('saveProfile', saveProfile);
+		.on('saveBio', saveBio);
 };
