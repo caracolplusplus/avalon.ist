@@ -4,7 +4,7 @@ const GeneralChat = require('../chat/general-chat');
 const ClientsOnline = require('./clients-online').clients;
 const SocketsOnline = require('./clients-online').sockets;
 
-const { GEN_CHAT }  = require('../room-names');
+const { GEN_CHAT } = require('../room-names');
 
 module.exports = function (io, socket) {
 	SocketsOnline.push(socket);
@@ -139,23 +139,26 @@ module.exports = function (io, socket) {
 		io.emit('clientsOnlineResponse', result);
 	};
 
-	const getProfile = async(username) => {
+	const getProfile = async (username) => {
 		const profile = new Profile(username);
-		await profile.getFromUser();
-		socket.emit('saveProfile', profile);
+		(await profile.getFromUser()) ? socket.emit('saveProfile', profile.toClient()) : socket.emit('profileNotFound');
 	};
 
-	const saveBio = async (data) => {
+	const editProfile = async (data) => {
 		const user = socket.user;
+
 		if (user) {
-			const profile = new Profile(user);
+			const profile = new Profile(user.get('username'));
 			await profile.getFromUser();
-			profile.bio = data.bio;
+
+			profile.bio = data.bio.toString();
+			profile.nationality = data.nationality.toString();
 			profile.saveToUser();
-			socket.emit('saveProfile', profile);
+
+			socket.emit('saveProfile', profile.toClient());
 		}
-	}
-	
+	};
+
 	socket
 		.emit('connectionStarted')
 		.on('saveTheme', saveTheme)
@@ -165,5 +168,5 @@ module.exports = function (io, socket) {
 		.on('disconnect', removeFromSocketsOnline)
 		.on('clientsOnlineRequest', clientsOnlineRequest)
 		.on('getProfile', getProfile)
-		.on('saveBio', saveBio);
+		.on('editProfile', editProfile);
 };

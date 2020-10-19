@@ -91,7 +91,7 @@ class RoomClient {
     this.players = game.players;
     this.avatars = game.avatars;
     this.clients = Object.keys(game.clients);
-    this.imRes = ['Resistance', 'Percival'].includes(game.roles[this.seat]);
+    this.imRes = ['Resistance', 'Percival', 'Merlin'].includes(game.roles[this.seat]);
 
     this.started = game.started;
     this.ended = actions.ended;

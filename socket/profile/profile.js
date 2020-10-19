@@ -11,7 +11,7 @@ class Profile {
       spy: 'https://i.ibb.co/sJcthnM/base-spy.png',
       res: 'https://i.ibb.co/M8RXC95/base-res.png',
     };
-    this.bio = 'This is my account on Avalon.ist.';
+    this.bio = "A very mysterious person.";
     this.nationality = 'United Nations';
     // Game
     this.games = [0, 0];
@@ -167,6 +167,31 @@ class Profile {
 
       if (data.cause < 1) this.gameShots[0]++;
     }
+  }
+
+  toClient() {
+    const client = {};
+
+    const parameters = [
+      'user',
+      'avatarClassic',
+      'avatarGummy',
+      'bio',
+      'nationality',
+      'games',
+      'gameStats',
+      'gameHistory',
+      'gameShots',
+      'gameRating',
+    ];
+
+    for (const x in this) {
+      if (parameters.includes(x)) {
+        client[x] = this[x];
+      }
+    }
+
+    return client;
   }
 }
 

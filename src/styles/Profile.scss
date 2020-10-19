@@ -1,18 +1,51 @@
 @use 'Globals';
 
 @mixin init-profile($base-font-size) {
+  .dark {
+    .row {
+      background-color: Globals.$gray-3;
+    }
+  }
+  .light {
+    .row {
+      background-color: Globals.$light-2;
+    }
+  }
+  .edit-your-profile-with-this {
+    position: fixed;
+    background-color: black !important;
+    border-radius: $base-font-size * 0.4 !important;
+    display: flex;
+    width: $base-font-size * 2.5 !important;
+    height: $base-font-size * 0.5 !important;
+    transition: 0.5s;
+    margin: 0;
+    bottom: $base-font-size * 0.5;
+    right: $base-font-size * 0.5;
+    p {
+      color: white;
+      margin: auto;
+      font-weight: 600;
+      height: 1.1em;
+      line-height: 100%;
+    }
+    &:hover {
+      background-color: Globals.$spy-dark;
+    }
+  }
   #Profile {
     height: 100%;
     margin: auto;
     padding-top: $base-font-size;
     width: 100%;
+
     .thumb-vertical {
       z-index: 0 !important;
     }
     .bubble {
       position: relative;
-      background: #00aabb;
-      border-radius: .4em;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 0.4em;
     }
     .bubble:after {
       content: '';
@@ -21,41 +54,111 @@
       top: 50%;
       width: 0;
       height: 0;
-      border: 33px solid transparent;
-      border-right-color: #00aabb;
+      border: 10px solid transparent;
+      border-right-color: rgba(0, 0, 0, 0.1);
       border-left: 0;
       border-bottom: 0;
-      margin-top: -50px;
-      margin-left: -33px;
+      margin-top: -80px;
+      margin-left: -10px;
     }
     .tooltip {
       background: #aaaaaa;
-      border-radius: .4em;
+      border-radius: 0.4em;
       p {
         margin: 0.5em;
       }
     }
     .row {
       display: flex;
-      flex-flow: row nowrap;
+      flex-flow: row wrap;
       justify-content: flex-start;
-      padding-bottom: 5em;
-      padding-left: 5em;
+      padding: 2.5em 0;
+      margin-bottom: $base-font-size * 0.25;
     }
     .row:last-of-type {
       padding-bottom: 0em;
     }
     #user {
-      margin-right: 5em;
+      display: flex;
+      flex-direction: column;
+      margin: 2em 2em;
+      min-width: $base-font-size * 3;
+      width: 15%;
+      img {
+        margin: 0 auto $base-font-size * 0.25;
+        height: $base-font-size * 2.5;
+        width: auto;
+      }
+      .user-tag {
+        display: flex;
+        flex-direction: row;
+        img {
+          height: $base-font-size * 0.45;
+          width: auto;
+          margin: $base-font-size * 0.15;
+        }
+        p {
+          margin: auto 0;
+        }
+      }
     }
-    #stats {
-      margin-right: 5em;
+    #stats, #history {
+      margin: 0 2em;
+      height: $base-font-size * 10;
+      width: 40%;
+      h1 {
+        margin-bottom: $base-font-size * 0.5;
+      }
+      min-width: $base-font-size * 8;
+      table {
+        table-layout: fixed;
+        td,
+        th {
+          font-size: $base-font-size * 0.33;
+          background-color: rgba(0, 0, 0, 0.1);
+          width: 10%;
+          line-height: $base-font-size * 0.5;
+        }
+        .link {
+          background: rgba(0,0,0, 0.05);
+        }
+        a {
+          text-decoration: none;
+          font-weight: 600;
+        }
+        td {
+          padding-left: 1em;
+        }
+      }
     }
     #bio {
       position: relative;
-      min-width: 45%;
+      height: $base-font-size * 6;
+      width: 60%;
       p {
         margin: 1em;
+      }
+    }
+    #graph {
+      width: 50%;
+      min-width: $base-font-size * 12.5;
+      height: 100%;
+    }
+    @media screen and (min-width: Globals.$min-res) {
+      flex-direction: column;
+      padding-bottom: 0;
+      padding-left: 0;
+      .row {
+        border-radius: 0;
+      }
+    }
+    @media screen and (min-width: Globals.$small-res*0.9) {
+      flex-direction: row;
+      padding-bottom: $base-font-size * 0.5;
+      padding-left: $base-font-size * 0.5;
+      padding-right: $base-font-size * 0.5;
+      .row {
+        border-radius: $base-font-size * 0.125;
       }
     }
   }

@@ -163,7 +163,7 @@ class Actions {
 
   // This method checks resistance vote validity
   voteIsInvalid(index, vote) {
-    const res = ['Resistance', 'Percival'].includes(this.game.roles[index]);
+    const res = ['Resistance', 'Percival', 'Merlin'].includes(this.game.roles[index]);
     return res && vote === 0;
   }
 
