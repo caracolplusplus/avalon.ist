@@ -286,7 +286,7 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
                     </tr>
                     {this.state.gameHistory.reverse().slice(-10).map((g: string) => (
                       <tr key={"Game" + g}>
-                        <td className="link"><Link to={"/game/" + g}>Game #{g}</Link></td>
+                        <td><Link to={"/game/" + g}>Game #{g}</Link></td>
                       </tr>
                     ))}
                   </tbody>

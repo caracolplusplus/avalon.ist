@@ -102,7 +102,8 @@
         }
       }
     }
-    #stats, #history {
+    #stats,
+    #history {
       margin: 0 2em;
       height: $base-font-size * 10;
       width: 40%;
@@ -119,15 +120,13 @@
           width: 10%;
           line-height: $base-font-size * 0.5;
         }
-        .link {
-          background: rgba(0,0,0, 0.05);
-        }
         a {
           text-decoration: none;
           font-weight: 600;
         }
         td {
           padding-left: 1em;
+          background: rgba(0, 0, 0, 0.05);
         }
       }
     }
