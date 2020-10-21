@@ -119,6 +119,7 @@ module.exports = function (io, socket) {
 				profile.avatarSize = style.avatarSize;
 				profile.avatarStyle = style.avatarStyle;
 				profile.themeLight = style.themeLight;
+				profile.coloredNames = style.coloredNames;
 
 				profile.saveToUser();
 			} catch (err) {

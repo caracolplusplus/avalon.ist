@@ -1,5 +1,39 @@
 @use '../Globals';
 
+@mixin colored-names ()
+{
+  .username1 {
+    color: Globals.$username-1;
+  }
+  .username2 {
+    color: Globals.$username-2;
+  }
+  .username3 {
+    color: Globals.$username-3;
+  }
+  .username4 {
+    color: Globals.$username-4;
+  }
+  .username5 {
+    color: Globals.$username-5;
+  }
+  .username6 {
+    color: Globals.$username-6;
+  }
+  .username7 {
+    color: Globals.$username-7;
+  }
+  .username8 {
+    color: Globals.$username-8;
+  }
+  .username9 {
+    color: Globals.$username-9;
+  }
+  .username10 {
+    color: Globals.$username-10;
+  }
+}
+
 @mixin init-chat($base-font-size) {
   .dark {
     #Chat {
@@ -7,6 +41,7 @@
         .username {
           color: white;
         }
+        @include colored-names();
         &.negative {
           color: Globals.$spy-dark;
           .content {
@@ -35,6 +70,7 @@
         .username {
           color: Globals.$gray-1;
         }
+        @include colored-names();
         &.negative {
           color: Globals.$spy-light;
           .content {
