@@ -117,6 +117,8 @@ module.exports = function (io, socket) {
 
 							socket.emit('gameResponse', client);
 							socket.emit('gameChatUpdate');
+
+							socket.off('disconnect', afterLeave);
 						} else {
 							console.log(err);
 							socket.emit('gameNotFound');

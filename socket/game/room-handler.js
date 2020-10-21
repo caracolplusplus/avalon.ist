@@ -290,7 +290,6 @@ class RoomHandler {
       const actions = room.actions;
       const missions = room.missions;
 
-      const seat = game.players.indexOf(username);
       const results = game.started ? missions.missionResults : [];
       let spectators = 0;
       let gameState = -1;
@@ -437,8 +436,6 @@ class RoomHandler {
         gc.clients = gc.players;
         gc.code = this.roomName;
         gc.avatars = await aves;
-
-        console.log(gc.avatars);
 
         return gc;
       })

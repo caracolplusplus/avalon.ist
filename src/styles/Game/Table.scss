@@ -123,37 +123,26 @@
       }
     }
     .table-info {
-      margin-top: $base-font-size * 0.6;
       display: flex;
       flex: 0 0 $base-font-size;
+      max-height: $base-font-size;
+      margin-top: $base-font-size * 0.6;
       border-radius: $base-font-size * 0.175;
-      padding: 5px;
       justify-content: center;
       align-items: center;
-      flex-direction: row !important;
+      flex-flow: row wrap;
       z-index: 6;
       .nice-bar-above {
         width: 100%;
         position: absolute;
         display: block;
         bottom: $base-font-size * 1;
-        .players,
-        .report-someone-with-this {
+        .players {
           float: right;
-          background-color: black;
-          border-radius: $base-font-size * 0.4;
-          display: flex;
           width: $base-font-size * 1.2;
-          height: $base-font-size * 0.5;
-          p {
-            color: white;
-            margin: auto;
-            font-weight: 600;
-            height: 1.1em;
-            line-height: 100%;
-          }
         }
         .report-someone-with-this {
+          float: right;
           width: $base-font-size * 2;
           transition: 0.5s;
           margin-right: 0.3em;
@@ -169,18 +158,21 @@
         }
       }
       .message {
-        flex: 0 1 auto !important;
-        margin-right: $base-font-size * 0.3;
-        font-weight: 500;
-        font-size: $base-font-size * 0.29;
+        text-align: center;
+        @media screen and (min-width: Globals.$min-res) {
+          min-width: 100%;
+        }
+        @media screen and (min-width: Globals.$small-res) {
+          min-width: 0;
+        }
       }
       .button-cont {
         display: flex;
         flex: 0 0 $base-font-size * 2;
-        margin-left: $base-font-size * 0.1;
+        margin-left: $base-font-size * 0.15;
         button {
-          margin: auto 0;
           height: $base-font-size * 0.5;
+          margin-bottom: 0;
           p {
             font-size: $base-font-size * 0.29;
           }

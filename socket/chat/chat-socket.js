@@ -20,7 +20,7 @@ module.exports = function (io, socket) {
 				const messages = GeneralChat.messages;
 				const messagesLength = messages.length;
 
-				for (i = messagesLength - 1; i >= 0; i--) {
+				for (let i = messagesLength - 1; i >= 0; i--) {
 					const currentMessage = messages[i];
 					if (currentMessage.id <= id) break;
 					if (
@@ -54,7 +54,7 @@ module.exports = function (io, socket) {
 				const messages = room.chat.messages;
 				const messagesLength = messages.length;
 
-				for (i = messagesLength - 1; i >= 0; i--) {
+				for (let i = messagesLength - 1; i >= 0; i--) {
 					const currentMessage = messages[i];
 					if (currentMessage.id <= id) break;
 					if (currentMessage.public || currentMessage.to.includes(username) || currentMessage.author === username)

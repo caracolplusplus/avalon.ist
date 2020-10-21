@@ -296,7 +296,7 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
           </div>
         </AvalonScrollbars>
         {this.props.match.params.myname === this.state.user ? (
-          <button className="edit-your-profile-with-this" type="button" onClick={this.onFormToggle}>
+          <button className="button-b edit-your-profile-with-this" type="button" onClick={this.onFormToggle}>
             <p>Edit Profile</p>
           </button>
         ) : null}

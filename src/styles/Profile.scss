@@ -13,22 +13,11 @@
   }
   .edit-your-profile-with-this {
     position: fixed;
-    background-color: black !important;
-    border-radius: $base-font-size * 0.4 !important;
-    display: flex;
     width: $base-font-size * 2.5 !important;
-    height: $base-font-size * 0.5 !important;
     transition: 0.5s;
     margin: 0;
     bottom: $base-font-size * 0.5;
     right: $base-font-size * 0.5;
-    p {
-      color: white;
-      margin: auto;
-      font-weight: 600;
-      height: 1.1em;
-      line-height: 100%;
-    }
     &:hover {
       background-color: Globals.$spy-dark;
     }
@@ -38,7 +27,6 @@
     margin: auto;
     padding-top: $base-font-size;
     width: 100%;
-
     .thumb-vertical {
       z-index: 0 !important;
     }
@@ -104,8 +92,7 @@
     }
     #stats,
     #history {
-      margin: 0 2em;
-      height: $base-font-size * 10;
+      margin: 0 2em 2em;
       width: 40%;
       h1 {
         margin-bottom: $base-font-size * 0.5;
@@ -133,14 +120,15 @@
     #bio {
       position: relative;
       height: $base-font-size * 6;
-      width: 60%;
+      margin-right: 10%;
+      flex: 1 0 1%;
       p {
         margin: 1em;
       }
     }
     #graph {
-      width: 50%;
-      min-width: $base-font-size * 12.5;
+      flex: 0 1 50%;
+      max-width: 95%;
       height: 100%;
     }
     @media screen and (min-width: Globals.$min-res) {

@@ -36,379 +36,314 @@ $username-9: #95a5a6;
 $username-10: #928374;
 
 * {
-  box-sizing: border-box;
-  font-family: $montserrat;
-  margin: 0;
-  padding: 0;
-} 
+	box-sizing: border-box;
+	font-family: $montserrat;
+	margin: 0;
+	padding: 0;
+}
 html,
 body,
 #root {
-  height: 100%;
+	height: 100%;
 }
 input:focus,
 select:focus,
 textarea:focus,
 button:focus {
-  outline: none;
+	outline: none;
 }
 .full {
-  align-items: center;
-  display: flex;
-  height: 100%;
-  overflow: hidden;
-  width: 100%;
+	align-items: center;
+	display: flex;
+	height: 100%;
+	overflow: hidden;
+	width: 100%;
 }
 .section {
-  align-items: center;
-  display: flex;
-  flex: 1 1 100%;
-  height: 100%;
-  position: relative;
-  width: 100%;
-}
-@keyframes wake-late {
-  0% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+	align-items: center;
+	display: flex;
+	flex: 1 1 100%;
+	height: 100%;
+	position: relative;
+	width: 100%;
 }
 @mixin init-global($base-font-size) {
-  .tooltip {
-    position: relative;
-    display: inline-block;
-    .tooltip-text {
-      visibility: hidden;
-      font-size: $base-font-size * 0.3;
-      font-weight: 400;
-      color: white;
-      background-color: $green-1;
-      text-align: center;
-      padding: $base-font-size * 0.075 $base-font-size * 0.175;
-      border-radius: $base-font-size * 0.125;
+	/* Tooltip */
+	.tooltip {
+		position: relative;
+		display: inline-block;
+		.tooltip-text {
+			visibility: hidden;
+			font-size: $base-font-size * 0.3;
+			font-weight: 400;
+			color: white;
+			background-color: $green-1;
+			text-align: center;
+			padding: $base-font-size * 0.075 $base-font-size * 0.175;
+			border-radius: $base-font-size * 0.125;
 
-      /* Position the tooltip text - see examples below! */
-      position: absolute;
-      white-space: nowrap;
-      z-index: 3000;
-      bottom: 100%;
-      left: 50%;
-      transform: translate(-50%, 10%);
-      opacity: 0;
-      transition: opacity 0s;
-      transition-delay: 1s;
-      pointer-events: none;
-    }
-    .tooltip-text::after {
-      content: ' ';
-      position: absolute;
-      top: 100%; /* At the bottom of the tooltip */
-      left: 50%;
-      margin-left: $base-font-size * -0.125;
-      border-width: $base-font-size * 0.125;
-      border-style: solid;
-      border-color: $green-1 transparent transparent transparent;
-    }
-  }
-  .tooltip:hover .tooltip-text {
-    visibility: visible;
-    opacity: 1;
-  }
-  .dark {
-    background-color: $gray-1;
-    color: white;
-    h1 {
-      font-size: $base-font-size;
-      font-weight: 800;
-    }
-    h2 {
-      font-size: $base-font-size * 0.5;
-      font-weight: 100;
-    }
-    p,
-    li {
-      font-size: $base-font-size * 0.333;
-      font-weight: 300;
-    }
-    a {
-      color: $gold-1;
-      font-size: $base-font-size * 0.333;
-      font-weight: 500;
-      transition: color 1s;
-    }
-    a:hover {
-      color: $green-1;
-    }
-    button {
-      align-items: center;
-      background-color: $gold-1;
-      border-radius: $base-font-size * 0.125;
-      border-width: 0;
-      display: flex;
-      flex-direction: row;
-      font-weight: 700;
-      height: $base-font-size * 0.625;
-      margin-bottom: $base-font-size * 0.125;
-      width: 100%;
-      p {
-        color: white;
-        display: inline;
-        flex: 1;
-        font-size: $base-font-size * 0.333;
-        font-weight: 700;
-        vertical-align: middle;
-      }
-    }
-    button:hover {
-      cursor: pointer;
-    }
-    .input {
-      background-color: white;
-      border-radius: $base-font-size * 0.125;
-      display: flex;
-      flex-direction: row;
-      height: $base-font-size * 0.625;
-      margin-bottom: $base-font-size * 0.125;
-      svg {
-        align-items: center;
-        color: $gray-2;
-        display: flex;
-        justify-content: center;
-        width: $base-font-size * 0.625;
-        height: $base-font-size * 0.625;
-        transform: scale(0.5);
-      }
-      input {
-        background-color: transparent;
-        border: 0;
-        color: $gray-2;
-        flex: 1;
-        font-size: $base-font-size * 0.25;
-        font-weight: 700;
-        position: relative;
-      }
-    }
-    .track-vertical {
-      position: fixed;
-      background-color: transparent;
-      height: 100%;
-      padding: $base-font-size * 0.075;
-      right: 0;
-      width: $base-font-size * 0.3 !important;
-    }
-    .track-horizontal {
-      background-color: transparent;
-      height: $base-font-size * 0.3 !important;
-      padding: $base-font-size * 0.075;
-      bottom: 0;
-      width: 100%;
-    }
-    .thumb-vertical,
-    .thumb-horizontal {
-      background-color: white !important;
-      border-radius: $base-font-size * 0.25;
-      opacity: 0.25 !important;
-      z-index: 1000;
-    }
-  }
-  .light {
-    background-color: $light-1;
-    color: $gray-1;
-    h1 {
-      font-size: $base-font-size;
-      font-weight: 800;
-    }
-    h2 {
-      font-size: $base-font-size * 0.5;
-      font-weight: 100;
-    }
-    p,
-    li {
-      font-size: $base-font-size * 0.333;
-      font-weight: 300;
-    }
-    a {
-      color: $gold-1;
-      font-size: $base-font-size * 0.333;
-      font-weight: 500;
-      transition: color 1s;
-    }
-    a:hover {
-      color: $green-1;
-    }
-    button {
-      align-items: center;
-      background-color: $gold-1;
-      border-radius: $base-font-size * 0.125;
-      border-width: 0;
-      display: flex;
-      flex-direction: row;
-      font-weight: 700;
-      height: $base-font-size * 0.625;
-      justify-content: center;
-      margin-bottom: $base-font-size * 0.125;
-      width: 100%;
-      p {
-        color: white;
-        display: inline;
-        flex: 1;
-        font-size: $base-font-size * 0.333;
-        font-weight: 700;
-        vertical-align: middle;
-      }
-    }
-    button:hover {
-      cursor: pointer;
-    }
-    .input {
-      background-color: white;
-      border-radius: $base-font-size * 0.125;
-      display: flex;
-      flex-direction: row;
-      height: $base-font-size * 0.625;
-      margin-bottom: $base-font-size * 0.125;
-      svg {
-        align-items: center;
-        color: $gray-2;
-        display: flex;
-        justify-content: center;
-        width: $base-font-size * 0.625;
-        height: $base-font-size * 0.625;
-        transform: scale(0.5);
-      }
-      input {
-        background-color: transparent;
-        border: 0;
-        color: $gray-2;
-        flex: 1;
-        font-size: $base-font-size * 0.25;
-        font-weight: 700;
-        position: relative;
-      }
-    }
-    .track-vertical {
-      background-color: transparent;
-      height: 100%;
-      padding: $base-font-size * 0.075;
-      right: 0;
-      width: $base-font-size * 0.3 !important;
-    }
-    .track-horizontal {
-      background-color: transparent;
-      height: $base-font-size * 0.3 !important;
-      padding: $base-font-size * 0.075;
-      top: 0;
-      width: 100%;
-    }
-    .thumb-vertical,
-    .thumb-horizontal {
-      background-color: $gray-1 !important;
-      border-radius: $base-font-size * 0.25;
-      opacity: 0.1 !important;
-      z-index: 1000;
-    }
-  }
-  .markdown {
-    padding: $base-font-size * 0.5;
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      font-weight: bold;
-      text-transform: uppercase;
-      margin-bottom: $base-font-size * 0.25;
-    }
-    h1 {
-      font-size: $base-font-size * 1.5;
-      color: $gold-1;
-    }
-    h2 {
-      font-size: $base-font-size * 1;
-    }
-    h3 {
-      font-size: $base-font-size * 0.9;
-    }
-    h4 {
-      font-size: $base-font-size * 0.8;
-    }
-    h5 {
-      font-size: $base-font-size * 0.7;
-    }
-    h6 {
-      font-size: $base-font-size * 0.6;
-    }
-    hr {
-      margin: $base-font-size * 0.5 0;
-      border: 1px solid $gold-1;
-    }
-    a {
-      color: $gold-1;
-      font-weight: 600;
-      text-decoration: none;
-    }
-    blockquote {
-      border-left: $base-font-size * 0.15 solid #ccc;
-      border-radius: $base-font-size * 0.1;
-      margin: 0.75em;
-      padding: 0.75em;
-      p {
-        display: inline;
-      }
-    }
-    p,
-    li {
-      font-size: $base-font-size * 0.35;
-    }
-    p {
-      text-indent: 2em;
-      margin: 1em 0;
-    }
-    ul,
-    ol {
-      margin-left: $base-font-size;
-    }
-    img {
-      display: block;
-      margin-bottom: $base-font-size * 0.25;
-      margin-left: 5%;
-      max-width: 60%;
-    }
-    table {
-      width: 100%;
-      th, td {
-        font-size:  $base-font-size * 0.35;
-        line-height: $base-font-size * 0.5;
-        background-color: rgba(0,0,0,0.1);
-        padding-left: $base-font-size * 0.25;
-      }
-    }
-  }
+			/* Position the tooltip text - see examples below! */
+			position: absolute;
+			white-space: nowrap;
+			z-index: 3000;
+			bottom: 100%;
+			left: 50%;
+			transform: translate(-50%, 10%);
+			opacity: 0;
+			transition: opacity 0s;
+			transition-delay: 1s;
+			pointer-events: none;
+		}
+		.tooltip-text::after {
+			content: ' ';
+			position: absolute;
+			top: 100%; /* At the bottom of the tooltip */
+			left: 50%;
+			margin-left: $base-font-size * -0.125;
+			border-width: $base-font-size * 0.125;
+			border-style: solid;
+			border-color: $green-1 transparent transparent transparent;
+		}
+	}
+	.tooltip:hover .tooltip-text {
+		visibility: visible;
+		opacity: 1;
+	}
+	/* Scrollbars */
+	.track-vertical {
+		position: fixed;
+		background-color: transparent;
+		height: 100%;
+		padding: $base-font-size * 0.075;
+		right: 0;
+		width: $base-font-size * 0.3 !important;
+	}
+	.track-horizontal {
+		background-color: transparent;
+		height: $base-font-size * 0.3 !important;
+		padding: $base-font-size * 0.075;
+		bottom: 0;
+		width: 100%;
+	}
+	.thumb-vertical,
+	.thumb-horizontal {
+		border-radius: $base-font-size * 0.25;
+		opacity: 0.25 !important;
+		z-index: 1000;
+	}
+	.thumb-hidden {
+		display: none !important;
+	}
+	/* Elements */
+	h1 {
+		font-size: $base-font-size;
+		font-weight: 800;
+	}
+	h2 {
+		font-size: $base-font-size * 0.5;
+		font-weight: 100;
+	}
+	p,
+	li {
+		font-size: $base-font-size * 0.333;
+		font-weight: 300;
+	}
+	a {
+		font-size: $base-font-size * 0.333;
+		font-weight: 500;
+		transition: color 1s;
+	}
+	button {
+		align-items: center;
+		background-color: $gold-1;
+		border-radius: $base-font-size * 0.125;
+		border-width: 0;
+		display: flex;
+		flex-direction: row;
+		font-weight: 700;
+		height: $base-font-size * 0.625;
+		margin-bottom: $base-font-size * 0.125;
+		width: 100%;
+		p {
+			color: white;
+			display: inline;
+			flex: 1;
+			font-size: $base-font-size * 0.333;
+			font-weight: 700;
+			vertical-align: middle;
+		}
+	}
+	button:hover {
+		cursor: pointer;
+	}
+	.button-b {
+		background-color: black;
+		border-radius: $base-font-size * 0.4;
+		display: flex;
+		height: $base-font-size * 0.5;
+		p {
+			color: white;
+			margin: auto;
+			font-weight: 600;
+			height: 1.1em;
+			line-height: 100%;
+		}
+	}
+	.input {
+		background-color: white;
+		border-radius: $base-font-size * 0.125;
+		display: flex;
+		flex-direction: row;
+		height: $base-font-size * 0.625;
+		margin-bottom: $base-font-size * 0.125;
+		svg {
+			align-items: center;
+			color: $gray-2;
+			display: flex;
+			justify-content: center;
+			width: $base-font-size * 0.3;
+			height: $base-font-size * 0.3;
+			margin: auto 0.5em;
+		}
+		input {
+			background-color: transparent;
+			border: 0;
+			color: $gray-2;
+			flex: 1;
+			font-size: $base-font-size * 0.25;
+			font-weight: 700;
+			position: relative;
+		}
+	}
+	/* Dark theme */
+	.dark {
+		background-color: $gray-1;
+		color: white;
+		a {
+			color: $gold-1;
+		}
+		a:hover {
+			color: $green-1;
+		}
+
+		.thumb-vertical,
+		.thumb-horizontal {
+			background-color: white !important;
+		}
+	}
+	/* Light theme */
+	.light {
+		background-color: $light-1;
+		color: $gray-1;
+		a {
+			color: $gold-1;
+		}
+		a:hover {
+			color: $green-1;
+		}
+		.thumb-vertical,
+		.thumb-horizontal {
+			background-color: $gray-1 !important;
+		}
+	}
+	/* Markdown pages */
+	.markdown {
+		padding: $base-font-size * 0.5;
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6 {
+			font-weight: bold;
+			text-transform: uppercase;
+			margin-bottom: $base-font-size * 0.25;
+		}
+		h1 {
+			font-size: $base-font-size * 1.5;
+			color: $gold-1;
+		}
+		h2 {
+			font-size: $base-font-size * 1;
+		}
+		h3 {
+			font-size: $base-font-size * 0.9;
+		}
+		h4 {
+			font-size: $base-font-size * 0.8;
+		}
+		h5 {
+			font-size: $base-font-size * 0.7;
+		}
+		h6 {
+			font-size: $base-font-size * 0.6;
+		}
+		hr {
+			margin: $base-font-size * 0.5 0;
+			border: 1px solid $gold-1;
+		}
+		a {
+			color: $gold-1;
+			font-weight: 600;
+			text-decoration: none;
+		}
+		blockquote {
+			border-left: $base-font-size * 0.15 solid #ccc;
+			border-radius: $base-font-size * 0.1;
+			margin: 0.75em;
+			padding: 0.75em;
+			p {
+				display: inline;
+			}
+		}
+		p,
+		li {
+			font-size: $base-font-size * 0.35;
+		}
+		p {
+			text-indent: 2em;
+			margin: 1em 0;
+		}
+		ul,
+		ol {
+			margin-left: $base-font-size;
+		}
+		img {
+			display: block;
+			margin-bottom: $base-font-size * 0.25;
+			margin-left: 5%;
+			max-width: 60%;
+		}
+		table {
+			width: 100%;
+			th,
+			td {
+				font-size: $base-font-size * 0.35;
+				line-height: $base-font-size * 0.5;
+				background-color: rgba(0, 0, 0, 0.1);
+				padding-left: $base-font-size * 0.25;
+			}
+		}
+	}
 }
 @media screen and (min-width: $min-res) {
-  @include init-global($initial-font-size * 0.9);
-  .tooltip-text {
-    display: none;
-  }
+	@include init-global($initial-font-size * 0.9);
+	.tooltip-text {
+		display: none;
+	}
 }
 @media screen and (min-width: $small-res) {
-  @include init-global($initial-font-size);
-  .tooltip-text {
-    display: initial;
-  }
+	@include init-global($initial-font-size);
+	.tooltip-text {
+		display: initial;
+	}
 }
 @media screen and (min-width: $large-res) {
-  @include init-global($initial-font-size * 1.2);
+	@include init-global($initial-font-size * 1.2);
 }
 @media screen and (min-width: $max-res) {
-  @include init-global($initial-font-size * 1.4);
+	@include init-global($initial-font-size * 1.4);
 }
 @media screen and (min-width: $insane-res) {
-  @include init-global($initial-font-size * 2.5);
+	@include init-global($initial-font-size * 2.5);
 }

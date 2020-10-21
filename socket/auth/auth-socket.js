@@ -131,7 +131,7 @@ module.exports = function (io, socket) {
 	const clientsOnlineRequest = async () => {
 		const usersOnline = [];
 
-		for (username in ClientsOnline) {
+		for (const username in ClientsOnline) {
 			usersOnline.push(filterProfile(username, ClientsOnline[username].profile));
 		}
 

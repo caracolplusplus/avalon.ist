@@ -128,6 +128,8 @@
         }
         .username {
           width: $base-font-size * 2.5;
+          margin-top: 0.3em;
+          height: 1.5em;
           overflow: hidden;
           white-space: none;
           text-overflow: clip;
