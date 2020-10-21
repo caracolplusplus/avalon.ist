@@ -148,9 +148,17 @@ class Navbar extends React.PureComponent<{ username: string; style?: any; dispat
           </div>
           <div id="Navbar-Mobile" className="section">
             <div className="logo" />
-            <button onClick={this.toggleSidebar}>
-              <FontAwesomeIcon icon={faList} />
-            </button>
+            <div>
+              <button onClick={this.toggleSettings}>
+                <FontAwesomeIcon icon={faCog} />
+              </button>
+              <button onClick={this.handleLogout}>
+                <FontAwesomeIcon icon={faSignOutAlt} />
+              </button>
+              <button onClick={this.toggleSidebar}>
+                <FontAwesomeIcon icon={faList} />
+              </button>
+            </div>
           </div>
         </div>
         {this.state.showSettings ? (

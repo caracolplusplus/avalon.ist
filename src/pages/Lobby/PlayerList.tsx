@@ -72,8 +72,8 @@ class PlayerTab extends React.PureComponent<PlayerTabProps, PlayerTabState> {
   render() {
     return (
       <div className="the-whole-tab">
-        <p className="tab-title">
-          <button onClick={this.toggleTab}>
+        <p className="tab-title" onClick={this.toggleTab}>
+          <button>
             <i className={this.state.showTab ? 'arrow up' : 'arrow down'} />
           </button>
           <span>

@@ -36,7 +36,11 @@
   }
   @media screen and (min-width: Globals.$min-res) {
     #Navbar-Mobile {
-      display: block;
+      display: flex;
+      justify-content: space-between;
+      div {
+        display: flex;
+      }
     }
     #Navbar {
       display: none;
