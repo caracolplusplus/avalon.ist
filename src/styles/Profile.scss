@@ -3,7 +3,7 @@
 @mixin init-profile($base-font-size) {
   .dark {
     .row {
-      background-color: Globals.$gray-3;
+      background-color: Globals.$gray-1;
     }
   }
   .light {
