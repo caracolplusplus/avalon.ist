@@ -32,6 +32,10 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
     this.state = { ...props.style };
   }
 
+  switchColoredNames = () => {
+    this.setState({ coloredNames: !this.state.coloredNames });
+  }
+
   switchTheme = () => {
     this.setState({ themeLight: !this.state.themeLight });
   };
@@ -88,6 +92,10 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
             <div className="input-container">
               <Slider value={this.state.avatarStyle} onClick={this.switchAvatarStyle} />
               <p className="handle">{this.state.avatarStyle ? 'New Avatars' : 'Classic Avatars'}</p>
+            </div>
+            <div className="input-container">
+              <Slider value={this.state.coloredNames} onClick={this.switchColoredNames} />
+              <p className="handle">{this.state.coloredNames ? 'Colored Names' : 'Uncolored Names'}</p>
             </div>
             <p className="subtitle">Accessibility</p>
             <div className="input-container">

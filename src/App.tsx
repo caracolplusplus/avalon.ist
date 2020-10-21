@@ -122,7 +122,9 @@ class App extends React.PureComponent<appProps, appState> {
   updateState(style: any) {
     const currentUser = Parse.User.current();
 
-    this.props.dispatch(updateStyle(style));
+    if (style) {
+      this.props.dispatch(updateStyle(style));
+    }
 
     if (currentUser) {
       const username = currentUser.getUsername();

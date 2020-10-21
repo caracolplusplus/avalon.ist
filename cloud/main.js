@@ -14,15 +14,7 @@ Parse.Cloud.define('authStateChange', async (request) => {
 	const currentId = request.headers.cookie.match(new RegExp('(^| )io=([^;]+)'))[2];
 
 	let currentSocket = undefined;
-	let style = {
-		playArea: 1,
-		playTabs: 2,
-		playFontSize: 12,
-		avatarSize: 75,
-		avatarStyle: true,
-		themeLight: false,
-	};
-
+	let style = undefined;
 	const l = SocketsOnline.length;
 
 	for (let i = l - 1; i > -1; i--) {
@@ -77,6 +69,7 @@ Parse.Cloud.define('authStateChange', async (request) => {
 					avatarSize: currentUser.get('avatarSize'),
 					avatarStyle: currentUser.get('avatarStyle'),
 					themeLight: currentUser.get('themeLight'),
+					coloredNames: currentUser.get('coloredNames'),
 				};
 			}
 

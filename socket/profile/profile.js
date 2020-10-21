@@ -35,6 +35,7 @@ class Profile {
     this.avatarSize = 75;
     this.avatarStyle = true;
     this.themeLight = false;
+    this.coloredNames = true;
     // Roles
     this.isAdmin = false;
     this.isMod = false;

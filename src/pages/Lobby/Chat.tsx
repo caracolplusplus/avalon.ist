@@ -39,6 +39,7 @@ interface ChatProps {
   stage?: string;
   chatHighlights: { [key: string]: string };
   username: string;
+  style?: any;
 }
 
 interface ChatState {
@@ -47,8 +48,8 @@ interface ChatState {
 }
 
 const mapState = (state: rootType) => {
-  const { chatHighlights, username, messageDelay } = state;
-  return { chatHighlights, username, messageDelay };
+  const { chatHighlights, username, messageDelay, style } = state;
+  return { chatHighlights, username, messageDelay, style };
 };
 
 class Chat extends React.PureComponent<ChatProps, ChatState> {
@@ -188,7 +189,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       !this.props.players.includes(snap.author) && this.props.code !== undefined && snap.type === 0 ? 'spectator' : '';
 
     const messageClass = classType + classCharacter + classSpectator;
-    const messageAuthor = snap.type !== 1 ? snap.author : undefined;
+    let messageAuthor = snap.type !== 1 ? snap.author : undefined;
     const messageContent = snap.content;
     const messageHighlight =
       messageAuthor && messageAuthor in this.props.chatHighlights ? this.props.chatHighlights[messageAuthor] : '';
@@ -200,22 +201,31 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     const iSent = this.props.username === snap.author;
     const iReceived = this.props.username === snap.to[0];
 
+    if (messageAuthor && isDm) {
+      if (iSent) {
+        messageAuthor = 'To ' + snap.to[0]
+      } else if (iReceived) {
+        messageAuthor = 'From ' + messageAuthor
+      } else {
+        messageAuthor += ' to ' + snap.to[0]
+      }
+    }
+
+    const indexOfPlayer = messageAuthor ? this.props.players.indexOf(messageAuthor) : -1;
+    const coloredText = (indexOfPlayer !== -1 && this.props.style.coloredNames) ? `username${indexOfPlayer}` : '';
+
     return (
       <div className={'message ' + messageClass} style={{ backgroundColor: messageHighlight }}>
-        <span className="hour">{messageHour}</span>
+        <span className={`hour ${coloredText}`}>{messageHour}</span>
         <p className="text">
-          {messageAuthor ? (
-            <Link className="username" to={'/profile/' + messageAuthor}>
-              {isDm
-                ? iSent
-                  ? 'To ' + snap.to[0]
-                  : iReceived
-                  ? 'From ' + messageAuthor
-                  : messageAuthor + ' to ' + snap.to[0]
-                : messageAuthor}
+          {messageAuthor && (
+            <Link
+              className={`username ${coloredText}`}
+              to={'/profile/' + messageAuthor}>
+              {messageAuthor}
               :
             </Link>
-          ) : null}
+          )}
           <span className="content">{messageContent}</span>
         </p>
       </div>

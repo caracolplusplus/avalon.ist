@@ -84,6 +84,7 @@ function style(
 		avatarSize: 140,
 		avatarStyle: true,
 		themeLight: false,
+		coloredNames: true,
 	},
 	action: ActionTypes
 ): any {
