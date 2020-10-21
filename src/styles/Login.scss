@@ -35,6 +35,7 @@
 }
 
 @mixin init-login($base-font-size) {
+  /* Background image */
   #Background {
     animation: resize 3s infinite;
     background-attachment: local;
@@ -42,95 +43,99 @@
     background-position: center;
     background-repeat: no-repeat;
   }
-  #Login,
-  #Signup {
-    form {
-      align-items: center;
-      animation: flip 1s 1;
-      display: flex;
-      flex: 1 1 100%;
-      flex-direction: column;
-      margin-bottom: auto;
-      margin-top: auto;
-      @media screen and (min-width: Globals.$min-res) {
-        h1,
-        h2,
-        p {
-          width: $base-font-size * 7.5;
-        }
-      }
-      @media screen and (min-width: Globals.$small-res) {
-        h1,
-        h2,
-        p {
-          width: $base-font-size * 18.125;
-        }
-      }
-      * {
-        z-index: 1;
-      }
+  /* Set Up Pages */
+  #Login form,
+  #Signup form,
+  #Verify {
+    align-items: center;
+    animation: flip 1s 1;
+    display: flex;
+    flex: 1 1 100%;
+    flex-direction: column;
+    margin: auto 0;
+    @media screen and (min-width: Globals.$min-res) {
       h1,
-      h2 {
-        text-align: center;
+      h2,
+      p,
+      .welcome,
+      .not-found {
+        width: $base-font-size * 7.5;
       }
-      h2 {
-        margin-bottom: $base-font-size * 0.25;
+    }
+    @media screen and (min-width: Globals.$small-res) {
+      h1,
+      h2,
+      p,
+      .welcome,
+      .not-found {
+        width: $base-font-size * 18.125;
       }
-      p {
-        text-align: justify;
-        text-align-last: center;
-        &.last {
-          margin-bottom: $base-font-size * 0.5;
-        }
-      }
-      .logo-big {
-        background: url('../images/login-logo.png');
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-        height: $base-font-size * 4;
+    }
+
+    * {
+      z-index: 1;
+    }
+    h1,
+    h2 {
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: $base-font-size * 0.25;
+    }
+    p {
+      text-align: justify;
+      text-align-last: center;
+      &.last {
         margin-bottom: $base-font-size * 0.5;
-        margin-top: $base-font-size * 0.5;
-        width: $base-font-size * 4;
       }
-      .glow {
-        $length: $base-font-size * 8;
-        animation: glow 3s infinite;
-        background: url('../images/login-glow.png');
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-        height: 0px;
-        margin-bottom: -$length;
-        padding-bottom: $length;
-        position: relative;
-        transform: translate(0, -$length * 0.321);
-        width: $length;
-        z-index: 0;
+    }
+    .logo-big {
+      background: url('../images/login-logo.png');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      height: $base-font-size * 4;
+      margin-bottom: $base-font-size * 0.5;
+      margin-top: $base-font-size * 0.5;
+      width: $base-font-size * 4;
+    }
+    .glow {
+      $length: $base-font-size * 8;
+      animation: glow 3s infinite;
+      background: url('../images/login-glow.png');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      height: 0px;
+      margin-bottom: -$length;
+      padding-bottom: $length;
+      position: relative;
+      transform: translate(0, -$length * 0.321);
+      width: $length;
+      z-index: 0;
+    }
+    .after-glow {
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+    }
+    .input {
+      width: $base-font-size * 7.5;
+    }
+    button {
+      margin-bottom: $base-font-size * 0.375;
+      width: $base-font-size * 7.5;
+      p {
+        margin-bottom: 0;
       }
-      .after-glow {
-        align-items: center;
-        display: flex;
-        flex-direction: column;
-      }
-      .input {
-        width: $base-font-size * 7.5;
-      }
-      button {
-        margin-bottom: $base-font-size * 0.375;
-        width: $base-font-size * 7.5;
-        p {
-          margin-bottom: 0;
-        }
-      }
-      .error {
-        color: Globals.$spy-dark;
-        font-weight: 900;
-        margin-bottom: $base-font-size * 0.2;
-      }
-      .footnote {
-        margin-top: 4em;
-      }
+    }
+    .error {
+      color: Globals.$spy-dark;
+      font-weight: 900;
+      margin-bottom: $base-font-size * 0.2;
+    }
+    .footnote {
+      margin-top: 4em;
     }
   }
 }

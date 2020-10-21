@@ -1,28 +1,32 @@
 // External
 
-import React, { Component, createRef } from "react";
-import { Scrollbars } from "react-custom-scrollbars";
+import React, { Component, createRef } from 'react';
+import { Scrollbars } from 'react-custom-scrollbars';
 
 // Declaration
 
-class AvalonScrollbars extends Component<{}, {}> {
+interface ScrollbarProps {
+  horizontal?: boolean;
+}
+
+class AvalonScrollbars extends Component<ScrollbarProps, {}> {
   scrollbars = createRef<Scrollbars>();
   top = 1;
   threshold = 0.95;
 
-  constructor(props: {}) {
+  constructor(props: ScrollbarProps) {
     super(props);
     this.autoScroll = this.autoScroll.bind(this);
     this.getScrollBottom = this.getScrollBottom.bind(this);
   }
 
   componentDidMount() {
-    window.addEventListener("resize", this.setThreshold.bind(this));
+    window.addEventListener('resize', this.setThreshold.bind(this));
     this.setThreshold();
   }
 
   componentWillUnmount() {
-    window.removeEventListener("resize", this.setThreshold.bind(this));
+    window.removeEventListener('resize', this.setThreshold.bind(this));
   }
 
   setThreshold() {
@@ -32,7 +36,7 @@ class AvalonScrollbars extends Component<{}, {}> {
   getScrollBottom() {
     try {
       const ref = this.scrollbars.current!;
-      
+
       this.top = ref.getValues().top;
     } catch (e) {
       console.log(e);
@@ -55,18 +59,12 @@ class AvalonScrollbars extends Component<{}, {}> {
         autoHideTimeout={200}
         autoHideDuration={200}
         onScroll={this.getScrollBottom}
-        renderTrackHorizontal={(props) => (
-          <div {...props} className="track-horizontal" />
-        )}
-        renderTrackVertical={(props) => (
-          <div {...props} className="track-vertical" />
-        )}
+        renderTrackHorizontal={(props) => <div {...props} className="track-horizontal" />}
+        renderTrackVertical={(props) => <div {...props} className="track-vertical" />}
         renderThumbHorizontal={(props) => (
-          <div {...props} className="thumb-horizontal" />
+          <div {...props} className={this.props.horizontal ? 'thumb-horizontal' : 'thumb-hidden'} />
         )}
-        renderThumbVertical={(props) => (
-          <div {...props} className="thumb-vertical" />
-        )}
+        renderThumbVertical={(props) => <div {...props} className="thumb-vertical" />}
         renderView={(props) => <div {...props} className="view" />}
       >
         {this.props.children}

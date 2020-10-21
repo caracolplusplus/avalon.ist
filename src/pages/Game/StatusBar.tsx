@@ -483,12 +483,12 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     return this.props.code === '-1' ? null : (
       <>
         <div className="nice-bar-above">
-          <div className="players">
+          <div className="button-b players">
             <p>
               {this.props.players.length}/{this.props.playerMax}
             </p>
           </div>
-          <button className="report-someone-with-this" type="button" onClick={this.showReport}>
+          <button className="button-b report-someone-with-this" type="button" onClick={this.showReport}>
             <p>
               <FontAwesomeIcon icon={faExclamationTriangle} className="exclamation-mark" />
               Report

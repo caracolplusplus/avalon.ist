@@ -155,7 +155,7 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState
 
   render() {
     return (
-      <AvalonScrollbars>
+      <AvalonScrollbars horizontal={true}>
         <div id="Vote-History" className="row">
           {this.props.game.code === '-1' ? null :  (
             <table id="vh-cont" className="vh-cont">

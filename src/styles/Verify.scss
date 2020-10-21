@@ -2,45 +2,13 @@
 
 @mixin init-verify($base-font-size) {
   #Verify {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: $base-font-size * 12;
-    max-height: initial;
     height: 100%;
+    justify-content: center;
     margin: auto;
+    max-height: initial;
+    min-height: $base-font-size * 12;
     padding-top: $base-font-size;
     width: 100%;
-    @media screen and (min-width: Globals.$min-res) {
-      h1,
-      h2,
-      p,
-      .welcome, .not-found {
-        width: $base-font-size * 7.5;
-      }
-    }
-    @media screen and (min-width: Globals.$small-res) {
-      h1,
-      h2,
-      p,
-      .welcome, .not-found {
-        width: $base-font-size * 18.125;
-      }
-    }
-    * {
-      z-index: 1;
-    }
-    h1,
-    h2 {
-      text-align: center;
-    }
-    h2 {
-      margin-bottom: $base-font-size * 0.25;
-    }
-    p {
-      text-align: justify;
-      text-align-last: center;
-    }
     .thumb-vertical {
       z-index: 998;
     }
