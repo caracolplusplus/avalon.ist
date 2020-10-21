@@ -212,7 +212,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     }
 
     const indexOfPlayer = messageAuthor ? this.props.players.indexOf(messageAuthor) : -1;
-    const coloredText = (indexOfPlayer !== -1 && this.props.style.coloredNames) ? `username${indexOfPlayer}` : '';
+    const coloredText = (indexOfPlayer !== -1 && this.props.style.coloredNames) ? `username${indexOfPlayer+1}` : '';
 
     return (
       <div className={'message ' + messageClass} style={{ backgroundColor: messageHighlight }}>

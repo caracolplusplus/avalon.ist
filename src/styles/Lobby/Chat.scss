@@ -2,23 +2,35 @@
 
 @mixin colored-names ()
 {
-  .username0 {
-    color: red;
-  }
   .username1 {
-    color: blue;
+    color: Globals.$username-1;
   }
   .username2 {
-    color: green;
+    color: Globals.$username-2;
   }
   .username3 {
-    color: pink;
+    color: Globals.$username-3;
   }
   .username4 {
-    color: orange;
+    color: Globals.$username-4;
   }
   .username5 {
-    color: yellow;
+    color: Globals.$username-5;
+  }
+  .username6 {
+    color: Globals.$username-6;
+  }
+  .username7 {
+    color: Globals.$username-7;
+  }
+  .username8 {
+    color: Globals.$username-8;
+  }
+  .username9 {
+    color: Globals.$username-9;
+  }
+  .username10 {
+    color: Globals.$username-10;
   }
 }
 

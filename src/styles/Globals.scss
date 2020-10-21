@@ -24,13 +24,23 @@ $large-res: 93.75em;
 $max-res: 125em;
 $insane-res: 187.5em;
 $initial-font-size: 2.5rem;
+$username-1: #7daea3;
+$username-2: #ea6962;
+$username-3: #a9b665;
+$username-4: #fabd2f;
+$username-5: #d3869b;
+$username-6: #e78a4d;
+$username-7: #89b482;
+$username-8: #be90d4;
+$username-9: #95a5a6;
+$username-10: #928374;
 
 * {
   box-sizing: border-box;
   font-family: $montserrat;
   margin: 0;
   padding: 0;
-}
+} 
 html,
 body,
 #root {
