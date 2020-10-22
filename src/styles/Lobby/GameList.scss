@@ -11,7 +11,7 @@
         }
       }
       .game {
-        background: rgba(0, 0, 0, 0.3);
+        background: Globals.$gray-3;
         p {
           color: white;
         }
@@ -35,11 +35,11 @@
         background: rgba(0, 0, 0, 0.05);
         button {
           color: Globals.$gray-1;
-          background-color: Globals.$light-1;
+          background-color: Globals.$light-4;
         }
       }
       .game {
-        background: rgba(255, 255, 255, 0.2);
+        background: Globals.$light-3;
         p {
           color: Globals.$gray-1;
         }

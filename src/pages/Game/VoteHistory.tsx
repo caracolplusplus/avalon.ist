@@ -20,51 +20,14 @@ interface VoteHistoryProps {
   game: GameState;
 }
 
-interface VoteHistoryState {
-  loading: boolean;
-  rowHeight: number;
-}
-
 // Declaration
 
-class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState> {
+class VoteHistory extends React.PureComponent<VoteHistoryProps> {
   constructor(props: VoteHistoryProps) {
     super(props);
-    this.state = {
-      loading: true,
-      rowHeight: 0,
-    };
-    this.setRowHeight = this.setRowHeight.bind(this);
     this.SetHeaders = this.SetHeaders.bind(this);
     this.SetPlayers = this.SetPlayers.bind(this);
     this.DisplayCardHolders = this.DisplayCardHolders.bind(this);
-  }
-
-  setRowHeight() {
-    const vh = document.getElementById('Vote-History');
-    if (vh) this.setState({ rowHeight: vh.offsetWidth / 70 });
-  }
-
-  componentDidMount() {
-    this.setRowHeight();
-    window.addEventListener('resize', this.setRowHeight);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.setRowHeight);
-  }
-
-  componentDidUpdate(prevProps: { game: GameState }) {
-    const old = prevProps.game;
-    const current = this.props.game;
-
-    if (
-      old.results !== current.results ||
-      old.missionLeader !== current.missionLeader ||
-      old.missionVotes !== current.missionVotes ||
-      old.missionTeams !== current.missionTeams
-    )
-      this.setRowHeight();
   }
 
   SetHeaders() {
@@ -82,7 +45,7 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState
     }
 
     return (
-      <tr className="vh-col" style={{ fontSize: this.state.rowHeight + 'px' }}>
+      <tr className="vh-col">
         <th className="vh-row title">Players</th>
         {items}
       </tr>
@@ -114,7 +77,7 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState
     }
 
     return (
-      <tr className="vh-col" style={{ fontSize: this.state.rowHeight + 'px' }}>
+      <tr className="vh-col">
         <td className="vh-row">{props.p}</td>
         {items}
       </tr>
@@ -146,7 +109,7 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState
     ));
 
     return (
-      <tr className="vh-col" style={{ fontSize: this.state.rowHeight + 'px' }}>
+      <tr className="vh-col">
         <td className="vh-row lotl title">Lady of the Lake</td>
         {items}
       </tr>
@@ -155,9 +118,9 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps, VoteHistoryState
 
   render() {
     return (
-      <AvalonScrollbars horizontal={true}>
+      <AvalonScrollbars>
         <div id="Vote-History" className="row">
-          {this.props.game.code === '-1' ? null :  (
+          {this.props.game.code === '-1' ? null : (
             <table id="vh-cont" className="vh-cont">
               <tbody>
                 <this.SetHeaders />

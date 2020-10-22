@@ -19,28 +19,15 @@
       }
     }
     .table-info {
-      background-color: Globals.$gray-3;
+      background-color: Globals.$gray-2;
       margin-bottom: 0.05em;
       .message {
         color: white;
       }
-      .cancel {
-        border: $base-font-size * 0.05 solid Globals.$spy-dark;
-        background-color: #ffd3cf;
-        p {
-          color: Globals.$spy-light;
-        }
-      }
-      .kick {
-        background-color: Globals.$spy-dark;
-        p {
-          color: white;
-        }
-      }
     }
     .table-buttons {
       button {
-        background-color: Globals.$gray-1;
+        background-color: Globals.$gray-2;
       }
     }
   }
@@ -65,19 +52,6 @@
       background-color: Globals.$light-2;
       .message {
         color: Globals.$gray-1;
-      }
-      .cancel {
-        border: $base-font-size * 0.05 solid Globals.$spy-light;
-        background-color: #ffd3cf;
-        p {
-          color: Globals.$spy-light;
-        }
-      }
-      .kick {
-        background-color: Globals.$spy-light;
-        p {
-          color: white;
-        }
       }
     }
     .table-buttons {
@@ -107,7 +81,6 @@
         order: 2;
       }
       button {
-        background-color: Globals.$gray-4;
         flex: 0 0 $base-font-size * 1.5;
         transition: 0.5s;
         p {
@@ -126,8 +99,7 @@
     }
     .table-info {
       display: flex;
-      flex: 0 0 $base-font-size;
-      max-height: $base-font-size;
+      flex: 0 0 $base-font-size * 1.2;
       margin-top: $base-font-size * 0.6;
       border-radius: $base-font-size * 0.175;
       justify-content: center;
@@ -138,7 +110,7 @@
         width: 100%;
         position: absolute;
         display: block;
-        bottom: $base-font-size * 1;
+        bottom: $base-font-size * 1.2;
         .players {
           float: right;
           background-color: Globals.$gray-3;
@@ -181,27 +153,36 @@
           p {
             font-size: $base-font-size * 0.29;
           }
-        }
-        .confirm {
-          border: $base-font-size * 0.05 solid Globals.$green-1;
-          background-color: #d0fc9a;
-          p {
-            color: Globals.$green-1;
+          &:hover {
+            background-color: black;
           }
         }
-        .neutral {
-          border: $base-font-size * 0.05 solid Globals.$gold-1;
-          background-color: #ffe9a6;
+        .confirm {
+          background-color: Globals.$approve;
           p {
-            color: Globals.$gold-1;
+            color: white;
+          }
+        }
+        .cancel {
+          background-color: Globals.$cancel;
+          p {
+            color: white;
+          }
+        }
+        .kick {
+          background-color: #FDECEF;
+          p {
+            color: Globals.$cancel;
           }
         }
         .disabled {
+          background-color: Globals.$mission-gray;
           cursor: default;
-          border: $base-font-size * 0.05 solid gray;
-          background-color: Globals.$light-1;
           p {
-            color: gray;
+            color: #ccc;
+          }
+          &:hover {
+            background-color: Globals.$mission-gray;
           }
         }
       }

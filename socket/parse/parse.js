@@ -71,6 +71,4 @@ query
 		console.log(err);
 	});
 
-// DiscordReports.newReport('Oken', 'Room #69', 'Gamethrowing', 'Shot incorrectly');
-
 module.exports = Parse;

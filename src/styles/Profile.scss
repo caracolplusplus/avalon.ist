@@ -122,14 +122,22 @@
       height: $base-font-size * 6;
       margin-right: 10%;
       flex: 1 0 1%;
+      .markdown {
+        width: 100%;
+        word-wrap: break-word;
+      }
       p {
         margin: 1em;
       }
     }
     #graph {
-      flex: 0 1 50%;
-      max-width: 95%;
-      height: 100%;
+      @media screen and (min-width: Globals.$min-res) {
+        width: 95%;
+      }
+      @media screen and (min-width: Globals.$small-res) {
+        width: 50%;
+      }
+      height: auto;
     }
     @media screen and (min-width: Globals.$min-res) {
       flex-direction: column;

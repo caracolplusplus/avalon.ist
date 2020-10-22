@@ -76,12 +76,14 @@ function messageDelay(state: number[] = [0, 0, 0, 0, 0], action: ActionTypes): n
 	}
 }
 
+/* Set the same starting value on profile */
+
 function style(
 	state: any = {
-		playArea: 0,
+		playArea: 1,
 		playTabs: 2,
-		playFontSize: 14,
-		avatarSize: 140,
+		playFontSize: 12,
+		avatarSize: 75,
 		avatarStyle: true,
 		themeLight: false,
 		coloredNames: true,

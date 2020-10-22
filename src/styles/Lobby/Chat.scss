@@ -116,6 +116,7 @@
         line-height: $base-font-size * 0.5;
         .username {
           margin-right: $base-font-size * 0.15;
+          font-weight: 600;
           text-decoration: none;
         }
         .content {
@@ -138,7 +139,6 @@
         font-style: oblique;
         .username {
           color: Globals.$green-1;
-          font-weight: 600;
         }
       }
       &.quote {

@@ -17,6 +17,9 @@ const api = new ParseServer({
 		validationError: 'Password must have at least 6 characters, with 1 upper case letter and 1 digit.',
 		doNotAllowUsername: true,
 	},
+	liveQuery: {
+		classNames: ['Globals'], // List of classes to support for query subscriptions
+	},
 });
 
 const app = express();
@@ -45,3 +48,6 @@ require('./socket/init')(io);
 server.listen(port, () => {
 	console.log('Avalon.ist running on port ' + port + '.');
 });
+
+// Initialize Parse LiveQuery
+ParseServer.createLiveQueryServer(server);

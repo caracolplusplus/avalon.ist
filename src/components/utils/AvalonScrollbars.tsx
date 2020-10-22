@@ -11,33 +11,20 @@ interface ScrollbarProps {
 
 class AvalonScrollbars extends Component<ScrollbarProps, {}> {
   scrollbars = createRef<Scrollbars>();
-  top = 1;
   threshold = 0.95;
+  floored = true;
 
   constructor(props: ScrollbarProps) {
     super(props);
     this.autoScroll = this.autoScroll.bind(this);
-    this.getScrollBottom = this.getScrollBottom.bind(this);
+    this.checkIfFloored = this.checkIfFloored.bind(this);
   }
 
-  componentDidMount() {
-    window.addEventListener('resize', this.setThreshold.bind(this));
-    this.setThreshold();
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.setThreshold.bind(this));
-  }
-
-  setThreshold() {
-    this.threshold = window.innerWidth >= 800 ? 0.975 : 0.875;
-  }
-
-  getScrollBottom() {
+  checkIfFloored() {
     try {
       const ref = this.scrollbars.current!;
 
-      this.top = ref.getValues().top;
+      this.floored = ref.getValues().top === 1;
     } catch (e) {
       console.log(e);
     }
@@ -46,7 +33,7 @@ class AvalonScrollbars extends Component<ScrollbarProps, {}> {
   autoScroll() {
     const ref = this.scrollbars.current!;
 
-    if (this.top > this.threshold) {
+    if (this.floored) {
       ref.scrollToBottom();
     }
   }
@@ -58,7 +45,7 @@ class AvalonScrollbars extends Component<ScrollbarProps, {}> {
         autoHide
         autoHideTimeout={200}
         autoHideDuration={200}
-        onScroll={this.getScrollBottom}
+        onScroll={this.checkIfFloored}
         renderTrackHorizontal={(props) => <div {...props} className="track-horizontal" />}
         renderTrackVertical={(props) => <div {...props} className="track-vertical" />}
         renderThumbHorizontal={(props) => (

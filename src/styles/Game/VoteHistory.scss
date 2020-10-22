@@ -69,55 +69,49 @@
     display: flex;
     position: relative;
     flex-direction: column;
-    min-width: 600px;
+    width: 100%;
     .vh-cont {
+      padding: 10px;
       animation: wake 0.25s 1;
       margin: auto;
       width: 95%;
       background-color: transparent;
       table-layout: fixed;
-      svg {
+      th,
+      td {
+        font-size: $base-font-size * 0.28;
+        line-height: $base-font-size * 0.4;
         position: relative;
-        $svg-size: 1.1em;
-        height: $svg-size;
-        width: $svg-size;
-        margin-left: 50%;
-        transform: translate(-50%, 0);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        svg {
+          position: absolute;
+          $svg-size: 1em;
+          height: $svg-size;
+          width: $svg-size;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
       }
       th {
         text-align: center !important;
+        font-weight: 700;
         width: 100%;
       }
-      .vh-row {
+      td {
         font-weight: 500;
-        height: 1.7em;
         padding: 0 0.5em;
         text-align: left;
-        overflow: hidden;
-      }
-      .vh-row.title {
-        font-weight: 700;
       }
       .vh-row.mission {
         color: black;
         font-weight: 600;
       }
       .lotl {
+        font-weight: 700;
         text-align: center;
-      }
-      .vh-row.votes {
-        padding: 0px;
-        background-color: transparent;
-        .vh-vote {
-          position: relative;
-          height: 1.7em;
-          padding: 10px;
-          text-align: center;
-
-        }
-        .vh-vote:last-of-type {
-          margin-right: 0;
-        }
       }
     }
   }
