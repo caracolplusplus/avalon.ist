@@ -4,10 +4,10 @@
   .dark {
     #Game-List {
       .game-list-settings {
-        background: rgba(0, 0, 0, 0.5);
+        background: Globals.$gray-2;
         button {
           color: white;
-          background-color: Globals.$gray-1;
+          background-color: Globals.$gray-4;
         }
       }
       .game {

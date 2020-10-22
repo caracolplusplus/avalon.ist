@@ -20,6 +20,7 @@
     }
     .table-info {
       background-color: Globals.$gray-3;
+      margin-bottom: 0.05em;
       .message {
         color: white;
       }
@@ -39,7 +40,7 @@
     }
     .table-buttons {
       button {
-        background-color: Globals.$gray-3;
+        background-color: Globals.$gray-1;
       }
     }
   }
@@ -106,6 +107,7 @@
         order: 2;
       }
       button {
+        background-color: Globals.$gray-4;
         flex: 0 0 $base-font-size * 1.5;
         transition: 0.5s;
         p {
@@ -139,6 +141,9 @@
         bottom: $base-font-size * 1;
         .players {
           float: right;
+          background-color: Globals.$gray-3;
+          border-radius: $base-font-size * 0.4;
+          display: flex;
           width: $base-font-size * 1.2;
         }
         .report-someone-with-this {

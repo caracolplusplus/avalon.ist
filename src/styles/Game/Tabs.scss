@@ -3,11 +3,11 @@
 @mixin init-tabs($base-font-size) {
   .dark {
     .tag {
-      background-color: Globals.$gray-3;
+      background-color: Globals.$gray-2;
     }
     .tag:hover,
     .tag:focus {
-      background-color: black;
+      background-color: Globals.$gray-3;
     }
   }
   .light {

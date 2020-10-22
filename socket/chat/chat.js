@@ -73,11 +73,9 @@ class Chat {
 				splitContent.delete(referent);
 
 				if (!hasFoundQuote) {
-					const quoteContent = '{username} quotes:';
-
 					this.messages.push({
 						public: true,
-						content: quoteContent.replace(/{username}/gi, username),
+						content: `${username} quotes:`,
 						author: AVALONIST_NAME,
 						to: [],
 						type: 1,
@@ -139,7 +137,7 @@ class Chat {
 
 		this.messages.push({
 			public: true,
-			content: content,
+			content,
 			author: username,
 			to: [],
 			type: 0,
@@ -154,12 +152,11 @@ class Chat {
 	// Lobby Messages
 
 	joinLeaveLobby(username, joined) {
-		const content = '{username} has {action} the lobby!';
 		const action = joined ? 'entered' : 'left';
 
 		this.messages.push({
 			public: true,
-			content: content.replace(/{username}/gi, username).replace(/{action}/gi, action),
+			content: `${username} has ${action} the lobby.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -172,11 +169,9 @@ class Chat {
 	}
 
 	roomCreated(username, no) {
-		const content = '{username} has created Room #{no}! Join now!';
-
 		this.messages.push({
 			public: true,
-			content: content.replace(/{username}/gi, username).replace(/{no}/gi, no),
+			content: `${username} has created Room ${no}.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -189,12 +184,11 @@ class Chat {
 	}
 
 	roomFinished(no, winner) {
-		const content = 'Game #{no} has finished! {outcome}!';
 		const outcome = winner ? 'The Resistance Wins' : 'The Spies Win';
 
 		this.messages.push({
 			public: true,
-			content: content.replace(/{no}/gi, no).replace(/{outcome}/gi, outcome),
+			content: `Game ${no} has finished. ${outcome}.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -209,12 +203,11 @@ class Chat {
 	// Game Message
 
 	onEnter(username, joined) {
-		const content = '{username} has {action} the room!';
 		const action = joined ? 'joined' : 'left';
 
 		this.messages.push({
 			public: true,
-			content: content.replace(/{username}/gi, username).replace(/{action}/gi, action),
+			content: `${username} has ${action} the room.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -229,21 +222,26 @@ class Chat {
 	onStart(roleSettings, no) {
 		const arr = [];
 
-		if (roleSettings.merlin) arr.push('Merlin');
-		if (roleSettings.percival) arr.push('Percival');
-		if (roleSettings.morgana) arr.push('Morgana');
-		if (roleSettings.assassin) arr.push('Assassin');
-		if (roleSettings.oberon) arr.push('Oberon');
-		if (roleSettings.mordred) arr.push('Mordred');
-		if (roleSettings.card) arr.push('Lady of the Lake');
-		if (arr.length < 1) arr.push('No special roles');
+		const roles = {
+			merlin: 'Merlin',
+			percival: 'Percival',
+			morgana: 'Morgana',
+			assassin: 'Assassin',
+			oberon: 'Oberon',
+			mordred: 'Mordred',
+			card: 'Lady of the Lake',
+			empty: 'No special roles',
+		}
 
-		const content = 'Room #{no} starts with: {info}.';
-		const info = arr.toString().replace(/,/g, ', ');
+		for (const role in roleSettings) {
+			arr.push(roles[role].charAt(0).toUpperCase() + role.slice(1));
+		}
+
+		if (arr.length < 1) arr.push(roles.empty);
 
 		this.messages.push({
 			public: true,
-			content: content.replace(/{no}/gi, no).replace(/{info}/gi, info),
+			content: `Room ${no} starts with: ${arr.join(', ')}.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -256,11 +254,9 @@ class Chat {
 	}
 
 	onPick(username) {
-		const content = 'Waiting for {username} to select a team!';
-
 		this.messages.push({
 			public: true,
-			content: content.replace(/{username}/gi, username),
+			content: `Waiting for ${username} to select a team.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -273,16 +269,10 @@ class Chat {
 	}
 
 	afterPick(mission, round, team) {
-		const content = 'Mission {mission}.{round} picked: {team}';
-		const content2 = 'Everybody vote!';
-
 		this.messages.push(
 			{
 				public: true,
-				content: content
-					.replace(/{mission}/gi, mission)
-					.replace(/{round}/gi, round)
-					.replace(/{team}/gi, team),
+				content: `Mission ${mission}.${round} picked: ${team}`,
 				author: AVALONIST_NAME,
 				to: [],
 				type: 1,
@@ -292,7 +282,7 @@ class Chat {
 			},
 			{
 				public: true,
-				content: content2,
+				content: 'Everybody vote!',
 				author: AVALONIST_NAME,
 				to: [],
 				type: 1,
@@ -306,15 +296,11 @@ class Chat {
 	}
 
 	afterVote(mission, round, passes) {
-		const content = 'Everybody has voted! Mission {mission}.{round} has been {result}.';
 		const result = passes ? 'approved' : 'rejected';
 
 		this.messages.push({
 			public: true,
-			content: content
-				.replace(/{mission}/gi, mission)
-				.replace(/{round}/gi, round)
-				.replace(/{result}/gi, result),
+			content: `Everybody has voted! Mission ${mission}.${round} has been ${result}.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -327,11 +313,10 @@ class Chat {
 	}
 
 	afterPassing(team) {
-		const content = 'Waiting for {team} to choose the fate of this mission.';
 
 		this.messages.push({
 			public: true,
-			content: content.replace(/{team}/gi, team),
+			content: `Waiting for ${team} to choose the fate of this mission.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -344,18 +329,19 @@ class Chat {
 	}
 
 	afterMission(mission, fails, success) {
-		const content =
-			fails !== 1
-				? 'Mission {mission} has {outcome} with {fails} fails!'
-				: 'Mission {mission} has {outcome} with 1 fail!';
 		const outcome = success ? 'succeeded' : 'failed';
+
+		let content = `Mission ${mission} has ${outcome} `;
+
+		content += fails === 1
+			? `with ${fails} fail`
+			:	`with ${fails} fails`;
+
+		content += '.';
 
 		this.messages.push({
 			public: true,
-			content: content
-				.replace(/{mission}/gi, mission)
-				.replace(/{outcome}/gi, outcome)
-				.replace(/{fails}/gi, fails),
+			content,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -368,11 +354,9 @@ class Chat {
 	}
 
 	waitingForShot(player) {
-		const content = 'Waiting for {player} to select a target!';
-
 		this.messages.push({
 			public: true,
-			content: content.replace(/{player}/gi, player),
+			content: `Waiting for ${player} to select a target.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -385,11 +369,9 @@ class Chat {
 	}
 
 	afterShot(player) {
-		const content = '{player} was shot!';
-
 		this.messages.push({
 			public: true,
-			content: content.replace(/{player}/gi, player),
+			content: `${player} was shot!`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -402,11 +384,9 @@ class Chat {
 	}
 
 	waitingForCard(player) {
-		const content = 'Waiting for {player} to use Lady of the Lake!';
-
 		this.messages.push({
 			public: true,
-			content: content.replace(/{player}/gi, player),
+			content: `Waiting for ${player} to use Lady of the Lake.`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -419,14 +399,12 @@ class Chat {
 	}
 
 	afterCard(player, carded, isSpy) {
-		const content = '{player} has used Lady of the Lake on {carded}!';
-		const content2 = '{carded} is {result}!';
 		const result = isSpy ? 'a Spy' : 'a member of The Resistance';
 
 		this.messages.push(
 			{
 				public: true,
-				content: content.replace(/{player}/gi, player).replace(/{carded}/gi, carded),
+				content: `${player} has used Lady of the Lake on ${carded}!`,
 				author: AVALONIST_NAME,
 				to: [],
 				type: 1,
@@ -436,7 +414,7 @@ class Chat {
 			},
 			{
 				public: false,
-				content: content2.replace(/{result}/gi, result).replace(/{carded}/gi, carded),
+				content: `${carded} is ${result}!`,
 				author: AVALONIST_NAME,
 				to: [player],
 				type: 1,
@@ -450,7 +428,7 @@ class Chat {
 	}
 
 	onEnd(no, cause, winner) {
-		const content = 'Game #{no} has finished!';
+		const content = `Game ${no} has finished!`;
 		const content2 = [
 			'Merlin has been killed! The Spies Win.',
 			'Merlin was not killed! The Resistance wins.',
@@ -462,7 +440,7 @@ class Chat {
 		this.messages.push(
 			{
 				public: true,
-				content: content.replace(/{no}/gi, no),
+				content,
 				author: AVALONIST_NAME,
 				to: [],
 				type: 1,
@@ -486,11 +464,11 @@ class Chat {
 	}
 
 	onVoid(no) {
-		const content = 'Room #{no} has been voided!';
+		const content = `Room ${no} has been voided!`;
 
 		this.messages.push({
 			public: true,
-			content: content.replace(/{no}/gi, no),
+			content,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -503,11 +481,11 @@ class Chat {
 	}
 
 	kickPlayer(host, player) {
-		const content = '{player} has been kicked by {host}!';
+		const content = `${player} has been kicked by ${host}!`;
 
 		this.messages.push({
 			public: true,
-			content: content.replace(/{player}/gi, player).replace(/{host}/gi, host),
+			content,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
@@ -659,7 +637,7 @@ class ChatCommands extends Chat {
 
 		const helpMessages = mod ? helpMod[page] : helpClient[page];
 
-		const author = 'Command Help > Page {p}/{m}'.replace(/{p}/gi, page).replace(/{m}/gi, pageMax);
+		const author = `Command Help > Page ${page}/${pageMax}`;
 
 		for (const x in helpMessages) {
 			this.messages.push({
@@ -702,8 +680,7 @@ class ChatCommands extends Chat {
 						profile.saveToUser();
 
 						message =
-							hours === 1 ? '{user} has been suspended for 1 hour.' : '{user} has been for suspended for {n} hours.';
-						message = message.replace(/{user}/gi, profile.user).replace(/{n}/gi, hours);
+							hours === 1 ? `${profile.user} has been suspended for 1 hour.` : `${profile.user} has been for suspended for ${hours} hours.`;
 
 						this.addModLog({
 							action: 'SUSPENSION',
@@ -718,8 +695,7 @@ class ChatCommands extends Chat {
 						profile.suspensionDate = 0;
 						profile.saveToUser();
 
-						message = '{user} has been unsuspended.';
-						message = message.replace(/{user}/gi, profile.user);
+						message = `${profile.user} has been unsuspended.`;
 
 						this.addModLog({
 							action: 'REVOKE SUSPENSION',
@@ -734,8 +710,7 @@ class ChatCommands extends Chat {
 						profile.isBanned = true;
 						profile.saveToUser();
 
-						message = '{user} has been banned.';
-						message = message.replace(/{user}/gi, profile.user);
+						message = `${profile.user} has been banned.`;
 
 						this.addModLog({
 							action: 'BAN',
@@ -750,8 +725,7 @@ class ChatCommands extends Chat {
 						profile.isBanned = false;
 						profile.saveToUser();
 
-						message = '{user} has been unbanned.';
-						message = message.replace(/{user}/gi, profile.user);
+						message = `${profile.user} has been unbanned.`;
 
 						this.addModLog({
 							action: 'REVOKE BAN',
@@ -816,8 +790,7 @@ class ChatCommands extends Chat {
 						await prom1;
 						await prom2;
 
-						message = '{user} has been banned and all of their IP adresses have been locked.';
-						message = message.replace(/{user}/gi, profile.user);
+						message = `${profile.user} has been banned and all of their IP adresses have been locked.`;
 
 						this.addModLog({
 							action: 'IP BAN',
@@ -904,8 +877,7 @@ class ChatCommands extends Chat {
 
 				await prom1;
 
-				let message = '{ip} has been removed from the IP blacklist.';
-				message = message.replace(/{ip}/gi, ip);
+				let message = `${ip} has been removed from the IP blacklist.`;
 
 				this.addModLog({
 					action: 'REVOKE IP BAN',
@@ -1026,8 +998,7 @@ class ChatCommands extends Chat {
 					case '/close':
 						handler.deleteRoom();
 
-						message = 'Room #{no} has been closed.';
-						message = message.replace(/{no}/gi, splitContent[1]);
+						message = `Room ${splitContent[1]} has been closed.`;
 
 						this.addModLog({
 							action: 'CLOSE ROOM',
@@ -1059,8 +1030,7 @@ class ChatCommands extends Chat {
 
 						room.actions.frozen = true;
 
-						message = 'Room #{no} has been paused.';
-						message = message.replace(/{no}/gi, splitContent[1]);
+						message = `Room ${splitContent[1]} has been paused.`;
 
 						this.addModLog({
 							action: 'PAUSE ROOM',
@@ -1092,8 +1062,7 @@ class ChatCommands extends Chat {
 
 						room.actions.frozen = false;
 
-						message = 'Room #{no} has been unpaused.';
-						message = message.replace(/{no}/gi, splitContent[1]);
+						message = `Room ${splitContent[1]} has been unpaused.`;
 
 						this.addModLog({
 							action: 'UNPAUSE ROOM',
@@ -1125,8 +1094,7 @@ class ChatCommands extends Chat {
 
 						room.game.privateKnowledge[username] = room.game.roles;
 
-						message = 'Learned roles in Room #{no}.';
-						message = message.replace(/{no}/gi, splitContent[1]);
+						message = `Learned roles in Room ${splitContent[1]}.`;
 
 						this.addModLog({
 							action: 'LEARN ROLES',
@@ -1168,8 +1136,7 @@ class ChatCommands extends Chat {
 							room.actions.voidGame(outcome);
 						}
 
-						message = 'Room #{no} has been ended.';
-						message = message.replace(/{no}/gi, splitContent[1]);
+						message = `Room ${splitContent[1]} has been ended.`;
 
 						this.addModLog({
 							action: 'END ROOM',
@@ -1253,8 +1220,7 @@ class ChatCommands extends Chat {
 				main.set('latestAvatars', aves);
 				main.save({}, { useMasterKey: true });
 
-				let message = "{user}'s avatars have been set.";
-				message = message.replace(/{user}/gi, profile.user);
+				const message = `${profile.user}'s avatars have been set.`;
 
 				this.addModLog({
 					action: 'AVATAR SET',
@@ -1374,7 +1340,7 @@ class ChatCommands extends Chat {
 		if (!target) {
 			this.messages.push({
 				public: false,
-				content: 'User with username "{user}" is currently disconnected.'.replace(/{user}/gi, splitContent[1]),
+				content: `User with username "${splitContent[1]}" is currently disconnected.`,
 				author: AVALONIST_NAME,
 				to: [username],
 				type: 1,
@@ -1484,7 +1450,7 @@ class ChatCommands extends Chat {
 		if (!target) {
 			this.messages.push({
 				public: false,
-				content: 'No user online exists with the provided username.'.replace(/{user}/gi, splitContent[1]),
+				content: `No ${splitContent[1]} online exists with the provided username.`,
 				author: AVALONIST_NAME,
 				to: [username],
 				type: 1,
@@ -1503,7 +1469,7 @@ class ChatCommands extends Chat {
 		if (target.profile.dontBotherMeUntilThisTime > Date.now()) {
 			this.messages.push({
 				public: false,
-				content: 'This player has already been {action} recently by someone...'.replace(/{action}/gi, action),
+				content: `This player has already been ${action} recently by someone...`,
 				author: AVALONIST_NAME,
 				to: [username],
 				type: 1,
@@ -1521,10 +1487,7 @@ class ChatCommands extends Chat {
 
 		this.messages.push({
 			public: true,
-			content: '{user} has {action} {target}!'
-				.replace(/{user}/gi, username)
-				.replace(/{target}/gi, splitContent[1])
-				.replace(/{action}/gi, action),
+			content: `${username} has ${splitContent[1]} ${action}!`,
 			author: AVALONIST_NAME,
 			to: [],
 			type: 1,
