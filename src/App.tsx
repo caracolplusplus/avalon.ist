@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Route, BrowserRouter as Router, Switch } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
@@ -63,138 +64,150 @@ const initialState: appState = {
 // App
 
 class App extends React.PureComponent<appProps, appState> {
-  constructor(props: appProps) {
-    super(props);
-    this.state = initialState;
-    this.updateState = this.updateState.bind(this);
-    this.updateDimensions = this.updateDimensions.bind(this);
-  }
+  state = initialState;
 
-  componentDidMount() {
-    window.addEventListener('resize', this.updateDimensions);
+  componentDidMount = () => {
+    const {
+      getAuthenticated,
+      setNotifications,
+      listenForKicks,
+      listenForStyles,
+      listenForLogs,
+      updateDimensions,
+    } = this;
 
-    socket.on('showModerationLogs', (data: any) => {
-      const logstring = JSON.stringify(data, null, 2);
-      alert(logstring);
+    window.addEventListener('resize', updateDimensions);
 
-      console.log(data);
-    });
+    socket.on('getAuthenticated', () =>
+      getAuthenticated()
+        .then(() => {
+          setNotifications();
+          listenForKicks();
+          listenForStyles();
+          listenForLogs();
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+    );
+  };
 
-    if (!('Notification' in window)) {
-      console.log('This browser does not support desktop notifications');
-    } else {
-      Notification.requestPermission();
-    }
+  componentWillUnmount = () => {
+    const { updateDimensions } = this;
 
-    socket.on('updateUISettings', (style: any) => {
-      this.props.dispatch(updateStyle(style));
-    });
-
-    socket.on('notificationMessage', (data: any) => {
-      if (Soundboard[data.audio]) Soundboard[data.audio].play();
-
-      new Notification(data.title, {
-        body: data.body,
-        icon: 'https://i.ibb.co/kGHXzYr/favicon-32x32.png',
-        dir: 'ltr',
-      });
-    });
-
-    socket.on('connectionStarted', async () => {
-      try {
-        await Parse.Cloud.run('authStateChange');
-      } catch (err) {
-        await Parse.User.logOut();
-        socket.disconnect();
-        window.location.reload(true);
-      }
-    });
-
-    socket.on('connectionLinked', this.updateState);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.updateDimensions);
+    window.removeEventListener('resize', updateDimensions);
 
     socket.disconnect();
-  }
+  };
 
-  updateState(style: any) {
+  getAuthenticated = async () => {
+    const { dispatch } = this.props;
+
+    await Parse.Cloud.run('linkSocketIO');
+
     const currentUser = Parse.User.current();
 
-    if (style) {
-      this.props.dispatch(updateStyle(style));
-    }
-
     if (currentUser) {
-      const username = currentUser.getUsername();
+      const username = currentUser.getUsername()!;
 
-      this.props.dispatch(setUsername(username ? username : '-'));
-      this.props.dispatch(setOnline(true));
+      dispatch(setUsername(username));
+      dispatch(setOnline(true));
 
       this.setState({
         authenticated: true,
         verified: true,
         loading: false,
       });
-
-      socket.emit('parseLink');
     } else {
-      this.props.dispatch(setOnline(false));
+      dispatch(setOnline(false));
 
       this.setState({
         authenticated: false,
         verified: false,
         loading: false,
       });
-
-      socket.emit('parseUnlink');
     }
-  }
+  };
 
-  updateDimensions() {
-    this.setState({ width: window.innerWidth, height: window.innerHeight });
-  }
+  setNotifications = () => {
+    const printNotification = (data: any) => {
+      // This is broken
+      if (Soundboard[data.audio]) Soundboard[data.audio].play();
+
+      // eslint-disable-next-line no-undef
+      new Notification(data.title, {
+        body: data.body,
+        icon: 'https://i.ibb.co/kGHXzYr/favicon-32x32.png',
+        dir: 'ltr',
+      });
+    };
+
+    if (!('Notification' in window)) {
+      console.log('This browser does not support desktop notifications');
+    } else {
+      // eslint-disable-next-line no-undef
+      Notification.requestPermission();
+
+      socket.on('printNotification', printNotification);
+    }
+  };
+
+  listenForKicks = () => {
+    const reloadPage = async () => {
+      await Parse.User.logOut();
+
+      socket.disconnect();
+      window.location.reload(true);
+    };
+
+    socket.on('reloadPage', reloadPage);
+  };
+
+  listenForStyles = () => {
+    const updateTheme = (style: any) => {
+      const { dispatch } = this.props;
+
+      dispatch(updateStyle(style));
+    };
+
+    socket.on('updateStyle', updateTheme);
+  };
+
+  listenForLogs = () => {
+    const printLogs = (data: any) => {
+      console.log(data);
+    };
+
+    socket.on('printLogs', printLogs);
+  };
+
+  updateDimensions = () => {
+    const { innerWidth, innerHeight } = window;
+
+    this.setState({ width: innerWidth, height: innerHeight });
+  };
 
   render() {
-    return this.state.loading === true ? null : (
+    const { loading, authenticated, verified, width, height } = this.state;
+
+    const routeProps = { authenticated, verified };
+
+    return loading === true ? null : (
       <>
         <Router>
           <Switch>
-            <LoggedOutOnly exact path="/" authenticated={this.state.authenticated} component={Login} />
-            <LoggedOutOnly exact path="/signup" authenticated={this.state.authenticated} component={Signup} />
-            <UnverifiedOnly
-              exact
-              path="/verify"
-              authenticated={this.state.authenticated}
-              verified={this.state.verified}
-              component={Verify}
-            />
-            <LoggedInOnly
-              exact
-              path="/lobby"
-              authenticated={this.state.authenticated}
-              verified={this.state.verified}
-              component={Lobby}
-            />
-            <LoggedInOnly
-              path="/profile/:username"
-              authenticated={this.state.authenticated}
-              verified={this.state.verified}
-              component={Profile}
-            />
-            <LoggedInOnly
-              path="/game/:id"
-              authenticated={this.state.authenticated}
-              verified={this.state.verified}
-              component={Game}
-            />
+            <LoggedOutOnly exact path="/" authenticated={authenticated} component={Login} />
+            <LoggedOutOnly exact path="/signup" authenticated={authenticated} component={Signup} />
+            <UnverifiedOnly exact path="/verify" {...routeProps} component={Verify} />
+            <LoggedInOnly exact path="/lobby" {...routeProps} component={Lobby} />
+            <LoggedInOnly path="/profile/:username" {...routeProps} component={Profile} />
+            <LoggedInOnly path="/game/:id" {...routeProps} component={Game} />
             <Route path="/article/:id" component={Article} />
             <Route component={NoMatch} />
           </Switch>
         </Router>
         <span style={{ display: 'none' }}>
-          Window size: {this.state.width} x {this.state.height}
+          Window size: {width} x {height}
         </span>
       </>
     );

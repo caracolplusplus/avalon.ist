@@ -1,6 +1,6 @@
 import Parse from "parse";
 
 Parse.initialize("AVALONIST");
-Parse.serverURL = '/parse'
+Parse.serverURL = '/parse';
 
 export default Parse

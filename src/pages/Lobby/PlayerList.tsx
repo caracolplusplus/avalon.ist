@@ -107,13 +107,13 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
   }
 
   componentDidMount() {
-    socket.on('clientsOnlineResponse', this.parseClientsOnline);
+    socket.on('playerListResponse', this.parseClientsOnline);
 
-    socket.emit('clientsOnlineRequest');
+    socket.emit('playerListRequest');
   }
 
   componentWillUnmount() {
-    socket.off('clientsOnlineResponse', this.parseClientsOnline);
+    socket.off('playerListResponse', this.parseClientsOnline);
   }
 
   componentDidUpdate(prevProps: PlayerListProps) {
