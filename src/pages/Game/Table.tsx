@@ -17,7 +17,6 @@ import Button from '../../components/utils/Button';
 
 import '../../styles/Game/Table.scss';
 import socket from '../../socket-io/socket-io';
-import { getAutomaticTypeDirectiveNames } from 'typescript';
 
 // Declaration
 
