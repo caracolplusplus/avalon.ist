@@ -87,8 +87,8 @@ class App extends React.PureComponent<appProps, appState> {
           listenForKicks();
           listenForLogs();
         })
-        .catch(async (err) => {
-          await Parse.User.logOut();
+        .catch((err) => {
+          Parse.User.logOut();
 
           socket.disconnect();
           window.location.reload(true);
