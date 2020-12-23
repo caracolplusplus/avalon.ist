@@ -28,6 +28,9 @@ const linkSocketIO = async (request) => {
   link(socket);
 
   if (user) {
+    /* eslint-disable no-undef */
+    user.setACL(new Parse.ACL(user));
+    /* eslint-enable no-undef */
     user.checkForBans({ address });
     socket.emit('updateStyle', user.toStyle());
   }
