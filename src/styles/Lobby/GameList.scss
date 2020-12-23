@@ -4,7 +4,7 @@
   .dark {
     #Game-List {
       .game-list-settings {
-        background: Globals.$gray-2;
+        background: rgba(0, 0, 0, 0.1);
         button {
           color: white;
           background-color: Globals.$gray-4;
@@ -32,14 +32,14 @@
   .light {
     #Game-List {
       .game-list-settings {
-        background: rgba(0, 0, 0, 0.05);
+        background: rgba(255, 177, 177, 0.05);
         button {
           color: Globals.$gray-1;
-          background-color: Globals.$light-4;
+          background-color: Globals.$light-1;
         }
       }
       .game {
-        background: Globals.$light-3;
+        background: Globals.$light-4;
         p {
           color: Globals.$gray-1;
         }

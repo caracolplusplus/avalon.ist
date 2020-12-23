@@ -1,34 +1,56 @@
-// External
+/* globals Set */
 
+// eslint-disable-next-line no-unused-vars
 import React, { FormEvent, createRef } from 'react';
-import { Link } from 'react-router-dom';
-import { connect } from 'react-redux';
-
-// Internal
-
-import socket from '../../socket-io/socket-io';
-import Soundboard from '../../sounds/audio';
-import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
-import { ChatInput } from '../../components/utils/Input';
+// eslint-disable-next-line no-unused-vars
 import { rootType } from '../../redux/reducers';
 import { setMessageDelay } from '../../redux/actions';
+import { connect } from 'react-redux';
+import { Link } from 'react-router-dom';
+import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
+import { ChatInput } from '../../components/utils/Input';
+import MessageBuilder from './MessageBuilder';
 import TooFast from './ChatTooFast';
-
-// Styles
+import socket from '../../socket-io/socket-io';
+import Soundboard from '../../sounds/audio';
+import AnnouncementForm from './ChatAnnouncementForm';
+import AvatarForm from './ChatAvatarForm';
+import * as _ from 'lodash';
 
 import '../../styles/Lobby/Chat.scss';
 
-// Declaration
+const userShow = new Set(['client', 'help', 'quote', 'direct']);
+
+enum FormType {
+  // eslint-disable-next-line no-unused-vars
+  None = 0,
+  // eslint-disable-next-line no-unused-vars
+  Fast = 1,
+  // eslint-disable-next-line no-unused-vars
+  Announce = 2,
+  // eslint-disable-next-line no-unused-vars
+  Avatar = 3,
+}
 
 interface ChatSnapshot {
-  public: boolean;
+  _public: boolean;
   content: string;
-  author: string;
+  from: string;
   to: string[];
-  type: number;
-  character: number;
+  type: string;
   timestamp: number;
   id: number;
+}
+
+interface ChatSnapshotRead {
+  timestamp: number;
+  hour: string;
+  from: string | null;
+  content: string;
+
+  id: number;
+  type: string;
+  public: boolean;
 }
 
 interface ChatProps {
@@ -43,8 +65,8 @@ interface ChatProps {
 }
 
 interface ChatState {
-  messages: ChatSnapshot[];
-  tooFast: boolean;
+  messages: ChatSnapshotRead[];
+  form: FormType;
 }
 
 const mapState = (state: rootType) => {
@@ -52,199 +74,407 @@ const mapState = (state: rootType) => {
   return { chatHighlights, username, messageDelay, style };
 };
 
+const generalEvents: string[] = [
+  'generalChatResponse',
+  'generalChatRequest',
+  'messageToGeneral',
+  'generalCommandResponse',
+];
+
+const gameEvents: string[] = [
+  'gameChatResponse',
+  'gameChatRequest',
+  'messageToGame',
+  'gameCommandResponse',
+];
+
+const msgBuilder = new MessageBuilder();
+
 class Chat extends React.PureComponent<ChatProps, ChatState> {
+  state: ChatState = {
+    messages: [],
+    form: FormType.None,
+  };
+
   refScrollbars = createRef<AvalonScrollbars>();
   refInput = createRef<ChatInput>();
 
-  eventNames: string[] = ['generalChatUpdate', 'generalChatResponse', 'generalChatRequest', 'messageToGeneral'];
-  eventTimestamp = 0;
+  componentDidMount = () => {
+    this.startChat();
+  };
 
-  constructor(props: ChatProps) {
-    super(props);
-    this.state = {
-      messages: [],
-      tooFast: false,
-    };
-    this.toGameChat = this.toGameChat.bind(this);
-    this.startChat = this.startChat.bind(this);
-    this.endChat = this.endChat.bind(this);
-    this.triggerRequest = this.triggerRequest.bind(this);
-    this.parseChat = this.parseChat.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.chatMessage = this.chatMessage.bind(this);
-  }
-
-  componentDidMount() {
-    if (this.props.code === undefined) {
-      this.startChat();
-    } else if (this.props.code !== '-1') {
-      this.toGameChat();
-      this.startChat();
-    }
-  }
-
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     this.endChat();
-  }
+  };
 
-  componentDidUpdate(prevProps: ChatProps) {
-    if (prevProps.code !== this.props.code && this.props.code !== undefined && this.props.code !== '-1') {
-      this.toGameChat();
+  componentDidUpdate = (prevProps: ChatProps) => {
+    const { code } = this.props;
+    const { code: _code } = prevProps;
+
+    if (code !== _code) {
+      this.endChat();
       this.startChat();
     }
+  };
 
-    const chatContainer = this.refScrollbars.current!;
-    chatContainer.autoScroll();
-  }
-
-  toGameChat() {
-    this.eventNames = ['gameChatUpdate', 'gameChatResponse' + this.props.code, 'gameChatRequest', 'messageToGame'];
-  }
-
-  startChat() {
-    socket.on(this.eventNames[0], this.triggerRequest);
-    socket.on(this.eventNames[1], this.parseChat);
-
-    this.triggerRequest();
-  }
-
-  endChat() {
-    socket.off(this.eventNames[0], this.triggerRequest);
-    socket.off(this.eventNames[1], this.parseChat);
-  }
-
-  triggerRequest() {
-    const messagesLength = this.state.messages.length;
-    const messagesLast = this.state.messages[messagesLength - 1];
-
-    if (messagesLength > 0) this.eventTimestamp = messagesLast.id;
-
-    socket.emit(this.eventNames[2], this.eventTimestamp);
-  }
-
-  parseChat(messagesNew: ChatSnapshot[]) {
-    let messages = [...this.state.messages];
-
-    if (messages.length > 0) {
-      const messagesLength = messages.length;
-      const messagesNewLength = messagesNew.length;
-      const messagesLast = messages[messagesLength - 1];
-
-      const messagesFiltered = [];
-
-      for (let i = messagesNewLength - 1; i >= 0; i--) {
-        const message = messagesNew[i];
-
-        if (message.id <= messagesLast.id) break;
-
-        messagesFiltered.unshift(message);
-      }
-
-      messages = messages.concat(messagesFiltered);
-    } else {
-      messages = messagesNew;
-    }
-
-    this.setState({ messages });
-  }
-
-  cancelTooFast = () => this.setState({ tooFast: false });
-
-  handleSubmit(event: FormEvent) {
+  handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    const content = this.refInput.current!.state.content;
+    this.sendMessage();
+  };
 
-    if (!content || content === '' || this.state.tooFast) return;
+  startChat = () => {
+    const { code } = this.props;
+    const events = code ? gameEvents : generalEvents;
 
-    if (/^\/clear(.*)$/.test(content)) {
-      const messagesLength = this.state.messages.length;
-      if (messagesLength) this.eventTimestamp = this.state.messages[messagesLength - 1].timestamp;
+    socket.on(events[0], this.parseMessages);
+    socket.on(events[3], this.commandResponseMessage);
 
-      this.setState({ messages: [] });
-    } else {
-      if (this.props.messageDelay[0] > Date.now()) {
-        Soundboard.rejected.play();
-        this.setState({ tooFast: true });
-        return;
+    this.setState({ messages: [] });
+
+    socket.emit(events[1]);
+
+    this.endChat = () => {
+      socket.off(events[0], this.parseMessages);
+      socket.off(events[3], this.commandResponseMessage);
+    };
+  };
+
+  endChat = () => {
+    // This function is defined when chat is started
+  };
+
+  scrollChat = () => {
+    const chatContainer = this.refScrollbars.current!;
+    chatContainer.autoScroll();
+  };
+
+  getClassname = (type: string, from: string | null) => {
+    const { code, players } = this.props;
+
+    const user = type === 'client';
+
+    const spectator = from && user && code && !players.includes(from);
+
+    return `message ${type}${spectator ? ' spectator' : ''}`;
+  };
+
+  getHour = (timestamp: number) => {
+    const d = new Date(timestamp);
+
+    const hours = ('0' + d.getHours()).slice(-2);
+    const min = ('0' + d.getMinutes()).slice(-2);
+    return `${hours}:${min}`;
+  };
+
+  getFrom = (type: string, from: string, to: string[], _public: boolean) => {
+    const { username } = this.props;
+
+    const isDm = type === 'direct';
+    const iSent = username === from;
+    const iReceived = to.includes(username);
+
+    let _from: string | null = userShow.has(type) ? from : null;
+
+    if (isDm) {
+      if (iSent) {
+        _from = `To ${to[0]}`;
+      } else if (iReceived) {
+        _from = `From ${from}`;
       }
+    }
 
-      this.props.dispatch(setMessageDelay());
+    return _from;
+  };
 
-      socket.emit(this.eventNames[3], {
-        content: content,
-        roomNumber: this.props.code,
+  getColor = (from: string | null) => {
+    if (!from) return '';
+
+    const { players, style } = this.props;
+
+    const index = players.indexOf(from);
+
+    return index !== -1 && style.coloredNames ? `username${index + 1}` : '';
+  };
+
+  getHighlight = (from: string | null) => {
+    if (!from) return '';
+
+    const { chatHighlights: highlights, code } = this.props;
+
+    return from in highlights && code ? highlights[from] : '';
+  };
+
+  readMessage = (snap: ChatSnapshot): ChatSnapshotRead => {
+    const { _public, content, type, from, to, timestamp, id } = snap;
+
+    const f = this.getFrom(type, from, to, _public);
+
+    const output: ChatSnapshotRead = {
+      from: f,
+      content: content,
+      hour: this.getHour(timestamp),
+      id,
+      timestamp,
+      type,
+      public: _public,
+    };
+
+    return output;
+  };
+
+  clearMessages = () => {
+    this.setState({ messages: [] });
+  };
+
+  createAnnouncement = (data: any) => {
+    socket.emit('createAnnouncement', data);
+  };
+
+  avatarSet = (data: any) => {
+    socket.emit('avatarSet', data);
+  };
+
+  activateTooFast = () => {
+    Soundboard.rejected.play();
+
+    this.setState({ form: FormType.Fast });
+  };
+
+  closeForm = () => {
+    this.setState({ form: FormType.None });
+  };
+
+  writeMessage = (content: string) => {
+    const { dispatch, username, code } = this.props;
+    const events = code ? gameEvents : generalEvents;
+    msgBuilder.setEmission(events[2]);
+
+    const quote = /^[0-9]{2}:[0-9]{2} (.*)$/g;
+
+    let output: ChatSnapshot[] = msgBuilder.waitingForServerResponse(username);
+
+    if (content.startsWith('/')) {
+      const split = content.split(' ');
+
+      const commandDefault = {
+        isGeneral: !code,
+        username,
+        target: split[1],
+        comment: split[2] ? content.slice(content.indexOf(split[2])) : 'No comment.',
+      };
+
+      switch (split[0]) {
+        case '/help':
+          output = msgBuilder.getCommandHelp({ page: split[1], username });
+          break;
+        case '/dm':
+          output = msgBuilder.sendDirectMessage({ username, content, split });
+          break;
+        case '/slap':
+          socket.emit('sendNotification', {
+            isGeneral: !code,
+            target: split[1] ? split[1] : '',
+            audio: 'slapped',
+            message: `You have been slapped by ${username}`,
+          });
+          break;
+        case '/buzz':
+          socket.emit('sendNotification', {
+            isGeneral: !code,
+            target: split[1] ? split[1] : '',
+            audio: 'notification',
+            message: `You have been buzzed by ${username}`,
+          });
+          break;
+        case '/lick':
+          socket.emit('sendNotification', {
+            isGeneral: !code,
+            target: split[1] ? split[1] : '',
+            audio: 'licked',
+            message: `You have been licked by ${username}`,
+          });
+          break;
+        case '/ss':
+          socket.emit('suspendPlayer', {
+            isGeneral: !code,
+            username,
+            target: split[1],
+            hours: split[2],
+            comment: split[3] ? content.slice(content.indexOf(split[3])) : 'No comment.',
+          });
+          break;
+        case '/unss':
+          socket.emit('revokeSuspension', commandDefault);
+          break;
+        case '/ban':
+          socket.emit('banPlayer', commandDefault);
+          break;
+        case '/unban':
+          socket.emit('revokeBan', commandDefault);
+          break;
+        case '/banip':
+          socket.emit('banPlayerIP', commandDefault);
+          break;
+        case '/unbanip':
+          socket.emit('revokeIPBan', commandDefault);
+          break;
+        case '/logs':
+          socket.emit('getLogs', { isGeneral: !code });
+          break;
+        case '/maintenance':
+          socket.emit('toggleMaintenance', { isGeneral: !code });
+          break;
+        case '/pause':
+          socket.emit('pauseGame', commandDefault);
+          break;
+        case '/unpause':
+          socket.emit('unpauseGame', commandDefault);
+          break;
+        case '/end':
+          socket.emit('endGame', {
+            isGeneral: !code,
+            username,
+            target: split[1],
+            outcome: split[2],
+            comment: split[3] ? content.slice(content.indexOf(split[3])) : 'No comment.',
+          });
+          break;
+        case '/close':
+          socket.emit('closeGame', commandDefault);
+          break;
+        case '/learnroles':
+          socket.emit('learnRoles', commandDefault);
+          break;
+        case '/passwordreset':
+          socket.emit('requestPasswordReset', {
+            isGeneral: !code,
+            email: split[1],
+          });
+          break;
+        case '/roll':
+          output = msgBuilder.rollDie({ username, split });
+          break;
+        case '/flip':
+          output = msgBuilder.flipCoin({ username });
+          break;
+        case '/announce':
+          this.setState({ form: FormType.Announce });
+          return;
+        case '/avatarset':
+          this.setState({ form: FormType.Avatar });
+          return;
+        case '/discordset':
+          socket.emit('discordSet', {
+            isGeneral: !code,
+            url: split[1],
+          });
+          break;
+        default:
+          output = msgBuilder.defaultMessage(username);
+          break;
+      }
+    } else if (quote.test(content)) {
+      output = msgBuilder.findQuote({ username, content, messages: this.state.messages });
+    } else {
+      output = msgBuilder.sendMessage({
+        username,
+        content: content.substr(0, 250).trim(),
       });
     }
 
-    this.refInput.current!.setState({ content: '' });
-  }
+    dispatch(setMessageDelay());
+    this.parseMessages(output);
+  };
 
-  chatMessage(snap: ChatSnapshot) {
-    const classType = ['client ', 'server ', 'broadcast '][snap.type];
-    const classCharacter = ['negative ', 'neutral ', 'positive ', 'highlighted ', 'command ', 'quote '][
-      snap.character + 1
-    ];
-    const classSpectator =
-      !this.props.players.includes(snap.author) && this.props.code !== undefined && snap.type === 0 ? 'spectator' : '';
+  commandResponseMessage = (content: string) => {
+    const { username } = this.props;
 
-    const messageClass = classType + classCharacter + classSpectator;
-    let messageAuthor = snap.type !== 1 ? snap.author : undefined;
-    const messageContent = snap.content;
-    const messageHighlight =
-      messageAuthor && messageAuthor in this.props.chatHighlights ? this.props.chatHighlights[messageAuthor] : '';
+    const output: ChatSnapshot[] = msgBuilder.commandResponseMessage({
+      username,
+      content,
+    });
 
-    const messageDate = new Date(snap.timestamp);
-    const messageHour = ('0' + messageDate.getHours()).slice(-2) + ':' + ('0' + messageDate.getMinutes()).slice(-2);
+    this.parseMessages(output);
+  };
 
-    const isDm = snap.type === 0 && snap.character === 3;
-    const iSent = this.props.username === snap.author;
-    const iReceived = this.props.username === snap.to[0];
+  sendMessage = () => {
+    const refInput = this.refInput.current!;
+    const { messageDelay: delay } = this.props;
+    const { content } = refInput.state;
+    const { form } = this.state;
 
-    if (messageAuthor && isDm) {
-      if (iSent) {
-        messageAuthor = 'To ' + snap.to[0]
-      } else if (iReceived) {
-        messageAuthor = 'From ' + messageAuthor
-      } else {
-        messageAuthor += ' to ' + snap.to[0]
+    if (content === '' || form === FormType.Fast) return;
+
+    if (content === '/clear') {
+      this.clearMessages();
+    } else {
+      const timestamp = Date.now();
+
+      if (delay[0] > timestamp) {
+        this.activateTooFast();
+        return;
       }
+
+      this.writeMessage(content);
     }
 
-    const indexOfPlayer = messageAuthor ? this.props.players.indexOf(messageAuthor) : -1;
-    const coloredText = (indexOfPlayer !== -1 && this.props.style.coloredNames) ? `username${indexOfPlayer+1}` : '';
+    refInput.setState({ content: '' });
+  };
+
+  parseMessages = _.throttle((messages: ChatSnapshot[]) => {
+    const { username, code } = this.props;
+    const messageIds = this.state.messages.map((m) => m.id);
+
+    const newMessages = messages
+      .filter(
+        (m) =>
+          !messageIds.includes(m.id) &&
+          (m._public || m.from === username || m.to.includes(username))
+      )
+      .map(this.readMessage);
+
+    const messagesToState = [...this.state.messages, ...newMessages];
+
+    this.setState(
+      { messages: code ? messagesToState : messagesToState.slice(-50) },
+      this.scrollChat
+    );
+  }, 50);
+
+  messageMapper = (snap: ChatSnapshotRead) => {
+    const color = this.getColor(snap.from);
+    const highlight = this.getHighlight(snap.from);
+    const classname = this.getClassname(snap.type, snap.from);
 
     return (
-      <div className={'message ' + messageClass} style={{ backgroundColor: messageHighlight }}>
-        <span className={`hour ${coloredText}`}>{messageHour}</span>
+      <div
+        className={classname}
+        key={snap.id.toString() + snap.content.split(' ')[0]}
+        style={{ backgroundColor: highlight }}
+      >
+        <span className={`hour ${color}`}>{snap.hour}</span>
         <p className="text">
-          {messageAuthor && (
-            <Link
-              className={`username ${coloredText}`}
-              to={'/profile/' + messageAuthor}>
-              {messageAuthor}
-              :
+          {snap.from ? (
+            <Link className={`username ${color}`} to={`/profile/${snap.from}`}>
+              {snap.from}:
             </Link>
-          )}
-          <span className="content">{messageContent}</span>
+          ) : null}
+          <span className="content">{snap.content}</span>
         </p>
       </div>
     );
-  }
+  };
 
   render() {
-    const messagesMapped: JSX.Element[] = [];
-
-    for (const x in this.state.messages) {
-      const s = this.state.messages[x];
-      messagesMapped.push(<this.chatMessage {...s} key={'message' + x} />);
-    }
+    const { messages, form } = this.state;
 
     return (
       <div id="Chat" className="row">
-        {this.state.messages.length && (this.props.code === undefined || this.props.code !== '-1') ? (
+        {this.state.messages.length &&
+        (this.props.code === undefined || this.props.code !== '-1') ? (
           <AvalonScrollbars ref={this.refScrollbars} key={'real'}>
-            {messagesMapped}
+            {messages.map(this.messageMapper)}
           </AvalonScrollbars>
         ) : (
           <AvalonScrollbars ref={this.refScrollbars} key={'fake'} />
@@ -254,7 +484,13 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
             <ChatInput ref={this.refInput} />
           </form>
         )}
-        {this.state.tooFast ? <TooFast onExit={this.cancelTooFast} /> : null}
+        {form === FormType.Fast ? <TooFast onExit={this.closeForm} /> : null}
+        {form === FormType.Announce ? (
+          <AnnouncementForm onSelect={this.createAnnouncement} onExit={this.closeForm} />
+        ) : null}
+        {form === FormType.Avatar ? (
+          <AvatarForm onSelect={this.avatarSet} onExit={this.closeForm} />
+        ) : null}
       </div>
     );
   }

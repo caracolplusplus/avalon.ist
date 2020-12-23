@@ -9,12 +9,15 @@ import { Dispatch } from 'redux';
 import AvatarUIProps from './AvatarUIProps';
 import StatusBar from './StatusBar';
 import GameState from './GameState';
+import DefaultAvatars from './DefaultAvatars';
 import ConnectedAUI, { AvatarUI } from './AvatarUI';
 import Button from '../../components/utils/Button';
 
 // Styles
 
 import '../../styles/Game/Table.scss';
+import socket from '../../socket-io/socket-io';
+import { getAutomaticTypeDirectiveNames } from 'typescript';
 
 // Declaration
 
@@ -23,7 +26,10 @@ interface TableProps {
   dispatch: Dispatch;
 }
 
-class MissionTracker extends React.PureComponent<{ count: number; results: boolean[]; round: number }, {}> {
+class MissionTracker extends React.PureComponent<
+  { count: number; results: boolean[]; round: number },
+  {}
+> {
   render() {
     const playerMatrix = [
       ['2', '3', '2', '3', '3'],
@@ -42,7 +48,9 @@ class MissionTracker extends React.PureComponent<{ count: number; results: boole
       this.props.results[4],
     ];
 
-    const rounds: boolean[] = new Array(5).fill(false).fill(true, 0, this.props.round + 1);
+    const rounds: boolean[] = new Array(5)
+      .fill(false)
+      .fill(true, 0, this.props.round + 1);
 
     return (
       <div className="mission-tracker">
@@ -62,6 +70,8 @@ class MissionTracker extends React.PureComponent<{ count: number; results: boole
     );
   }
 }
+
+const gummy = DefaultAvatars.gummy;
 
 class Table extends React.PureComponent<
   TableProps,
@@ -83,7 +93,9 @@ class Table extends React.PureComponent<
     window.msRequestAnimationFrame ||
     window.mozRequestAnimationFrame
   ).bind(window);
-  animationFrameCancel = (window.cancelAnimationFrame || window.mozCancelAnimationFrame).bind(window);
+  animationFrameCancel = (
+    window.cancelAnimationFrame || window.mozCancelAnimationFrame
+  ).bind(window);
 
   animationStart: (number | null)[] = [];
   animationState: number[] = [];
@@ -127,7 +139,8 @@ class Table extends React.PureComponent<
     if (prevProps !== this.props) {
       this.animationCallback = () => {};
 
-      if (prevProps.game.picks.length !== this.props.game.picks.length) this.animationCallback = this.initShields;
+      if (prevProps.game.picks.length !== this.props.game.picks.length)
+        this.animationCallback = this.initShields;
 
       if (
         prevProps.game.players.length !== this.props.game.players.length ||
@@ -140,6 +153,10 @@ class Table extends React.PureComponent<
     }
   }
 
+  toggleClaim = () => {
+    socket.emit('toggleClaim');
+  };
+
   createSeats() {
     this.seatRef = [];
     this.avatarRef = [];
@@ -151,7 +168,13 @@ class Table extends React.PureComponent<
 
     // Knowledge
     const knowledge =
-      game.privateKnowledge.length > 0 && game.ended !== true ? [...game.privateKnowledge] : [...game.publicKnowledge];
+      game.privateKnowledge.length > 0 && game.ended !== true
+        ? [...game.privateKnowledge]
+        : [...game.publicKnowledge];
+
+    const defaultA = game.style.avatarStyle
+      ? DefaultAvatars.gummy
+      : DefaultAvatars.classic;
 
     // Pre Conditions
     const imKilling = game.assassin && game.stage === 'ASSASSINATION';
@@ -170,13 +193,18 @@ class Table extends React.PureComponent<
       this.avatarRef.push(createRef<AvatarUI>());
 
       // Avatars
-      const avatarUrls = game.style.avatarStyle ? game.avatars[i].avatarGummy : game.avatars[i].avatarClassic;
+      const yourAvatars = game.avatars[i];
+      const avatarUrls =
+        yourAvatars.res === gummy.res && yourAvatars.spy === gummy.spy
+          ? defaultA
+          : yourAvatars;
 
       // Data
       const username = p;
       const role = knowledge[i];
       const vote = game.ended || imVoting ? -1 : game.votesRound[i];
-      const leader = !game.ended && (game.leader === i || (game.started === false && i === 0));
+      const leader =
+        !game.ended && (game.leader === i || (game.started === false && i === 0));
       const hammer = game.hammer === i;
       const killed = game.assassination === i;
       const card = game.card === i;
@@ -189,6 +217,7 @@ class Table extends React.PureComponent<
       const output: AvatarUIProps = {
         spyUrl: avatarUrls.spy,
         resUrl: avatarUrls.res,
+        hasClaimed: game.claimed.includes(username),
         username,
         role,
         vote,
@@ -348,7 +377,9 @@ class Table extends React.PureComponent<
           (a, i): AvatarUIProps => {
             if (!a.onMission) return a;
             const rect_a = this.centerRef.current!.getBoundingClientRect();
-            const rect_b = this.avatarRef[i].current!.shieldLocation.current!.getBoundingClientRect();
+            const rect_b = this.avatarRef[
+              i
+            ].current!.shieldLocation.current!.getBoundingClientRect();
             return {
               ...a,
               shieldShow: true,
@@ -488,9 +519,13 @@ class Table extends React.PureComponent<
       <div id="Table" className="tab">
         <div className="table-row table-buttons">
           <Button type="button" text="Exit" onClick={this.redirectToLobby} className="" />
-          <Button type="button" text="Claim" onClick={undefined} className="" />
+          <Button type="button" text="Claim" onClick={this.toggleClaim} className="" />
         </div>
-        <div className="table-row table-display" ref={this.tableRef} style={{ width: '95%' }}>
+        <div
+          className="table-row table-display"
+          ref={this.tableRef}
+          style={{ width: '95%' }}
+        >
           <div className="table-column">
             <div className="table-prow">{sortedAvatars.left}</div>
           </div>

@@ -1,17 +1,26 @@
-const proxyaddr = require('proxy-addr');
-
 const beforeLogin = async (request) => {
-	/* Get IP */
-	const trust = function (addr, i) {
-		return i < 1;
-	};
-	const address = proxyaddr(request, trust);
+  /* Get IP */
+  let address = null;
 
-	/* Check Bans */
-	const user = request.object;
+  try {
+    address =
+      request.headers['x-forwarded-for'] ||
+      request.connection.remoteAddress ||
+      request.socket.remoteAddress ||
+      (request.connection.socket ? request.connection.socket.remoteAddress : null);
+  } catch (err) {
+    address = request.ip;
+  }
 
-	user.checkForBans({ address });
-	return true;
+  if (address.indexOf(',') > -1) {
+    address = address.split(',')[0];
+  }
+
+  /* Check Bans */
+  const user = request.object;
+
+  user.checkForBans({ address });
+  return true;
 };
 
 module.exports = beforeLogin;

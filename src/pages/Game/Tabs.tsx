@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 // Internal
 
 import Chat from '../Lobby/Chat';
+// eslint-disable-next-line no-unused-vars
 import GameState from './GameState';
 import PlayerList from '../Lobby/PlayerList';
 import Notes from './Notes';
@@ -25,6 +26,11 @@ interface TabProps {
 
 interface TabContainerProps {
   game: GameState;
+  code: string;
+  players: string[];
+  stage: string | undefined;
+  clients: string[];
+  highlighted: boolean[];
   onClick: (no: number, value: boolean) => void;
   initialTab: number;
 }
@@ -41,44 +47,59 @@ class Tabs extends React.PureComponent<TabContainerProps, TabContainerState> {
     this.state = {
       tab: props.initialTab,
     };
-    this.Tab = this.Tab.bind(this);
   }
 
-  Tab(props: TabProps) {
-    const highlighted = props.highlighted ? 'highlighted ' : '';
+  Tab = (props: TabProps) => {
+    const highlighted = props.highlighted ? 'highlighted' : '';
     const selected = this.state.tab === props.no;
 
     const setTab = () => {
       this.setState({ tab: props.no });
-      if (props.no < 2) this.props.onClick(props.no, false)
+      if (props.no < 2) this.props.onClick(props.no, false);
     };
 
     return (
-      <button className={'tag ' + highlighted + selected} onClick={setTab}>
+      <button className={`tag ${highlighted} ${selected}`} onClick={setTab}>
         <p>{props.text}</p>
       </button>
     );
-  }
+  };
 
   render() {
+    const { game, code, players, clients, highlighted } = this.props;
+    const { tab } = this.state;
+
     const routes = [
-      <Chat players={[]} stage='NONE' username='' chatHighlights={{}} key="genChat" />,
-      <Chat code={this.props.game.code} username='' players={this.props.game.players} stage={this.props.game.stage} chatHighlights={{}} key="gameChat" />,
-      <Notes notes="" dispatch={useDispatch} />,
-      <VoteHistory game={this.props.game} />,
-      <PlayerList code={this.props.game.code} players={this.props.game.players} clients={this.props.game.clients} />,
+      <Chat
+        players={[]}
+        stage="NONE"
+        username=""
+        chatHighlights={{}}
+        key="General Chat"
+      />,
+      <Chat
+        code={code}
+        stage={game.active ? 'NONE' : 'REPLAY'}
+        username=""
+        players={players}
+        chatHighlights={{}}
+        key="Game Chat"
+      />,
+      <Notes notes="" dispatch={useDispatch} key="Notes" />,
+      <VoteHistory game={game} key="VH" />,
+      <PlayerList code={code} key="Player List" players={players} clients={clients} />,
     ];
 
     return (
       <div id="Tabs" className="tab">
         <div className="tab-row">
-          <this.Tab text="ALL CHAT" no={0} highlighted={this.props.game.highlighted[0]} />
-          <this.Tab text="GAME CHAT" no={1} highlighted={this.props.game.highlighted[1]} />
+          <this.Tab text="ALL CHAT" no={0} highlighted={highlighted[0]} />
+          <this.Tab text="GAME CHAT" no={1} highlighted={highlighted[1]} />
           <this.Tab text="NOTES" no={2} highlighted={false} />
           <this.Tab text="VOTES" no={3} highlighted={false} />
           <this.Tab text="PLAYERS" no={4} highlighted={false} />
         </div>
-        {routes[this.state.tab]}
+        {routes[tab]}
       </div>
     );
   }

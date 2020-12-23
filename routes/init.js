@@ -1,30 +1,31 @@
 // Loads all the socket.io routes
 function defineRoutes(io) {
-	require('./constructors/user');
-	require('./constructors/environment').initialize();
+  require('./constructors/user');
+  require('./constructors/environment').initialize();
 
-	const sockets = [];
+  const sockets = [];
 
-	io.on('connection', (socket) => {
-		sockets.push(socket);
+  io.on('connection', (socket) => {
+    sockets.push(socket);
 
-		socket.on('disconnect', (socket) => {
-			const i = sockets.indexOf(socket);
-			sockets.splice(i, 1);
-		});
+    socket.on('disconnect', (socket) => {
+      const i = sockets.indexOf(socket);
 
-		socket.emit('getAuthenticated');
-	});
+      sockets.splice(i, 1);
+    });
 
-	const link = (socket) => {
-		require('./auth/hooks')(io, socket);
-		// require('./game/hooks')(io, socket);
-		// require('./chat/hooks')(io, socket);
-	};
+    socket.emit('getAuthenticated');
+  });
 
-	module.exports.io = io;
-	module.exports.sockets = sockets;
-	module.exports.link = link;
+  const link = (socket) => {
+    require('./auth/hooks')(io, socket);
+    require('./game/hooks')(io, socket);
+    require('./chat/hooks')(io, socket);
+  };
+
+  module.exports.io = io;
+  module.exports.sockets = sockets;
+  module.exports.link = link;
 }
 
 module.exports.initialize = defineRoutes;

@@ -30,9 +30,20 @@
       h2 {
         margin-bottom: $base-font-size * 0.5;
       }
+      input[type='text'] {
+        border: $base-font-size * 0.025 solid Globals.$light-3;
+        border-radius: $base-font-size * 0.1;
+        padding: $base-font-size * 0.125;
+        margin-bottom: $base-font-size * 0.1;
+        font-size: $base-font-size * 0.33;
+        color: black !important;
+        resize: none;
+        width: 100%;
+        height: $base-font-size * 0.75;
+      }
       textarea {
-        border: $base-font-size * 0.025 solid Globals.$light-2;
-        border-radius: $base-font-size * 0.2;
+        border: $base-font-size * 0.025 solid Globals.$light-3;
+        border-radius: $base-font-size * 0.1;
         padding: $base-font-size * 0.125;
         font-size: $base-font-size * 0.33;
         resize: none;
@@ -50,6 +61,14 @@
         font-size: $base-font-size * 0.375;
         text-align: center;
         margin-bottom: $base-font-size * 0.25;
+      }
+      .img {
+        width: 50%;
+        height: $base-font-size * 3;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        float: left;
       }
       .subtitle {
         font-weight: 500;
@@ -75,7 +94,6 @@
           }
         }
         .list {
-          display: inline-block;
           float: right;
         }
         &.dual {

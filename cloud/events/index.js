@@ -8,8 +8,8 @@ const index = {};
 	'beforeGameSave',
 	'afterUserSave',
 	'afterEnvSave',
-	'afterChatSave',
 	'afterGameSave',
+	'afterChatSave',
 ].forEach((e) => {
 	index[e] = require(`./${e}`);
 });

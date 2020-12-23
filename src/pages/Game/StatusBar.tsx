@@ -9,52 +9,37 @@ import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import socket from '../../socket-io/socket-io';
 import GameInfo from '../Lobby/GameInfo';
 import GameForm from '../Lobby/GameForm';
+// eslint-disable-next-line no-unused-vars
 import GameState from './GameState';
 import Button from '../../components/utils/Button';
 import SelectablePlayerList from './SelectablePlayerList';
 import ReportPlayer from './ReportPlayer';
+import MessageBuilder from '../Lobby/MessageBuilder';
 
 // Types
 
 enum FormType {
+  // eslint-disable-next-line no-unused-vars
   None = 0,
+  // eslint-disable-next-line no-unused-vars
   Settings = 1,
+  // eslint-disable-next-line no-unused-vars
   Kick = 2,
+  // eslint-disable-next-line no-unused-vars
   Info = 3,
+  // eslint-disable-next-line no-unused-vars
   Report = 4,
 }
 
-interface Message {
-  loading: boolean;
+interface ButtonProps {
   text: string;
-  showButtonOne: boolean;
-  showButtonTwo: boolean;
-  showButtonThree: boolean;
-  showButtonFour: boolean;
-  buttonOne: {
-    type: 'button';
-    text: string;
-    onClick: ((...args: any[]) => void) | undefined;
-    className: string;
-  };
-  buttonTwo: {
-    type: 'button';
-    text: string;
-    onClick: ((...args: any[]) => void) | undefined;
-    className: string;
-  };
-  buttonThree: {
-    type: 'button';
-    text: string;
-    onClick: ((...args: any[]) => void) | undefined;
-    className: string;
-  };
-  buttonFour: {
-    type: 'button';
-    text: string;
-    onClick: ((...args: any[]) => void) | undefined;
-    className: string;
-  };
+  onClick: ((...args: any[]) => void) | undefined;
+  className: string;
+}
+
+interface Message {
+  text: string;
+  buttons: ButtonProps[];
 }
 
 interface StatusBarProps extends GameState {
@@ -63,139 +48,178 @@ interface StatusBarProps extends GameState {
 
 interface StatusBarState {
   showForm: FormType;
+  waitingResponse: boolean;
 }
 
 // Declaration
 
+const msgBuilder = new MessageBuilder();
+msgBuilder.setEmission('messageToGame');
+
 class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
+  state = {
+    showForm: FormType.None,
+    waitingResponse: false,
+  };
+
   formRef = createRef<GameForm>();
 
-  constructor(props: StatusBarProps) {
-    super(props);
-    this.state = {
-      showForm: FormType.None,
-    };
-    this.showSettings = this.showSettings.bind(this);
-    this.showInfo = this.showInfo.bind(this);
-    this.showKick = this.showKick.bind(this);
-    this.showReport = this.showReport.bind(this);
-    this.sitAndStand = this.sitAndStand.bind(this);
-    this.startGame = this.startGame.bind(this);
-    this.pickTeam = this.pickTeam.bind(this);
-    this.voteForMission = this.voteForMission.bind(this);
-    this.voteForSuccess = this.voteForSuccess.bind(this);
-    this.shootPlayer = this.shootPlayer.bind(this);
-    this.cardPlayer = this.cardPlayer.bind(this);
-    this.kickPlayer = this.kickPlayer.bind(this);
-  }
+  componentDidMount = () => {
+    socket.on('gameResponse', this.responseReceived);
+  };
 
-  showSettings() {
-    this.setState({ showForm: FormType.Settings });
-  }
+  componentWillUnmount = () => {
+    socket.off('gameResponse', this.responseReceived);
+  };
 
-  showKick() {
-    this.setState({ showForm: FormType.Kick });
-  }
-
-  showInfo() {
-    this.setState({ showForm: FormType.Info });
-  }
-
-  showReport() {
-    this.setState({ showForm: FormType.Report });
-  }
-
-  sitAndStand() {
-    socket.emit('joinLeaveGame', {
-      canSit: true,
+  sendServerMessage = (data: any) => {
+    msgBuilder.sendServerMessage({
+      ch: data.ch,
+      content: data.content,
     });
-  }
+  };
 
-  startGame() {
+  responseReceived = () => this.setState({ waitingResponse: false });
+
+  showSettings = () => {
+    this.setState({ showForm: FormType.Settings });
+  };
+
+  showKick = () => {
+    this.setState({ showForm: FormType.Kick });
+  };
+
+  showInfo = () => {
+    this.setState({ showForm: FormType.Info });
+  };
+
+  showReport = () => {
+    this.setState({ showForm: FormType.Report });
+  };
+
+  sitAndStand = () => {
+    socket.emit('joinLeaveGame');
+    this.setState({ waitingResponse: true });
+  };
+
+  startGame = () => {
     socket.emit('startGame');
-  }
+    this.setState({ waitingResponse: true });
+  };
 
-  pickTeam() {
+  pickTeam = () => {
     socket.emit('pickTeam', {
       team: this.props.selected,
     });
-  }
+    this.setState({ waitingResponse: true });
+  };
 
-  voteForMission(vote: number) {
+  voteForMission = (vote: number) => {
     socket.emit('voteForMission', {
       vote,
     });
-  }
+    this.setState({ waitingResponse: true });
+  };
 
-  voteForSuccess(vote: number) {
+  voteForSuccess = (vote: number) => {
     socket.emit('voteForSuccess', {
       vote,
     });
-  }
+    this.setState({ waitingResponse: true });
+  };
 
-  cardPlayer() {
-    socket.emit('cardPlayer', {
+  cardPlayer = () => {
+    socket.emit('ladyOfTheLake', {
       carded: this.props.selected[0],
     });
-  }
+    this.setState({ waitingResponse: true });
+  };
 
-  shootPlayer() {
+  shootPlayer = () => {
     socket.emit('shootPlayer', {
       shot: this.props.selected[0],
     });
-  }
+    this.setState({ waitingResponse: true });
+  };
 
-  kickPlayer(player: string) {
+  kickPlayer = (player: string) => {
+    const { username } = this.props;
+
     socket.emit('kickPlayer', {
       kick: player,
     });
-  }
 
-  reportPlayer(data: any) {
+    msgBuilder.sendServerMessage({
+      ch: 2,
+      content: `${player} has been kicked by ${username}.`,
+    });
+
+    this.setState({ waitingResponse: true });
+  };
+
+  reportPlayer = (data: any) => {
     socket.emit('reportPlayer', data);
-  }
+  };
 
-  onWaiting(message: Message) {
-    message.loading = false;
+  onWaiting = (message: Message) => {
+    const { seat, players, playerMax, kicked } = this.props;
 
-    if (this.props.seat === 0) {
-      const gameCantStart = this.props.players.length < 5;
+    if (seat === 0) {
+      const gameCantStart = players.length < 5;
 
-      message.showButtonThree = true;
-      message.showButtonFour = true;
       message.text = 'Modify settings or start the game.';
-      message.buttonOne.text = 'SETTINGS';
-      message.buttonOne.className = 'neutral';
-      message.buttonOne.onClick = this.showSettings;
-      message.buttonTwo.text = 'START';
-      message.buttonTwo.className = gameCantStart ? 'disabled' : 'confirm';
-      message.buttonTwo.onClick = gameCantStart ? undefined : this.startGame;
-      message.buttonThree.text = 'STAND UP';
-      message.buttonThree.className = 'cancel';
-      message.buttonThree.onClick = this.sitAndStand;
-      message.buttonFour.text = 'KICK';
-      message.buttonFour.className = 'kick';
-      message.buttonFour.onClick = this.showKick;
+      message.buttons = [
+        {
+          text: 'SETTINGS',
+          className: 'neutral',
+          onClick: this.showSettings,
+        },
+        {
+          text: 'START',
+          className: gameCantStart ? 'disabled' : 'confirm',
+          onClick: gameCantStart ? undefined : this.startGame,
+        },
+        {
+          text: 'STAND UP',
+          className: 'cancel',
+          onClick: this.sitAndStand,
+        },
+        {
+          text: 'KICK',
+          className: 'kick',
+          onClick: this.showKick,
+        },
+      ];
     } else {
-      const host = this.props.players[0];
-      const hasSeat = this.props.seat > -1;
+      const host = players[0];
+      const hasSeat = seat > -1;
+      const unableToSit = kicked || players.length >= playerMax;
+      const sittingClass = unableToSit ? 'disabled' : 'confirm';
 
-      message.text = host ? 'Waiting for ' + host + ' to start the game.' : 'Waiting for a new host.';
-      message.buttonOne.text = 'INFO';
-      message.buttonOne.className = 'neutral';
-      message.buttonOne.onClick = this.showInfo;
-      message.buttonTwo.text = hasSeat ? 'STAND UP' : 'SIT';
-      message.buttonTwo.className = hasSeat ? 'cancel' : 'confirm';
-      message.buttonTwo.onClick = this.sitAndStand;
+      message.text = host
+        ? `Waiting for ${host} to start the game.`
+        : 'Waiting for a new host.';
+      message.buttons = [
+        {
+          text: 'INFO',
+          className: 'neutral',
+          onClick: this.showInfo,
+        },
+        {
+          text: hasSeat ? 'STAND UP' : 'SIT',
+          className: hasSeat ? 'cancel' : sittingClass,
+          onClick: unableToSit ? undefined : this.sitAndStand,
+        },
+      ];
     }
 
     return message;
-  }
+  };
 
-  onPicking(message: Message) {
-    message.loading = false;
+  onPicking = (message: Message) => {
+    const { leader, seat, players, mission, selected } = this.props;
 
-    if (this.props.leader === this.props.seat) {
+    if (leader === seat) {
       const n = [
         [2, 3, 2, 3, 3],
         [2, 3, 4, 3, 4],
@@ -203,119 +227,136 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
         [3, 4, 4, 5, 5],
         [3, 4, 4, 5, 5],
         [3, 4, 4, 5, 5],
-      ][this.props.players.length - 5][this.props.mission];
-      const notEnoughPicks = n !== this.props.selected.length;
+      ][players.length - 5][mission];
+      const notEnoughPicks = n !== selected.length;
 
-      message.showButtonTwo = false;
-      message.text = "It's your turn to select a team. Choose " + n + ' players.';
-      message.buttonOne.text = 'CONFIRM';
-      message.buttonOne.className = notEnoughPicks ? 'disabled' : 'confirm';
-      message.buttonOne.onClick = notEnoughPicks ? undefined : this.pickTeam;
+      message.text = `It's your turn to select a team. Choose ${n} players.`;
+      message.buttons = [
+        {
+          text: 'CONFIRM',
+          className: notEnoughPicks ? 'disabled' : 'confirm',
+          onClick: notEnoughPicks ? undefined : this.pickTeam,
+        },
+      ];
     } else {
-      const leader = this.props.players[this.props.leader];
-      message.showButtonOne = false;
-      message.showButtonTwo = false;
-      message.text = 'Waiting for ' + leader + ' to select a team.';
+      const _leader = players[leader];
+
+      message.text = `Waiting for ${_leader} to select a team.`;
     }
 
     return message;
-  }
+  };
 
-  onVoting(message: Message) {
-    message.loading = false;
+  onVoting = (message: Message) => {
+    const { seat, leader, players, picks, votesRound } = this.props;
 
-    if (this.props.seat > -1 && this.props.votesRound[this.props.seat] < 0) {
-      const leader = this.props.players[this.props.leader];
-      const team = this.props.players.filter((p, i) => this.props.picks.includes(i)).toString();
+    if (seat > -1 && votesRound[seat] < 0) {
+      const _leader = players[leader];
+      const team = players.filter((p, i) => picks.includes(i)).toString();
 
-      message.text = 'Its your turn to vote. ' + leader + ' has selected: ' + team.replace(/,/g, ', ');
-      message.buttonOne.text = 'APPROVE';
-      message.buttonOne.className = 'confirm';
-      message.buttonOne.onClick = () => this.voteForMission(1);
-      message.buttonTwo.text = 'REJECT';
-      message.buttonTwo.className = 'cancel';
-      message.buttonTwo.onClick = () => this.voteForMission(0);
+      message.text = `Its your turn to vote. ${_leader} has selected: ${team.replace(
+        /,/g,
+        ', '
+      )}`;
+      message.buttons = [
+        {
+          text: 'APPROVE',
+          className: 'confirm',
+          onClick: () => this.voteForMission(1),
+        },
+        {
+          text: 'REJECT',
+          className: 'cancel',
+          onClick: () => this.voteForMission(0),
+        },
+      ];
     } else {
-      const remaining = this.props.players.filter((p, i) => this.props.votesRound[i] < 0).toString();
+      const remaining = players.filter((p, i) => votesRound[i] < 0).toString();
 
-      message.showButtonOne = false;
-      message.showButtonTwo = false;
-      message.text = 'Waiting for ' + remaining.replace(/,/g, ', ') + ' to vote.';
+      message.text = `Waiting for ${remaining.replace(/,/g, ', ')} to vote.`;
     }
 
     return message;
-  }
+  };
 
-  onMission(message: Message) {
-    message.loading = false;
+  onMission = (message: Message) => {
+    const { seat, imRes, picksYetToVote } = this.props;
 
-    if (this.props.seat > -1 && this.props.picksYetToVote.includes(this.props.seat)) {
+    if (seat > -1 && picksYetToVote.includes(seat)) {
       message.text = 'Its your turn to vote. Choose the fate of this mission.';
-      message.buttonOne.text = 'SUCCEED';
-      message.buttonOne.className = 'confirm';
-      message.buttonOne.onClick = () => this.voteForSuccess(1);
-      message.buttonTwo.text = 'FAIL';
-      message.buttonTwo.className = this.props.imRes ? 'disabled' : 'cancel';
-      message.buttonTwo.onClick = this.props.imRes ? undefined : () => this.voteForSuccess(0);
+      message.buttons = [
+        {
+          text: 'SUCCEED',
+          className: 'confirm',
+          onClick: () => this.voteForSuccess(1),
+        },
+        {
+          text: 'FAIL',
+          className: imRes ? 'disabled' : 'cancel',
+          onClick: imRes ? undefined : () => this.voteForSuccess(0),
+        },
+      ];
     } else {
-      const remaining = this.props.players.filter((p, i) => this.props.picksYetToVote.includes(i)).toString();
+      const remaining = this.props.players
+        .filter((p, i) => this.props.picksYetToVote.includes(i))
+        .toString();
 
-      message.showButtonOne = false;
-      message.showButtonTwo = false;
-      message.text = 'Waiting for ' + remaining.replace(/,/g, ', ') + ' to vote.';
+      message.text = `Waiting for ${remaining.replace(/,/g, ', ')} to vote.`;
     }
 
     return message;
-  }
+  };
 
-  onCarding(message: Message) {
-    message.loading = false;
+  onCarding = (message: Message) => {
+    const { seat, card, players, selected, cardHolders } = this.props;
 
-    if (this.props.seat > -1 && this.props.seat === this.props.card) {
-      const target = this.props.selected[0];
+    if (seat > -1 && seat === card) {
+      const target = selected[0];
       const cannotCard =
-        this.props.selected.length !== 1 || this.props.seat === target || this.props.cardHolders.includes(target);
+        selected.length !== 1 || seat === target || cardHolders.includes(target);
 
-      message.showButtonTwo = false;
       message.text = 'You have Lady of the Lake. Select a player to reveal their role.';
-      message.buttonOne.text = 'CONFIRM';
-      message.buttonOne.className = cannotCard ? 'disabled' : 'confirm';
-      message.buttonOne.onClick = cannotCard ? undefined : this.cardPlayer;
+      message.buttons = [
+        {
+          text: 'CONFIRM',
+          className: cannotCard ? 'disabled' : 'confirm',
+          onClick: cannotCard ? undefined : this.cardPlayer,
+        },
+      ];
     } else {
-      const remaining = this.props.players[this.props.card];
-      message.showButtonOne = false;
-      message.showButtonTwo = false;
-      message.text = 'Waiting for ' + remaining + ' to use lady of the lake.';
+      const remaining = players[card];
+      message.text = `Waiting for ${remaining} to use lady of the lake.`;
     }
 
     return message;
-  }
+  };
 
-  onAssassination(message: Message) {
-    message.loading = false;
+  onAssassination = (message: Message) => {
+    const { seat, username, selected, assassinName, privateKnowledge } = this.props;
 
-    if (this.props.seat > -1 && this.props.assassin) {
-      const target = this.props.selected[0];
+    if (seat > -1 && assassinName === username) {
+      const target = selected[0];
       const cannotKill =
-        this.props.selected.length !== 1 ||
-        this.props.seat === target ||
-        ['Spy', 'Spy?'].includes(this.props.privateKnowledge[target]);
+        selected.length !== 1 ||
+        seat === target ||
+        ['Spy', 'Spy?'].includes(privateKnowledge[target]);
 
-      message.showButtonTwo = false;
       message.text = 'Is your turn to kill Merlin! Choose a target.';
-      message.buttonOne.text = 'CONFIRM';
-      message.buttonOne.className = cannotKill ? 'disabled' : 'confirm';
-      message.buttonOne.onClick = cannotKill ? undefined : this.shootPlayer;
+      message.buttons = [
+        {
+          text: 'CONFIRM',
+          className: cannotKill ? 'disabled' : 'confirm',
+          onClick: cannotKill ? undefined : this.shootPlayer,
+        },
+      ];
     } else {
-      message.showButtonOne = false;
-      message.showButtonTwo = false;
-      message.text = 'Waiting for assassin to select a target.';
+      message.text = `Waiting for ${assassinName} to select a target.`;
     }
 
     return message;
-  }
+  };
 
-  inProgress(message: Message) {
+  inProgress = (message: Message) => {
     switch (this.props.stage) {
       case 'PICKING':
         return this.onPicking(message);
@@ -330,195 +371,166 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       default:
         return message;
     }
-  }
+  };
 
-  onFinish(message: Message) {
-    message.loading = false;
-    message.showButtonOne = false;
-    message.showButtonTwo = false;
+  onFinish = (message: Message) => {
+    const { cause } = this.props;
+
     message.text = [
       'Merlin has been killed! The Spies Win.',
       'Merlin was not killed! The Resistance wins.',
       'Three missions have failed! The Spies Win.',
       'Mission hammer was rejected! The Spies Win.',
       'Three missions have succeeded! The Resistance wins.',
-    ][this.props.cause ? this.props.cause : 0];
+    ][cause ? cause : 0];
 
     return message;
-  }
+  };
 
-  onFreeze(message: Message) {
-    message.loading = false;
-    message.showButtonOne = false;
-    message.showButtonTwo = false;
+  onFreeze = (message: Message) => {
+    const { ended } = this.props;
 
-    if (this.props.ended === false) {
+    if (ended === false) {
       message.text = 'The game has been paused by a moderator.';
-    } else if (this.props.ended === true) {
+    } else if (ended === true) {
       message.text = 'The game has been frozen by a moderator.';
     }
 
     return message;
-  }
+  };
 
-  onReplay(message: Message) {
-    message.loading = false;
-    message.showButtonOne = false;
-    message.showButtonTwo = false;
-    message.text = 'Game Replay #' + this.props.code + '. ';
+  onReplay = (message: Message) => {
+    const { code } = this.props;
+
+    message.text = `This is a replay of game #${code}.`;
 
     return message;
-  }
+  };
 
   hideForm = () => this.setState({ showForm: FormType.None });
 
-  message: Message = {
-    loading: true,
+  defaultMessage: Message = {
     text: '',
-    showButtonOne: true,
-    showButtonTwo: true,
-    showButtonThree: false,
-    showButtonFour: false,
-    buttonOne: {
-      type: 'button',
-      text: '',
-      onClick: () => {},
-      className: '',
-    },
-    buttonTwo: {
-      type: 'button',
-      text: '',
-      onClick: () => {},
-      className: '',
-    },
-    buttonThree: {
-      type: 'button',
-      text: '',
-      onClick: () => {},
-      className: '',
-    },
-    buttonFour: {
-      type: 'button',
-      text: '',
-      onClick: () => {},
-      className: '',
-    },
+    buttons: [],
   };
 
-  defaultMessage = { ...this.message };
-
   render() {
-    this.message = { ...this.defaultMessage };
+    const {
+      code,
+      started,
+      frozen,
+      ended,
+      seat,
+      players,
+      playerMax,
+      roleSettings,
+      active,
+    } = this.props;
+    const { showForm, waitingResponse } = this.state;
 
-    if (!this.props.started) {
-      this.message = this.onWaiting(this.message);
-    } else if (!this.props.frozen) {
-      if (!this.props.ended) {
-        this.message = this.inProgress(this.message);
+    let message: Message = { ...this.defaultMessage };
+
+    if (!started) {
+      message = this.onWaiting(message);
+    } else if (!frozen) {
+      if (!ended) {
+        message = this.inProgress(message);
       } else {
-        this.message = this.onFinish(this.message);
+        message = this.onFinish(message);
       }
     } else {
-      this.message = this.onFreeze(this.message);
+      message = this.onFreeze(message);
     }
 
-    if (this.props.stage === 'REPLAY') {
-      this.message = this.onReplay(this.message);
+    if (!active) {
+      message = this.onReplay(message);
+    }
+
+    if (waitingResponse) {
+      message.text = 'Waiting for server response...';
+      message.buttons = [];
     }
 
     let form = null;
-    if (!this.props.started && this.state.showForm !== FormType.None) {
-      if (this.state.showForm === FormType.Kick && this.props.seat === 0) {
+    if (!started && showForm !== FormType.None) {
+      if (showForm === FormType.Kick && seat === 0) {
         form = (
-          <>
-            {' '}
-            <SelectablePlayerList
-              title="Select a player to kick"
-              text="Kick"
-              // Skip the first player, since that's the game host and you can't kick yourself.
-              players={this.props.players.slice(1)}
-              onExit={this.hideForm}
-              onSelect={(player: string) => {
-                this.kickPlayer(player);
-              }}
-            />{' '}
-          </>
+          <SelectablePlayerList
+            title="Select a player to kick"
+            text="Kick"
+            // Skip the first player, since that's the game host and you can't kick yourself.
+            players={players.slice(1)}
+            onExit={this.hideForm}
+            onSelect={(player: string) => {
+              this.kickPlayer(player);
+            }}
+          />
         );
       }
-      if (this.state.showForm === FormType.Settings && this.props.seat === 0) {
+      if (showForm === FormType.Settings && seat === 0) {
         form = (
           <GameForm
             title="MODIFY GAME SETTINGS"
             createsGame={false}
-            initialRoleSettings={this.props.roleSettings}
-            initialPlayerMax={this.props.playerMax}
+            initialRoleSettings={roleSettings}
+            initialPlayerMax={playerMax}
             onExit={this.hideForm}
           />
         );
       }
-      if (this.state.showForm === FormType.Info) {
+      if (showForm === FormType.Info) {
         form = (
-          <GameInfo roleSettings={this.props.roleSettings} playerMax={this.props.playerMax} onExit={this.hideForm} />
+          <GameInfo
+            roleSettings={roleSettings}
+            playerMax={playerMax}
+            onExit={this.hideForm}
+          />
         );
       }
     }
-    if (this.state.showForm === FormType.Report) {
-      const arr = [...this.props.players];
-      if (this.props.seat > -1) arr.splice(this.props.seat, 1);
+    if (showForm === FormType.Report) {
+      const arr = [...players];
+      if (seat > -1) arr.splice(seat, 1);
 
       form = (
-        <>
-          {' '}
-          <ReportPlayer
-            title="report player"
-            text="Report"
-            players={arr}
-            onExit={this.hideForm}
-            onSelect={this.reportPlayer}
-          />{' '}
-        </>
+        <ReportPlayer
+          title="report player"
+          text="Report"
+          players={arr}
+          onExit={this.hideForm}
+          onSelect={this.reportPlayer}
+        />
       );
     }
 
-    return this.props.code === '-1' ? null : (
+    return code === '-1' ? null : (
       <>
         <div className="nice-bar-above">
           <div className="button-b players">
             <p>
-              {this.props.players.length}/{this.props.playerMax}
+              {players.length}/{playerMax}
             </p>
           </div>
-          <button className="button-b report-someone-with-this" type="button" onClick={this.showReport}>
+          <button
+            className="button-b report-someone-with-this"
+            type="button"
+            onClick={this.showReport}
+          >
             <p>
-              <FontAwesomeIcon icon={faExclamationTriangle} className="exclamation-mark" />
+              <FontAwesomeIcon
+                icon={faExclamationTriangle}
+                className="exclamation-mark"
+              />
               Report
             </p>
           </button>
         </div>
-        <p className="message">{this.message.text}</p>{' '}
-        {this.message.showButtonOne ? (
-          <div className="button-cont">
-            {' '}
-            <Button {...this.message.buttonOne} />{' '}
+        <p className="message">{message.text}</p>{' '}
+        {message.buttons.map((b, i) => (
+          <div className="button-cont" key={i + b.className}>
+            <Button type="button" {...b} />{' '}
           </div>
-        ) : null}
-        {this.message.showButtonTwo ? (
-          <div className="button-cont">
-            <Button {...this.message.buttonTwo} />{' '}
-          </div>
-        ) : null}
-        {this.message.showButtonThree ? (
-          <div className="button-cont">
-            {' '}
-            <Button {...this.message.buttonThree} />{' '}
-          </div>
-        ) : null}
-        {this.message.showButtonFour ? (
-          <div className="button-cont">
-            {' '}
-            <Button {...this.message.buttonFour} />{' '}
-          </div>
-        ) : null}
+        ))}
         {form}
       </>
     );

@@ -21,6 +21,7 @@ interface AvatarUIProps {
   isMe: boolean;
   isRes: boolean;
   isPickable: boolean;
+  hasClaimed: boolean;
   table: Table | null;
   tableWidth: number;
   shieldPosition: [number, number];

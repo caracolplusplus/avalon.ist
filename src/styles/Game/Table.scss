@@ -113,7 +113,6 @@
         bottom: $base-font-size * 1.2;
         .players {
           float: right;
-          background-color: Globals.$gray-3;
           border-radius: $base-font-size * 0.4;
           display: flex;
           width: $base-font-size * 1.2;
@@ -170,7 +169,7 @@
           }
         }
         .kick {
-          background-color: #FDECEF;
+          background-color: #ebc0c8;
           p {
             color: Globals.$cancel;
           }

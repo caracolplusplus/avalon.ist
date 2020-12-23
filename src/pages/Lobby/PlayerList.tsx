@@ -41,8 +41,7 @@ interface PlayerListState {
   areAdmins: PlayerProps[];
   areContribs: PlayerProps[];
   arePlayers: PlayerProps[];
-  arePlaying: PlayerProps[];
-  areSpectating: PlayerProps[];
+  allPlayers: PlayerProps[];
   loaded: boolean;
 }
 
@@ -57,32 +56,31 @@ const Player = (props: PlayerProps) => {
 };
 
 class PlayerTab extends React.PureComponent<PlayerTabProps, PlayerTabState> {
-  constructor(props: PlayerTabProps) {
-    super(props);
-    this.state = {
-      showTab: true,
-    };
-    this.toggleTab = this.toggleTab.bind(this);
-  }
+  state = {
+    showTab: true,
+  };
 
-  toggleTab() {
+  toggleTab = () => {
     this.setState({ showTab: !this.state.showTab });
-  }
+  };
 
   render() {
+    const { showTab } = this.state;
+    const { title, players } = this.props;
+
     return (
       <div className="the-whole-tab">
         <p className="tab-title" onClick={this.toggleTab}>
           <button>
-            <i className={this.state.showTab ? 'arrow up' : 'arrow down'} />
+            <i className={showTab ? 'arrow up' : 'arrow down'} />
           </button>
           <span>
-            {this.props.title}({this.props.players.length})
+            {title}({players.length})
           </span>
         </p>
-        {this.state.showTab ? (
+        {showTab ? (
           <div className="player-tab">
-            {this.props.players.map((p, i) => (
+            {players.map((p, i) => (
               <Player {...p} key={'Player' + i} />
             ))}
           </div>
@@ -93,117 +91,79 @@ class PlayerTab extends React.PureComponent<PlayerTabProps, PlayerTabState> {
 }
 
 class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
-  constructor(props: PlayerListProps) {
-    super(props);
-    this.state = {
-      areAdmins: [],
-      areContribs: [],
-      arePlayers: [],
-      arePlaying: [],
-      areSpectating: [],
-      loaded: false,
-    };
-    this.parseClientsOnline = this.parseClientsOnline.bind(this);
-  }
+  state = {
+    areAdmins: [],
+    areContribs: [],
+    arePlayers: [],
+    allPlayers: [],
+    loaded: false,
+  };
 
-  componentDidMount() {
-    socket.on('playerListResponse', this.parseClientsOnline);
+  componentDidMount = () => {
+    socket.on('playerListResponse', this.playerListResponse);
 
     socket.emit('playerListRequest');
-  }
+  };
 
-  componentWillUnmount() {
-    socket.off('playerListResponse', this.parseClientsOnline);
-  }
+  componentWillUnmount = () => {
+    socket.off('playerListResponse', this.playerListResponse);
+  };
 
-  componentDidUpdate(prevProps: PlayerListProps) {
-    const arraysEqual = (a: string[], b: string[]) => {
-      if (a === b) return true;
-      if (a == null || b == null) return false;
-      if (a.length !== b.length) return false;
-
-      // If you don't care about the order of the elements inside
-      // the array, you should sort both arrays here.
-      // Please note that calling sort on an array will modify that array.
-      // you might want to clone your array first.
-
-      for (var i = 0; i < a.length; i++) {
-        if (a[i] !== b[i]) return false;
-      }
-      return true;
-    };
-
-    if (!arraysEqual(this.props.players, prevProps.players) || !arraysEqual(this.props.clients, prevProps.clients)) {
-      socket.emit('clientsOnlineRequest');
-    }
-  }
-
-  parseClientsOnline(clients: PlayerProps[]) {
-    const areAdmins: PlayerProps[] = [];
-    const areContribs: PlayerProps[] = [];
-    const arePlayers: PlayerProps[] = [];
-
-    const arePlaying: PlayerProps[] = [];
-    const areSpectating: PlayerProps[] = [];
-
-    clients.forEach((c) => {
-      if (c.isAdmin || c.isMod) {
-        areAdmins.push(c);
-      } else if (c.isContrib) {
-        areContribs.push(c);
-      } else {
-        arePlayers.push(c);
-      }
-
-      const name = c.username;
-
-      if (this.props.code !== undefined && this.props.clients.includes(name)) {
-        if (this.props.players.includes(name)) {
-          arePlaying.push(c);
-        } else {
-          areSpectating.push(c);
-        }
-      }
-    });
-
+  playerListResponse = (players: PlayerProps[]) => {
     function compareRatings(a: PlayerProps, b: PlayerProps) {
       return b.rating - a.rating;
     }
 
-    areAdmins.sort(compareRatings);
-    areContribs.sort(compareRatings);
-    arePlayers.sort(compareRatings);
+    players = players.sort(compareRatings);
 
-    arePlaying.sort(compareRatings);
-    areSpectating.sort(compareRatings);
+    const areAdmins = players.filter((p) => p.isAdmin || p.isMod);
+    const areContribs = players.filter((p) => !p.isAdmin && !p.isMod && p.isContrib);
+    const arePlayers = players.filter((p) => !p.isAdmin && !p.isMod && !p.isContrib);
 
     this.setState({
       areAdmins,
       areContribs,
       arePlayers,
-      arePlaying,
-      areSpectating,
+      allPlayers: players,
       loaded: true,
     });
-  }
+  };
 
   render() {
+    const { clients, players } = this.props;
+
+    const { code } = this.props;
+    const {
+      loaded,
+      allPlayers,
+      areAdmins,
+      areContribs,
+      arePlayers,
+    }: PlayerListState = this.state;
+
+    const arePlaying = allPlayers.filter(
+      (p) => clients.includes(p.username) && players.includes(p.username)
+    );
+    const areSpectating = allPlayers.filter(
+      (p) => clients.includes(p.username) && !players.includes(p.username)
+    );
+
     return (
       <div id="Player-List" className="row">
         <h3>
           <p>PLAYER LIST</p>
         </h3>
-        {this.state.loaded && (this.props.code === undefined || this.props.code !== '-1') ? (
+        {loaded && (code || code !== '-1') ? (
           <AvalonScrollbars>
-            {this.props.code !== undefined ? (
+            {code !== undefined ? (
               <>
-                <PlayerTab title="In Game" players={this.state.arePlaying} />
-                <PlayerTab title="Spectating" players={this.state.areSpectating} />
+                <PlayerTab title="In Game" players={arePlaying} />
+                <PlayerTab title="Spectating" players={areSpectating} />
               </>
             ) : null}
-            <PlayerTab title="Moderators" players={this.state.areAdmins} />
-            <PlayerTab title="Contributors" players={this.state.areContribs} />
-            <PlayerTab title="Players" players={this.state.arePlayers} />
+            <PlayerTab title="Moderators" players={areAdmins} />
+            <PlayerTab title="Contributors" players={areContribs} />
+            <PlayerTab title="Players" players={arePlayers} />
           </AvalonScrollbars>
         ) : null}
       </div>

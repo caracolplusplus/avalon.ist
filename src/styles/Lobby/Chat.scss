@@ -1,7 +1,6 @@
 @use '../Globals';
 
-@mixin colored-names ()
-{
+@mixin colored-names() {
   .username1 {
     color: Globals.$username-1;
   }
@@ -42,6 +41,7 @@
           color: white;
         }
         @include colored-names();
+
         &.negative {
           color: Globals.$spy-dark;
           .content {
@@ -70,6 +70,7 @@
         .username {
           color: Globals.$gray-1;
         }
+
         @include colored-names();
         &.negative {
           color: Globals.$spy-light;
@@ -123,10 +124,10 @@
           word-break: break-word;
         }
       }
-      &.highlighted {
+      &.server {
         color: Globals.$gold-1;
         .content {
-          font-weight: 500;
+          font-weight: 600;
         }
       }
       &.command {
@@ -135,10 +136,20 @@
           font-weight: 500;
         }
       }
-      &.client.command, &.broadcast.command {
-        font-style: oblique;
+      &.direct {
+        color: Globals.$green-1;
         .username {
           color: Globals.$green-1;
+        }
+      }
+      &.help {
+        font-style: oblique;
+        color: Globals.$gold-1;
+        .username {
+          color: Globals.$gold-1;
+        }
+        .content {
+          font-weight: 500;
         }
       }
       &.quote {

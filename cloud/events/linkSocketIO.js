@@ -1,33 +1,38 @@
-const cookie = require('cookie');
-
 const linkSocketIO = async (request) => {
-	const { headers } = request;
-	const { link, sockets } = require('../../routes/init');
+  const { link, sockets } = require('../../routes/init');
 
-	/* Get IP */
-	let address =
-		request.headers['X-Forwarded-For'] ||
-		request.headers['x-forwarded-for'] ||
-		request.connection.remoteAddress ||
-		request.socket.remoteAddress;
+  const {
+    user,
+    params: { io },
+  } = request;
 
-	if (address.indexOf(',') > -1) {
-		address = address.split(',')[0];
-	}
+  let address = null;
 
-	const { user } = request;
-	const { io } = cookie.parse(headers.cookie);
+  try {
+    address =
+      request.headers['x-forwarded-for'] ||
+      request.connection.remoteAddress ||
+      request.socket.remoteAddress ||
+      (request.connection.socket ? request.connection.socket.remoteAddress : null);
+  } catch (err) {
+    address = request.ip;
+  }
 
-	const socket = sockets.find((s) => s.id === io);
+  if (address.indexOf(',') > -1) {
+    address = address.split(',')[0];
+  }
 
-	socket.user = user;
-	link(socket);
+  const socket = sockets.find((s) => s.id === io);
 
-	if (user) {
-		user.checkForBans({ address });
-	}
+  socket.user = user;
+  link(socket);
 
-	return true;
+  if (user) {
+    user.checkForBans({ address });
+    socket.emit('updateStyle', user.toStyle());
+  }
+
+  return true;
 };
 
 module.exports = linkSocketIO;

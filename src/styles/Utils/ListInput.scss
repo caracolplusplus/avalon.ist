@@ -11,7 +11,7 @@
       margin: 0;
       padding: 0 $base-font-size * 0.2;
       align-items: left;
-      border: $base-font-size * 0.025 solid Globals.$light-2;
+      border: $base-font-size * 0.025 solid Globals.$light-3;
       transition: 1s;
       overflow: hidden;
       p {
@@ -24,7 +24,7 @@
         white-space: nowrap;
       }
       svg {
-        color: Globals.$light-2;
+        color: Globals.$light-3;
       }
     }
     .list-button.false {
@@ -48,7 +48,7 @@
       z-index: 10;
       .dropdown-item {
         animation: wake 0.5s 1;
-        border: $base-font-size * 0.025 solid Globals.$light-2;
+        border: $base-font-size * 0.025 solid Globals.$light-3;
         border-top: 0;
         border-bottom: 0;
         width: 100%;
@@ -68,7 +68,7 @@
         }
       }
       .dropdown-item:last-of-type {
-        border-bottom: $base-font-size * 0.025 solid Globals.$light-2;
+        border-bottom: $base-font-size * 0.025 solid Globals.$light-3;
         border-radius: 0 0 $base-font-size * 0.1 $base-font-size * 0.1;
       }
     }

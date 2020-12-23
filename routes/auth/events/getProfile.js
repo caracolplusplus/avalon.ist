@@ -4,8 +4,10 @@ function getProfile(io, socket) {
 		const userQ = new Parse.Query('_User');
 		userQ.equalTo('username', username);
 
-		userQ.first({ useMasterKey: true }).then((u) => {
+		userQ.first({ useMasterKey: true }).then(async (u) => {
 			if (u) {
+				await u.fetch();
+
 				socket.emit('saveProfile', u.toProfilePage());
 			} else {
 				socket.emit('profileNotFound');

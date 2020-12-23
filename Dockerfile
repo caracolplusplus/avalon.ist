@@ -10,4 +10,4 @@ RUN yarn install
 EXPOSE 1337
 VOLUME /parse/cloud               
 
-CMD [ "yarn", "start-server" ]
+CMD [ "yarn", "start-server-node" ]

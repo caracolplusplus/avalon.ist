@@ -28,7 +28,7 @@ interface AnnouncementProps {
 
 const Announcement = (props: AnnouncementProps) => {
   const dateObj = new Date(props.date);
-  const month = dateObj.getUTCMonth() + 1; //months from 1-12
+  const month = dateObj.getUTCMonth() + 1;
   const day = dateObj.getUTCDate();
   const year = dateObj.getUTCFullYear();
 
@@ -73,7 +73,12 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
         </h3>
         <AvalonScrollbars>
           {this.state.articles.map((a, i) => (
-            <Announcement date={a.timestamp} text={a.title} id={a.id} key={a.id} />
+            <Announcement
+              date={a.timestamp}
+              text={a.title}
+              id={a.id}
+              key={a.id + a.timestamp}
+            />
           ))}
         </AvalonScrollbars>
       </div>

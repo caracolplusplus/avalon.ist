@@ -78,16 +78,20 @@ class App extends React.PureComponent<appProps, appState> {
 
     window.addEventListener('resize', updateDimensions);
 
+    listenForStyles();
+
     socket.on('getAuthenticated', () =>
       getAuthenticated()
         .then(() => {
           setNotifications();
           listenForKicks();
-          listenForStyles();
           listenForLogs();
         })
-        .catch((err) => {
-          console.log(err);
+        .catch(async (err) => {
+          await Parse.User.logOut();
+
+          socket.disconnect();
+          window.location.reload(true);
         })
     );
   };
@@ -103,7 +107,7 @@ class App extends React.PureComponent<appProps, appState> {
   getAuthenticated = async () => {
     const { dispatch } = this.props;
 
-    await Parse.Cloud.run('linkSocketIO');
+    const verified = await Parse.Cloud.run('linkSocketIO', { io: socket.id });
 
     const currentUser = Parse.User.current();
 
@@ -115,7 +119,7 @@ class App extends React.PureComponent<appProps, appState> {
 
       this.setState({
         authenticated: true,
-        verified: true,
+        verified,
         loading: false,
       });
     } else {
@@ -196,8 +200,18 @@ class App extends React.PureComponent<appProps, appState> {
       <>
         <Router>
           <Switch>
-            <LoggedOutOnly exact path="/" authenticated={authenticated} component={Login} />
-            <LoggedOutOnly exact path="/signup" authenticated={authenticated} component={Signup} />
+            <LoggedOutOnly
+              exact
+              path="/"
+              authenticated={authenticated}
+              component={Login}
+            />
+            <LoggedOutOnly
+              exact
+              path="/signup"
+              authenticated={authenticated}
+              component={Signup}
+            />
             <UnverifiedOnly exact path="/verify" {...routeProps} component={Verify} />
             <LoggedInOnly exact path="/lobby" {...routeProps} component={Lobby} />
             <LoggedInOnly path="/profile/:username" {...routeProps} component={Profile} />

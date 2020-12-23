@@ -1,11 +1,19 @@
 // Import External Components
 
 import React, { createRef } from 'react';
-import { faStamp, faPen, faPaintBrush, faCheck, faGavel, faAddressCard } from '@fortawesome/free-solid-svg-icons';
+import {
+  faStamp,
+  faPen,
+  faPaintBrush,
+  faCheck,
+  faGavel,
+  faAddressCard,
+  faExclamationTriangle,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { SketchPicker, ColorResult, RGBColor } from 'react-color';
-import { connect } from "react-redux";
-import { updateChatHighlight } from "../../redux/actions";
+import { connect } from 'react-redux';
+import { updateChatHighlight } from '../../redux/actions';
 
 // Import Internal Components
 
@@ -23,7 +31,7 @@ export class AvatarUI extends React.PureComponent<
   {
     currentBackground: number;
     currentHighlight: RGBColor;
-    highlightChat: boolean,
+    highlightChat: boolean;
     renderPicker: boolean;
     renderButtons: boolean;
     avatarSelected: boolean;
@@ -61,7 +69,7 @@ export class AvatarUI extends React.PureComponent<
 
   toggleHighlightChat() {
     const enable = !this.state.highlightChat;
-    this.setState({highlightChat: enable});
+    this.setState({ highlightChat: enable });
     if (enable) {
       this.highlightChat();
     } else {
@@ -70,7 +78,9 @@ export class AvatarUI extends React.PureComponent<
   }
 
   toHtmlHex(color: RGBColor) {
-    const toHex = (num: number) => { return num.toString(16).padStart(2, '0'); }
+    const toHex = (num: number) => {
+      return num.toString(16).padStart(2, '0');
+    };
     return '#' + toHex(color.r) + toHex(color.g) + toHex(color.b);
   }
 
@@ -146,6 +156,7 @@ export class AvatarUI extends React.PureComponent<
                 (this.state.avatarSelected && this.props.isPickable ? 'picked' : '')
               }
             />
+
             <div
               className={
                 'ave tooltip ' +
@@ -153,12 +164,22 @@ export class AvatarUI extends React.PureComponent<
                 (this.props.isPickable ? 'pickable' : 'not-pickable')
               }
               style={{
-                backgroundImage: 'url(' + (this.props.isRes ? this.props.resUrl : this.props.spyUrl) + ')',
+                backgroundImage:
+                  'url(' +
+                  (this.props.isRes ? this.props.resUrl : this.props.spyUrl) +
+                  ')',
               }}
               onClick={this.pickPlayer}
             >
-              {this.props.isPickable ? <span className="tooltip-text">Click on this player to pick them</span> : null}
+              {this.props.isPickable ? (
+                <span className="tooltip-text">Click on this player to pick them</span>
+              ) : null}
             </div>
+            {this.props.hasClaimed ? (
+              <div className="claim">
+                <FontAwesomeIcon icon={faExclamationTriangle} />
+              </div>
+            ) : null}
             {this.props.killed ? <div className="ave-sword" /> : null}
             {this.props.onMission ? (
               <div className="ave-shield" ref={this.shieldLocation}>
@@ -175,7 +196,9 @@ export class AvatarUI extends React.PureComponent<
               </div>
             ) : null}
             {this.props.leader ? <div className="ave-flag" /> : null}
-            {this.props.vote > -1 ? <div className={'ave-vote-bubble ' + (this.props.vote === 1)} /> : null}
+            {this.props.vote > -1 ? (
+              <div className={'ave-vote-bubble ' + (this.props.vote === 1)} />
+            ) : null}
             {this.state.renderButtons ? (
               <div className="ave-buttons">
                 <button onClick={this.setBackgroundColor} className="tooltip">
@@ -183,11 +206,22 @@ export class AvatarUI extends React.PureComponent<
                   <FontAwesomeIcon icon={faStamp} />
                 </button>
                 <button onClick={this.toggleHighlightChat} className="tooltip">
-                  <span className="tooltip-text">Highlight this player's chat messages</span>
-                  <FontAwesomeIcon style={{backgroundColor: this.state.highlightChat ? this.toHtmlHex(this.state.currentHighlight) : ''}} icon={faPen} />
+                  <span className="tooltip-text">
+                    Highlight this player's chat messages
+                  </span>
+                  <FontAwesomeIcon
+                    style={{
+                      backgroundColor: this.state.highlightChat
+                        ? this.toHtmlHex(this.state.currentHighlight)
+                        : '',
+                    }}
+                    icon={faPen}
+                  />
                 </button>
                 <button onClick={this.showColorPicker} className="tooltip">
-                  <span className="tooltip-text">Change this player's highlight color</span>
+                  <span className="tooltip-text">
+                    Change this player's highlight color
+                  </span>
                   <FontAwesomeIcon icon={faPaintBrush} />
                 </button>
               </div>
@@ -201,12 +235,16 @@ export class AvatarUI extends React.PureComponent<
             }}
           >
             {this.props.card ? <FontAwesomeIcon icon={faAddressCard} /> : null}{' '}
-            {this.props.hammer ? <FontAwesomeIcon icon={faGavel} /> : null} {this.props.username}
+            {this.props.hammer ? <FontAwesomeIcon icon={faGavel} /> : null}{' '}
+            {this.props.username}
           </p>
           <p
             className={'ave-role ' + this.props.isRes}
             style={{
-              opacity: this.props.role !== 'Spy?' && this.props.role !== 'Resistance?' ? '1' : '0',
+              opacity:
+                this.props.role !== 'Spy?' && this.props.role !== 'Resistance?'
+                  ? '1'
+                  : '0',
               fontSize: Math.max(fontSize * 0.8, 8) + 'px',
             }}
           >
@@ -218,7 +256,10 @@ export class AvatarUI extends React.PureComponent<
             <AvalonScrollbars>
               <div className="hl-stuff">
                 <p>CHANGE HIGHLIGHT COLOR</p>
-                <SketchPicker color={this.state.currentHighlight} onChange={this.handleHighlight} />
+                <SketchPicker
+                  color={this.state.currentHighlight}
+                  onChange={this.handleHighlight}
+                />
                 <button onClick={this.hideColorPicker}>
                   <FontAwesomeIcon icon={faCheck} />
                 </button>

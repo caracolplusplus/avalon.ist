@@ -1,56 +1,79 @@
-// External
+/* global Set */
 
-import React from 'react';
-import { Redirect, Link } from 'react-router-dom';
-import { connect } from 'react-redux';
-import { rootType } from '../redux/reducers';
-import Flag from 'react-world-flags';
+// eslint-disable-next-line no-unused-vars
 import { RouteComponentProps } from 'react-router';
-import socket from '../socket-io/socket-io';
-import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Cell, Bar, Tooltip } from 'recharts';
+import { Redirect, Link } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
+import { rootType } from '../redux/reducers';
+import { connect } from 'react-redux';
+import React from 'react';
+import Flag from 'react-world-flags';
+import {
+  ResponsiveContainer,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Cell,
+  Bar,
+  Tooltip,
+} from 'recharts';
+
+import DefaultAvatars from './Game/DefaultAvatars';
 import ReactMarkdown from 'react-markdown';
-
-// Internal
-
+import EditProfile from './Lobby/EditProfile';
 import Navbar from './Navbar';
 import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 import countries from '../components/countries';
-import EditProfile from './Lobby/EditProfile';
-
-// Styles
+import socket from '../socket-io/socket-io';
 
 import '../styles/Profile.scss';
 
-// Declaration
+const SPY_ROLES = new Set(['morgana', 'oberon', 'mordred', 'assassin', 'spy']);
+const UN_FLAG = `https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Flag_of_the_United_Nations.svg/800px-Flag_of_the_United_Nations.svg.png`;
+const gummy = DefaultAvatars.gummy;
 
 const Percent = (n: number) => Math.trunc(n * 10000) / 100;
 
 const CustomTooltip = ({ active, payload }: { active?: Boolean; payload?: any }) => {
   if (active) {
-    const v =
-      payload[0].payload.name +
-      ': ' +
-      payload[0].payload.Winrate +
-      '% [ ' +
-      payload[0].payload.wins +
-      'W / ' +
-      (payload[0].payload.total - payload[0].payload.wins) +
-      'L ]';
+    const { name, Winrate, wins, total } = payload[0].payload;
+    const v = `${name}: ${Winrate}% [ ${wins}W / ${total - wins}L ]`;
+
     return (
       <div className="tooltip">
         <p>{v}</p>
       </div>
     );
   }
+
   return <></>;
 };
-
-const SPY_ROLES = new Set(['morgana', 'oberon', 'mordred', 'assassin', 'spy']);
 
 interface ProfileProps {
   username: string;
   myname?: any;
   style?: any;
+}
+
+interface ProfileState {
+  username: string;
+  avatars: {
+    spy: string;
+    res: string;
+  };
+  bio: string;
+  nationality: string;
+  games: number[];
+  gameStats: {
+    [role: string]: number[];
+  };
+  gameHistory: string[];
+  gameShots: number[];
+  gameRating: number;
+  redirect: boolean;
+  showSpy: boolean;
+  showForm: boolean;
 }
 
 const mapState = (state: rootType, ownProps: any) => {
@@ -69,62 +92,78 @@ const mapState = (state: rootType, ownProps: any) => {
   };
 };
 
-class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any> {
-  constructor(props: RouteComponentProps<ProfileProps>) {
-    super(props);
-    this.state = {
-      user: '',
-      // Personality
-      avatarClassic: {
-        spy: 'to_define',
-        res: 'to_define',
-      },
-      avatarGummy: {
-        spy: 'to_define',
-        res: 'to_define',
-      },
-      bio: '',
-      nationality: 'United Nations',
-      // Game
-      games: [0, 0],
-      gameStats: {
-        merlin: [0, 0],
-        percival: [0, 0],
-        resistance: [0, 0],
-        assassin: [0, 0],
-        morgana: [0, 0],
-        oberon: [0, 0],
-        mordred: [0, 0],
-        spy: [0, 0],
-      },
-      gameHistory: [],
-      gameShots: [0, 0],
-      gameRating: 1500,
-      // From profile page
-      redirect: false,
-      showSpy: false,
-      showForm: false,
-    };
-  }
+class Profile extends React.PureComponent<
+  RouteComponentProps<ProfileProps>,
+  ProfileState
+> {
+  state: ProfileState = {
+    username: '',
+    // Personality
+    avatars: {
+      spy: 'to_define',
+      res: 'to_define',
+    },
+    bio: '',
+    nationality: 'United Nations',
+    // Game
+    games: [0, 0],
+    gameStats: {
+      merlin: [0, 0],
+      percival: [0, 0],
+      resistance: [0, 0],
+      assassin: [0, 0],
+      morgana: [0, 0],
+      oberon: [0, 0],
+      mordred: [0, 0],
+      spy: [0, 0],
+    },
+    gameHistory: [],
+    gameShots: [0, 0],
+    gameRating: 1500,
+    // From profile page
+    redirect: false,
+    showSpy: false,
+    showForm: false,
+  };
 
-  componentDidMount() {
+  componentDidMount = () => {
+    const { username } = this.props.match.params;
+
     socket.on('saveProfile', this.onProfileRequest);
     socket.on('profileNotFound', this.onProfileNotFound);
-    socket.emit('getProfile', this.props.match.params.username);
-  }
 
-  componentWillUnmount() {
+    socket.emit('getProfile', username);
+  };
+
+  componentWillUnmount = () => {
     socket.off('saveProfile', this.onProfileRequest);
     socket.off('profileNotFound', this.onProfileNotFound);
-  }
+  };
 
-  componentDidUpdate(prevProps: RouteComponentProps<ProfileProps>) {
-    if (this.props.match.params.username !== prevProps.match.params.username) {
-      socket.emit('getProfile', this.props.match.params.username);
+  componentDidUpdate = (prevProps: RouteComponentProps<ProfileProps>) => {
+    const { username } = this.props.match.params;
+    const { username: prevUsername } = prevProps.match.params;
+
+    if (username !== prevUsername) {
+      socket.emit('getProfile', username);
     }
-  }
+  };
 
-  onProfileRequest = (profile: any) => this.setState({ ...this.state, ...profile });
+  onProfileRequest = (profile: ProfileState) => {
+    const {
+      style: { avatarStyle },
+    } = this.props.match.params;
+
+    const defaultA = avatarStyle ? DefaultAvatars.gummy : DefaultAvatars.classic;
+
+    const yourAvatars = profile.avatars;
+    const avatarUrls =
+      yourAvatars.res === gummy.res && yourAvatars.spy === gummy.spy
+        ? defaultA
+        : yourAvatars;
+
+    this.setState({ ...profile, avatars: avatarUrls });
+  };
 
   onProfileNotFound = (profile: any) => this.setState({ redirect: true });
 
@@ -142,37 +181,59 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
   initialHeight = Math.max(window.innerHeight, 630);
 
   render() {
-    const theme = this.props.match.params.style.themeLight ? 'light' : 'dark';
-    var data: any[] = [];
-    Object.keys(this.state.gameStats).forEach((k) =>
+    const { initialHeight } = this;
+    const {
+      myname,
+      style: { themeLight },
+    } = this.props.match.params;
+
+    const theme = themeLight ? 'light' : 'dark';
+    const data: any[] = [];
+
+    // const { avatarStyle } = this.props.match.params.style;
+    const {
+      username,
+      nationality,
+      bio,
+      gameRating,
+      gameHistory,
+      games,
+      gameStats,
+      gameShots,
+      avatars,
+      showSpy,
+      redirect,
+    } = this.state;
+
+    for (const k in gameStats) {
+      const stat = gameStats[k];
+
       data.push({
         name: k.charAt(0).toUpperCase() + k.slice(1),
-        wins: this.state.gameStats[k][0],
-        total: this.state.gameStats[k][1],
-        Winrate:
-          this.state.gameStats[k][1] === 0 ? 0 : Percent(this.state.gameStats[k][0] / this.state.gameStats[k][1]),
+        wins: stat[0],
+        total: stat[1],
+        Winrate: stat[1] === 0 ? 0 : Percent(stat[0] / stat[1]),
         color: SPY_ROLES.has(k) ? '#ff6384' : '#36a2eb',
-      })
-    );
-    const country = countries.find((c) => c.text === this.state.nationality);
-    const totalWon = this.state.games[0];
-    const totalLost = this.state.games[1] - totalWon;
-    const winRate = this.state.games[1] > 0 ? Percent(totalWon / this.state.games[1]) : 0;
-    const shotRate = this.state.gameShots[1] > 0 ? Percent(this.state.gameShots[0] / this.state.gameShots[1]) : 0;
+      });
+    }
 
-    const avatars = this.props.match.params.style.avatarStyle ? this.state.avatarGummy : this.state.avatarClassic;
+    const country = countries.find((c) => c.text === nationality);
+    const totalWon = games[0];
+    const totalLost = games[1] - totalWon;
+    const winRate = games[1] > 0 ? Percent(totalWon / games[1]) : 0;
+    const shotRate = gameShots[1] > 0 ? Percent(gameShots[0] / gameShots[1]) : 0;
 
-    return this.state.redirect ? (
+    return redirect ? (
       <Redirect to="/profile-not-found" />
     ) : (
-      <div id="Background-2" className={'full ' + theme}>
+      <div id="Background-2" className={`full ${theme}`}>
         <Navbar username="" key={'Navbar'} />
         <AvalonScrollbars>
-          <div id="Profile" style={{ minHeight: this.initialHeight + 'px' }}>
+          <div id="Profile" style={{ minHeight: `${initialHeight}px` }}>
             <div className="row">
               <div id="user">
                 <img
-                  src={this.state.showSpy ? avatars.spy : avatars.res}
+                  src={showSpy ? avatars.spy : avatars.res}
                   alt={'Avatar'}
                   onMouseOver={this.onHover}
                   onMouseLeave={this.onStopHover}
@@ -181,19 +242,16 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
                   {country ? (
                     <Flag code={country.value} />
                   ) : (
-                    <img
-                      alt={'UN'}
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Flag_of_the_United_Nations.svg/800px-Flag_of_the_United_Nations.svg.png"
-                    />
+                    <img alt={'UN'} src={UN_FLAG} />
                   )}
                   <p>
-                    <b>{this.state.user}</b>
+                    <b>{username}</b>
                     <br />
-                    {this.state.nationality}
+                    {nationality}
                   </p>
                 </div>
               </div>
-              <div id="bio" style={{ minHeight: this.state.avatarSize }} className="bubble">
+              <div id="bio" className="bubble">
                 <AvalonScrollbars>
                   <ReactMarkdown
                     className="markdown"
@@ -210,7 +268,7 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
                       'heading',
                     ]}
                   >
-                    {this.state.bio}
+                    {bio}
                   </ReactMarkdown>
                 </AvalonScrollbars>
               </div>
@@ -246,7 +304,7 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
                     </tr>
                     <tr>
                       <td>Rating</td>
-                      <td>{this.state.gameRating}</td>
+                      <td>{gameRating}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -284,19 +342,28 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
                     <tr>
                       <th>Game Link</th>
                     </tr>
-                    {this.state.gameHistory.reverse().slice(-10).map((g: string) => (
-                      <tr key={"Game" + g}>
-                        <td><Link to={"/game/" + g}>Game #{g}</Link></td>
-                      </tr>
-                    ))}
+                    {gameHistory
+                      .reverse()
+                      .slice(-10)
+                      .map((g: string, i) => (
+                        <tr key={'Game' + g + i}>
+                          <td>
+                            <Link to={'/game/' + g}>Game #{g}</Link>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
         </AvalonScrollbars>
-        {this.props.match.params.myname === this.state.user ? (
-          <button className="button-b edit-your-profile-with-this" type="button" onClick={this.onFormToggle}>
+        {myname === username ? (
+          <button
+            className="button-b edit-your-profile-with-this"
+            type="button"
+            onClick={this.onFormToggle}
+          >
             <p>Edit Profile</p>
           </button>
         ) : null}
@@ -304,8 +371,8 @@ class Profile extends React.PureComponent<RouteComponentProps<ProfileProps>, any
           <EditProfile
             onExit={this.onFormToggle}
             text="Submit"
-            nationality={this.state.nationality}
-            bio={this.state.bio}
+            nationality={nationality}
+            bio={bio}
             title="EDIT YOUR PROFILE"
             onSelect={this.onEdit}
           />

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
+// eslint-disable-next-line no-unused-vars
 import { rootType } from '../redux/reducers';
 
 // Internal
@@ -37,10 +38,14 @@ class Lobby extends React.PureComponent<PageProps> {
     const theme = this.props.style.themeLight ? 'light' : 'dark';
 
     return (
-      <div id="Background-2" className={'full ' + theme}>
-        <Navbar username="" key={'Navbar'}/>
+      <div id="Background-2" className={`full ${theme}`}>
+        <Navbar username="" />
         <AvalonScrollbars>
-          <div id="Lobby" className="section" style={{ minHeight: this.initialHeight + 'px' }}>
+          <div
+            id="Lobby"
+            className="section"
+            style={{ minHeight: this.initialHeight + 'px' }}
+          >
             <div className="column section">
               <div id="Welcome" className="row" />
               <Announcements />

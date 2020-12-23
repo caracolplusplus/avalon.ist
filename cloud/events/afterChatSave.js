@@ -1,16 +1,22 @@
 const { gameChat, generalChat } = require('../../routes/rooms');
 
 const afterChatSave = async (request) => {
-	const chat = request.object;
+  const chat = request.object;
+  const { context } = request;
 
-	const { io } = require('../../routes/init');
+  if (!('messages' in context)) return true;
 
-	const code = chat.get('code');
-	const isGeneral = code === 'Global';
+  const { io } = require('../../routes/init');
 
-	io.to(isGeneral ? generalChat : gameChat + code).emit('gameResponse', chat.get('messages'));
+  const code = chat.get('code');
+  const isGeneral = code === 'Global';
 
-	return true;
+  io.to(isGeneral ? generalChat : gameChat + code).emit(
+    isGeneral ? 'generalChatResponse' : 'gameChatResponse',
+    context.messages
+  );
+
+  return true;
 };
 
 module.exports = afterChatSave;

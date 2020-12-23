@@ -1,67 +1,69 @@
 const afterEnvSave = async (request) => {
-	const Environment = require('../../routes/constructors/environment');
+  const Environment = require('../../routes/constructors/environment');
 
-	const { object: env } = request;
+  const { object: env } = request;
 
-	Environment.setGlobal(env);
+  Environment.setGlobal(env);
 
-	if ('context' in request) {
-		const { context } = request;
+  if ('context' in request) {
+    const { context } = request;
 
-		if ('playerList' in context) {
-			const { playerList } = context;
+    if ('playerList' in context) {
+      const { playerList } = context;
 
-			if (!playerList) return true;
+      if (!playerList) return true;
 
-			const { io } = require('../../routes/init');
+      const { io } = require('../../routes/init');
 
-			io.emit('playerListResponse', env.get('playerList'));
-		}
+      io.emit('playerListResponse', env.get('playerList'));
+    }
 
-		if ('roomList' in context) {
-			const { roomList } = context;
+    if ('roomList' in context) {
+      const { roomList } = context;
 
-			if (!roomList) return true;
+      if (!roomList) return true;
 
-			const { io } = require('../../routes/init');
+      const { io } = require('../../routes/init');
 
-			io.emit('roomListResponse', env.get('roomList'));
-		}
+      io.emit('roomListResponse', env.get('roomList'));
+    }
 
-		if ('kick' in context) {
-			const { kick, ips } = context;
+    if ('kick' in context) {
+      env.updateTrees();
 
-			if (!kick) return true;
+      const { kick, ips } = context;
 
-			const { io } = require('../../routes/init');
+      if (!kick) return true;
 
-			const qMap = ips.map((i) => {
-				// eslint-disable-next-line no-undef
-				const userQ = new Parse.Query('_User');
-				userQ.equalTo('addressList', i);
+      const { io } = require('../../routes/init');
 
-				return userQ;
-			});
+      const qMap = ips.map((i) => {
+        // eslint-disable-next-line no-undef
+        const userQ = new Parse.Query('_User');
+        userQ.equalTo('addressList', i);
 
-			const kickUser = (u) => {
-				const username = u.get('username');
+        return userQ;
+      });
 
-				io.to(username).emit('reloadPage');
-			};
+      const kickUser = (u) => {
+        const username = u.get('username');
 
-			// eslint-disable-next-line no-undef
-			const mainQuery = Parse.Query.or(...qMap);
+        io.to(username).emit('reloadPage');
+      };
 
-			mainQuery
-				.find({ useMasterKey: true })
-				.then((userList) => {
-					userList.forEach(kickUser);
-				})
-				.catch((e) => console.log(e));
-		}
-	}
+      // eslint-disable-next-line no-undef
+      const mainQuery = Parse.Query.or(...qMap);
 
-	return true;
+      mainQuery
+        .find({ useMasterKey: true })
+        .then((userList) => {
+          userList.forEach(kickUser);
+        })
+        .catch((e) => console.log(e));
+    }
+  }
+
+  return true;
 };
 
 module.exports = afterEnvSave;

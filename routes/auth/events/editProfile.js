@@ -4,7 +4,7 @@ function editProfile(io, socket) {
 	socket.on('editProfile', async (data) => {
 		await user.fetch();
 
-		user.setProfile(data);
+		await user.setProfile(data);
 
 		socket.emit('saveProfile', user.toProfilePage());
 	});

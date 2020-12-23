@@ -1,12 +1,18 @@
 function articleRequest(io, socket) {
-	const environment = require('../../constructors/environment').getGlobal();
+  socket.on('articleRequest', (id) => {
+    const environment = require('../../constructors/environment').getGlobal();
 
-	socket.on('articleRequest', (data) => {
-		const { id } = data;
-		const article = environment.get('articles').find((a) => a.id === id);
+    const articles = environment.get('announcementLogs');
 
-		article ? socket.emit('articleResponse', article) : socket.emit('articleNotFound');
-	});
+    for (let i = articles.length - 1; i >= 0; i--) {
+      if (articles[i].id === id) {
+        socket.emit('articleResponse', articles[i]);
+        return;
+      }
+    }
+
+    socket.emit('articleNotFound');
+  });
 }
 
 module.exports = articleRequest;

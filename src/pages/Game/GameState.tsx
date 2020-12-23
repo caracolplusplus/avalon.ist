@@ -2,11 +2,14 @@ interface GameState {
   // Player Info
   username: string | null;
   players: string[];
+  claimed: string[];
   avatars: any[];
   clients: string[];
+  kicked: boolean;
   seat: number;
   imRes: boolean;
   // Game State Info
+  active: boolean;
   started: boolean | undefined;
   ended: boolean | undefined;
   frozen: boolean | undefined;
@@ -29,6 +32,7 @@ interface GameState {
   hammer: number;
   card: number;
   assassin: boolean;
+  assassinName: string;
   // Game Mission Info
   mission: number;
   round: number;
@@ -49,10 +53,11 @@ interface GameState {
     assassin: boolean;
     oberon: boolean;
     mordred: boolean;
-    card: boolean;
+    lady: boolean;
   };
 }
 
 type GameStateType = GameState;
 
+// eslint-disable-next-line no-undef
 export default GameStateType;

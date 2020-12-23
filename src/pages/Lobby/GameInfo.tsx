@@ -23,7 +23,7 @@ interface GameFormProps {
     assassin: boolean;
     oberon: boolean;
     mordred: boolean;
-    card: boolean;
+    lady: boolean;
   };
   playerMax: number;
 }
@@ -41,7 +41,7 @@ class GameForm extends React.PureComponent<GameFormProps> {
     if (this.props.roleSettings.assassin) roleArr.push('Assassin');
     if (this.props.roleSettings.oberon) roleArr.push('Oberon');
     if (this.props.roleSettings.mordred) roleArr.push('Mordred');
-    if (this.props.roleSettings.card) cardArr.push('Lady of the Lake');
+    if (this.props.roleSettings.lady) cardArr.push('Lady of the Lake');
 
     return (
       <div className="settings-form">

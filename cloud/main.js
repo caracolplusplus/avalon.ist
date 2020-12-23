@@ -1,16 +1,16 @@
-/* eslint-disable no-undef */
+/* global Parse */
 const Events = require('./events');
 
 const {
-	linkSocketIO,
-	beforeSignup,
-	beforeLogin,
-	beforeUserSave,
-	afterUserSave,
-	afterEnvSave,
-	afterGameSave,
-	afterChatSave,
-	beforeGameSave,
+  linkSocketIO,
+  beforeSignup,
+  beforeLogin,
+  beforeUserSave,
+  afterUserSave,
+  afterEnvSave,
+  afterGameSave,
+  afterChatSave,
+  beforeGameSave,
 } = Events;
 
 Parse.Cloud.define('linkSocketIO', linkSocketIO);

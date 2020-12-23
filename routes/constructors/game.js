@@ -2,909 +2,982 @@
 const Chat = require('./chat');
 
 const playerMatrix = [
-	[2, 3, 2, 3, 3],
-	[2, 3, 4, 3, 4],
-	[2, 3, 3, 4, 4],
-	[3, 4, 4, 5, 5],
-	[3, 4, 4, 5, 5],
-	[3, 4, 4, 5, 5],
+  [2, 3, 2, 3, 3],
+  [2, 3, 4, 3, 4],
+  [2, 3, 3, 4, 4],
+  [3, 4, 4, 5, 5],
+  [3, 4, 4, 5, 5],
+  [3, 4, 4, 5, 5],
 ];
 
 class Game extends Parse.Object {
-	constructor(props) {
-		super('Game');
-		const { code } = props;
-
-		// Meta
-		this.set('code', code);
-		this.set('host', 'Anonymous');
-		this.set('mode', 'Unrated');
-		this.set('listed', true);
-
-		// Players
-		this.set('playerList', []);
-		this.set('playerMax', 6);
-		this.set('spectatorList', {});
-		this.set('kickedPlayers', []);
-
-		// Roles
-		this.set('roleList', []);
-		this.set('roleSettings', {
-			merlin: true,
-			percival: true,
-			morgana: true,
-			assassin: true,
-			oberon: false,
-			mordred: false,
-			lady: false,
-		});
-		this.set('hasAssassin', true);
-		this.set('hasLady', false);
-
-		// Knowledge
-		this.set('publicKnowledge', new Array(10).fill('Resistance?'));
-		this.set('privateKnowledge', {});
-
-		// State
-		this.set('active', true);
-		this.set('started', false);
-		this.set('ended', false);
-		this.set('frozen', false);
-		this.set('stage', 'NONE');
-
-		// Result
-		this.set('cause', -1);
-		this.set('winner', -1);
-
-		// Mission Votes
-		this.set('picks', []);
-		this.set('picksYetToVote', []);
-		this.set('pickNames', []);
-		this.set('votesRound', []);
-		this.set('votesMission', []);
-
-		// Positions
-		this.set('leader', 0);
-		this.set('lady', -1);
-		this.set('hammer', -1);
-		this.set('hammerDistance', 4);
-		this.set('assassination', -1);
-
-		// Turn
-		this.set('mission', 0);
-		this.set('round', 0);
-		this.set('fails', 0);
-
-		// Chat
-		this.set('chat', new Chat({ code: code }));
-
-		// Mission History
-		this.set('missionResults', []);
-		this.set('missionPicks', [[], [], [], [], []]);
-		this.set('missionVotes', [[], [], [], [], []]);
-		this.set('missionLeader', [[], [], [], [], []]);
-
-		// Card Holders
-		this.set('ladyHolders', []);
-	}
-
-	shuffleArray(array) {
-		let currentIndex = array.length;
-
-		let temporaryValue = '';
-		let randomIndex = 0;
-
-		// While there remain elements to shuffle
-		while (0 !== currentIndex) {
-			// Pick a remaining element
-			randomIndex = Math.floor(Math.random() * currentIndex);
-			currentIndex -= 1;
-			// And swap it with the current element
-			temporaryValue = array[currentIndex];
-			array[currentIndex] = array[randomIndex];
-			array[randomIndex] = temporaryValue;
-		}
-
-		return array;
-	}
-
-	editSettings(data) {
-		const { roleSettings, playerMax } = data;
-		const { length } = this.get('playerList');
-
-		// Set player max
-		// Minimum is 5 and maximum is 10
-		// If number is less than player count then do nothing
-		const newMax = Math.min(Math.max(length, playerMax, 5), 10);
-
-		this.set('playerMax', newMax);
-
-		// Prepares for role setting
-		const resRoles = new Array(6).fill('Resistance');
-		const spyRoles = new Array(4).fill('Spy');
-
-		let { merlin, percival, morgana, assassin, oberon, mordred, lady } = roleSettings;
-
-		// Set mordred
-		if (mordred) {
-			spyRoles.push('Mordred');
-			spyRoles.shift();
-
-			mordred = true;
-		} else {
-			mordred = false;
-		}
-
-		// Set oberon
-		if (oberon) {
-			spyRoles.push('Oberon');
-			spyRoles.shift();
-
-			oberon = true;
-		} else {
-			oberon = false;
-		}
-
-		// Set percival and morgana
-		if (percival && morgana) {
-			resRoles.push('Percival');
-			resRoles.shift();
-
-			spyRoles.push('Morgana');
-			spyRoles.shift();
-
-			percival = true;
-			morgana = true;
-		} else {
-			percival = false;
-			morgana = false;
-		}
-
-		// Set merlin and assassin
-		if (merlin && assassin) {
-			resRoles.push('Merlin');
-			resRoles.shift();
-
-			spyRoles.push('Assassin');
-			spyRoles.shift();
-
-			merlin = true;
-			assassin = true;
-
-			this.set('hasAssassin', true);
-		} else {
-			merlin = false;
-			assassin = false;
-
-			this.set('hasAssassin', false);
-		}
-
-		// Set lady of the lake
-		if (lady) {
-			lady = true;
-		} else {
-			lady = false;
-		}
-
-		this.set('hasLady', lady);
-
-		// Save to database
-		const newSettings = {
-			merlin,
-			percival,
-			morgana,
-			assassin,
-			oberon,
-			mordred,
-			lady,
-		};
-		const newRoles = [
-			// 5p
-			resRoles[5],
-			resRoles[4],
-			resRoles[3],
-			spyRoles[3],
-			spyRoles[2],
-			// 6p to 10p
-			resRoles[2],
-			spyRoles[1],
-			resRoles[1],
-			spyRoles[0],
-			resRoles[0],
-		];
+  constructor() {
+    super('Game');
+  }
+
+  static spawn(props) {
+    const { code } = props;
+    const game = new Game();
+
+    // Meta
+    game.set('code', code);
+    game.set('host', 'Anonymous');
+    game.set('mode', 'Unrated');
+    game.set('listed', true);
+    game.set('hasClaimed', []);
+
+    // Players
+    game.set('playerList', []);
+    game.set('avatarList', {});
+    game.set('playerMax', 6);
+    game.set('spectatorList', {});
+    game.set('kickedPlayers', []);
+
+    // Roles
+    game.set('roleList', []);
+    game.set('roleSettings', {
+      merlin: true,
+      percival: true,
+      morgana: true,
+      assassin: true,
+      oberon: false,
+      mordred: false,
+      lady: false,
+    });
+    game.set('hasAssassin', true);
+    game.set('hasLady', false);
+
+    // Knowledge
+    game.set('publicKnowledge', new Array(10).fill('Resistance?'));
+    game.set('privateKnowledge', {});
+
+    // State
+    game.set('active', true);
+    game.set('started', false);
+    game.set('ended', false);
+    game.set('frozen', false);
+    game.set('stage', 'NONE');
+
+    // Result
+    game.set('cause', -1);
+    game.set('winner', -1);
+
+    // Mission Votes
+    game.set('picks', []);
+    game.set('picksYetToVote', []);
+    game.set('pickNames', []);
+    game.set('votesRound', []);
+    game.set('votesMission', []);
+
+    // Positions
+    game.set('leader', 0);
+    game.set('lady', -1);
+    game.set('hammer', -1);
+    game.set('hammerDistance', 4);
+    game.set('assassination', -1);
+
+    // Turn
+    game.set('mission', 0);
+    game.set('round', 0);
+    game.set('fails', 0);
+
+    // Chat
+    game.set('chat', Chat.spawn({ code: code }));
+
+    // Mission History
+    game.set('missionResults', []);
+    game.set('missionPicks', [[], [], [], [], []]);
+    game.set('missionVotes', [[], [], [], [], []]);
+    game.set('missionLeader', [[], [], [], [], []]);
+
+    // Card Holders
+    game.set('ladyHolders', []);
+
+    return game;
+  }
+
+  shuffleArray(array) {
+    let currentIndex = array.length;
+
+    let temporaryValue = '';
+    let randomIndex = 0;
+
+    // While there remain elements to shuffle
+    while (0 !== currentIndex) {
+      // Pick a remaining element
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+      // And swap it with the current element
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+
+    return array;
+  }
+
+  async editSettings(data) {
+    const { roleSettings, playerMax } = data;
+
+    const { length } = this.get('playerList');
+
+    // Set player max
+    // Minimum is 5 and maximum is 10
+    // If number is less than player count then do nothing
+    const newMax = Math.min(Math.max(length, playerMax, 5), 10);
+
+    this.set('playerMax', newMax);
+
+    // Prepares for role setting
+    const resRoles = new Array(6).fill('Resistance');
+    const spyRoles = new Array(4).fill('Spy');
+
+    let { merlin, percival, morgana, assassin, oberon, mordred, lady } = roleSettings;
+
+    // Set mordred
+    if (mordred) {
+      spyRoles.push('Mordred');
+      spyRoles.shift();
+
+      mordred = true;
+    } else {
+      mordred = false;
+    }
+
+    // Set oberon
+    if (oberon) {
+      spyRoles.push('Oberon');
+      spyRoles.shift();
+
+      oberon = true;
+    } else {
+      oberon = false;
+    }
+
+    // Set percival and morgana
+    if (percival && morgana) {
+      resRoles.push('Percival');
+      resRoles.shift();
+
+      spyRoles.push('Morgana');
+      spyRoles.shift();
+
+      percival = true;
+      morgana = true;
+    } else {
+      percival = false;
+      morgana = false;
+    }
+
+    // Set merlin and assassin
+    if (merlin && assassin) {
+      resRoles.push('Merlin');
+      resRoles.shift();
+
+      spyRoles.push('Assassin');
+      spyRoles.shift();
+
+      merlin = true;
+      assassin = true;
 
-		this.set('roleSettings', newSettings);
-		this.set('roleList', newRoles);
+      this.set('hasAssassin', true);
+    } else {
+      merlin = false;
+      assassin = false;
 
-		this.save({}, { useMasterKey: true });
+      this.set('hasAssassin', false);
+    }
 
-		return true;
-	}
+    // Set lady of the lake
+    if (lady) {
+      lady = true;
+    } else {
+      lady = false;
+    }
 
-	addClient(data) {
-		const { username, instance, id } = data;
-		const spectatorList = this.get('spectatorList');
+    this.set('hasLady', lady);
+
+    // Save to database
+    const newSettings = {
+      merlin,
+      percival,
+      morgana,
+      assassin,
+      oberon,
+      mordred,
+      lady,
+    };
+    const newRoles = [
+      // 5p
+      resRoles[5],
+      resRoles[4],
+      resRoles[3],
+      spyRoles[3],
+      spyRoles[2],
+      // 6p to 10p
+      resRoles[2],
+      spyRoles[1],
+      resRoles[1],
+      spyRoles[0],
+      resRoles[0],
+    ];
 
-		const tag = `${instance}.${id}`;
+    this.set('roleSettings', newSettings);
+    this.set('roleList', newRoles);
 
-		const client = spectatorList[username];
+    await this.save({}, { useMasterKey: true });
 
-		if (!client) {
-			spectatorList[username] = {
-				timestamp: Date.now(),
-				sockets: [tag],
-			};
-		} else if (!client.sockets.includes(tag)) {
-			client.sockets.push(tag);
-		}
+    return true;
+  }
 
-		this.set('spectatorList', spectatorList);
+  async addToKick(data) {
+    const { kick } = data;
 
-		this.save({}, { useMasterKey: true });
+    let kicked = this.get('kickedPlayers');
 
-		return true;
-	}
+    kicked = new Set(kicked);
+    kicked.add(kick);
 
-	removeClient(data) {
-		const { username, instance, id } = data;
+    this.set('kickedPlayers', [...kicked]);
 
-		const room = this.get('code');
-		const spectatorList = this.get('spectatorList');
+    await this.save({}, { useMasterKey: true });
 
-		const tag = `${instance}.${id}`;
+    return true;
+  }
 
-		const client = spectatorList[username];
+  addClient(data) {
+    const { username, avatars, instance, id } = data;
+    const spectatorList = this.get('spectatorList');
+    const avatarList = this.get('avatarList');
 
-		if (!client) {
-			console.log(`${username} asked to leave Room #${room} but request failed.`);
-		} else {
-			const sockets = client.sockets;
+    const client = spectatorList[username];
 
-			const index = sockets.indexOf(tag);
-			if (index > -1) sockets.splice(index, 1);
+    if (!client || !client[id]) {
+      avatarList[username] = avatars;
 
-			const { length } = sockets;
+      spectatorList[username] = {};
+      spectatorList[username][id] = [instance];
+    } else if (!client[id].includes(instance)) {
+      client[id].push(instance);
+    }
 
-			if (length === 0) {
-				const started = this.get('started');
+    this.set('avatarList', avatarList);
+    this.set('spectatorList', spectatorList);
 
-				// If sockets are empty, then there are no connections for this client,
-				// so remove it from the object so we can reap the room. If the client
-				// reconnects, they will be readded to the clients objects anyways.
-				delete spectatorList[username];
+    this.save({}, { useMasterKey: true });
 
-				if (!started) {
-					this.togglePlayer({ username, add: false });
-				}
-			}
+    return true;
+  }
 
-			// If no more clients, then delete the room.
-			if (Object.keys(spectatorList).length === 0) {
-				this.set('active', false);
-			}
-		}
+  removeClient(data) {
+    const { username, instance, id } = data;
 
-		this.set('spectatorList', spectatorList);
+    const room = this.get('code');
+    const spectatorList = this.get('spectatorList');
+    const started = this.get('started');
 
-		this.save({}, { useMasterKey: true });
+    const client = spectatorList[username];
 
-		return true;
-	}
+    if (!client || !client[id]) {
+      console.log(`${username} asked to leave Room #${room} but request failed.`);
 
-	togglePlayer(data) {
-		const { username, add } = data;
+      if (client) {
+        delete spectatorList[username];
 
-		const players = this.get('playerList');
-		const playerMax = this.get('playerMax');
+        if (!started) {
+          this.togglePlayer({ username, add: false });
+        }
+      }
+    } else {
+      const index = client[id].indexOf(instance);
+      if (index > -1) client[id].splice(index, 1);
 
-		const playerSet = new Set(players);
+      const { length } = client[id];
 
-		const has = playerSet.has(username);
+      if (length === 0) {
+        // If sockets are empty, then there are no connections for this client,
+        // so remove it from the object so we can reap the room. If the client
+        // reconnects, they will be readded to the clients objects anyways.
+        delete spectatorList[username];
 
-		if (has) {
-			players.delete(username);
-		} else if (add && players.length < playerMax) {
-			players.add(username);
-		}
+        if (!started) {
+          this.togglePlayer({ username, add: false });
+        }
+      }
+    }
 
-		const playersNew = [...playerSet];
+    // If no more clients, then delete the room.
+    if (Object.keys(spectatorList).length === 0) {
+      this.set('active', false);
+    }
 
-		this.set('host', playersNew[0]);
-		this.set('playerList', playersNew);
+    this.set('spectatorList', spectatorList);
 
-		this.save({}, { useMasterKey: true });
+    this.save({}, { useMasterKey: true });
 
-		return true;
-	}
+    return true;
+  }
 
-	async startGame(data) {
-		const { username } = data;
-		const { shuffleArray } = this;
+  toggleClaim(username) {
+    const players = this.get('hasClaimed');
 
-		const host = this.get('host');
+    const playerSet = new Set(players);
 
-		let players = this.get('playerList');
-		const { length } = players;
+    const has = playerSet.has(username);
 
-		let roles = this.get('roleList').slice(0, length);
+    if (has) {
+      playerSet.delete(username);
+    } else {
+      playerSet.add(username);
+    }
 
-		// Condition
-		const canStart = host === username && length >= 5;
-		if (!canStart) return false;
+    const playersNew = [...playerSet];
 
-		// Start the game
+    this.set('hasClaimed', playersNew);
 
-		players = shuffleArray(players);
-		roles = shuffleArray(roles);
+    this.save({}, { useMasterKey: true });
 
-		this.setRoleKnowledge({ players, length, roles });
+    return true;
+  }
 
-		// Chat
-		const chat = this.get('chat');
-		const settings = this.get('roleSettings');
-		const code = this.get('code');
-		await chat.fetch();
+  async togglePlayer(data) {
+    const { username, add } = data;
 
-		chat.onStart({ settings, code });
+    const players = this.get('playerList');
+    const playerMax = this.get('playerMax');
+    const kicked = this.get('kickedPlayers');
 
-		// Lady
-		const hasLady = this.get('hasLady');
-		const leader = Math.floor(Math.random() * length);
-		const lady = (leader + length) % length;
+    const playerSet = new Set(players);
 
-		if (hasLady) this.set('lady', lady);
+    const has = playerSet.has(username);
 
-		// Set everything
-		this.set('leader', leader);
-		this.set('playerList', players);
-		this.set('roleList', roles);
-		this.set('started', true);
+    if (has) {
+      playerSet.delete(username);
+    } else if (add && players.length < playerMax && !kicked.includes(username)) {
+      playerSet.add(username);
+    }
 
-		this.save({}, { useMasterKey: true });
+    const playersNew = [...playerSet];
 
-		return true;
-	}
+    this.set('host', playersNew[0]);
+    this.set('playerList', playersNew);
 
-	setRoleKnowledge(data) {
-		const { players, length, roles } = data;
+    await this.save({}, { useMasterKey: true });
 
-		const publicKnowledge = this.get('publicKnowledge').slice(0, length);
-		const privateKnowledge = {};
+    return true;
+  }
 
-		const merlin = roles.indexOf('Merlin');
-		const morgana = roles.indexOf('Morgana');
+  async startGame(data) {
+    const { username } = data;
+    const { shuffleArray } = this;
 
-		const seemResToMerlin = ['Resistance', 'Percival', 'Merlin', 'Mordred'];
-		const seemResToSpy = ['Resistance', 'Percival', 'Merlin', 'Oberon'];
+    const host = this.get('host');
 
-		roles.forEach((role, index, array) => {
-			const username = players[index];
-			let knowledge = [...publicKnowledge];
+    let players = this.get('playerList');
+    const { length } = players;
 
-			switch (role) {
-				default:
-					break;
-				case 'Percival':
-					if (merlin > -1) {
-						knowledge[merlin] = 'Merlin?';
-					}
-					if (morgana > -1) {
-						knowledge[morgana] = 'Merlin?';
-					}
-					break;
-				case 'Merlin':
-					knowledge = array.map((r) => (seemResToMerlin.includes(r) ? 'Resistance?' : 'Spy?'));
-					break;
-				case 'Spy':
-				case 'Assassin':
-				case 'Morgana':
-				case 'Mordred':
-					knowledge = array.map((r) => (seemResToSpy.includes(r) ? 'Resistance?' : 'Spy?'));
-					break;
-			}
+    let roles = this.get('roleList').slice(0, length);
 
-			knowledge[index] = role;
+    // Condition
+    const canStart = host === username && length >= 5;
+    if (!canStart) return false;
 
-			privateKnowledge[username] = knowledge;
-		});
+    // Start the game
 
-		this.set('privateKnowledge', privateKnowledge);
+    players = shuffleArray(players);
+    roles = shuffleArray(roles);
 
-		return true;
-	}
+    this.setRoleKnowledge({ players, length, roles });
 
-	async newRound() {
-		const ended = this.get('ended');
+    // Chat
+    const chat = this.get('chat');
+    const settings = this.get('roleSettings');
+    const code = this.get('code');
+    await chat.fetch();
 
-		if (ended) return false;
+    chat.onStart({ settings, code });
 
-		const playerList = this.get('playerList');
-		const { length: players } = playerList;
+    // Lady
+    const hasLady = this.get('hasLady');
+    const leader = Math.floor(Math.random() * length);
+    const lady = (leader + length) % length;
 
-		const hammerDistance = this.get('hammerDistance');
-		let hammer = this.get('hammer');
-		let leader = this.get('leader');
+    if (hasLady) this.set('lady', lady);
 
-		const round = this.get('round');
+    // Set everything
+    this.set('leader', leader);
+    this.set('playerList', players);
+    this.set('roleList', roles);
+    this.set('started', true);
 
-		leader = (leader + 1) % players;
-		if (round === 0) hammer = (leader + hammerDistance) % players;
+    await this.save({}, { useMasterKey: true });
+    this.newRound();
 
-		this.addLeader(leader);
-		this.addPicks([]);
-		this.addVotes([]);
+    return true;
+  }
 
-		const picks = [];
-		const votesMission = [];
+  setRoleKnowledge(data) {
+    const { players, length, roles } = data;
 
-		this.set('stage', 'PICKING');
-		this.set('leader', leader);
-		this.set('hammer', hammer);
-		this.set('picks', picks);
-		this.set('votesMission', votesMission);
+    const publicKnowledge = this.get('publicKnowledge').slice(0, length);
+    const privateKnowledge = {};
 
-		const chat = this.get('chat');
-		await chat.fetch();
-		chat.onPick({ leader: playerList[leader] });
+    const merlin = roles.indexOf('Merlin');
+    const morgana = roles.indexOf('Morgana');
 
-		this.save({}, { useMasterKey: true });
+    const seemResToMerlin = ['Resistance', 'Percival', 'Merlin', 'Mordred'];
+    const seemResToSpy = ['Resistance', 'Percival', 'Merlin', 'Oberon'];
 
-		return true;
-	}
+    roles.forEach((role, index, array) => {
+      const username = players[index];
+      let knowledge = [...publicKnowledge];
 
-	async pickTeam(data) {
-		const { username, picks } = data;
+      switch (role) {
+        default:
+          break;
+        case 'Percival':
+          if (merlin > -1) {
+            knowledge[merlin] = 'Merlin?';
+          }
+          if (morgana > -1) {
+            knowledge[morgana] = 'Merlin?';
+          }
+          break;
+        case 'Merlin':
+          knowledge = array.map((r) =>
+            seemResToMerlin.includes(r) ? 'Resistance?' : 'Spy?'
+          );
+          break;
+        case 'Spy':
+        case 'Assassin':
+        case 'Morgana':
+        case 'Mordred':
+          knowledge = array.map((r) =>
+            seemResToSpy.includes(r) ? 'Resistance?' : 'Spy?'
+          );
+          break;
+      }
 
-		const host = this.get('host');
-		if (username !== host) return false;
+      knowledge[index] = role;
 
-		const playerList = this.get('playerList');
-		const { length: players } = playerList;
-		const { length } = picks;
+      privateKnowledge[username] = knowledge;
+    });
 
-		const stage = this.get('stage');
-		const mission = this.get('mission');
-		const round = this.get('round');
+    this.set('privateKnowledge', privateKnowledge);
 
-		if (stage !== 'PICKING' || length !== playerMatrix[players][mission]) return false;
+    return true;
+  }
 
-		const votesRound = new Array(players).fill(-1);
-		const pickNames = playerList.filter((p, i) => picks.includes(i));
+  async newRound() {
+    const ended = this.get('ended');
 
-		this.addPicks(picks);
+    if (ended) return false;
 
-		this.set('stage', 'VOTING');
-		this.set('picks', picks);
-		this.set('picksYetToVote', picks);
-		this.set('pickNames', pickNames);
-		this.set('votesRound', votesRound);
+    const playerList = this.get('playerList');
+    const { length: players } = playerList;
 
-		const chat = this.get('chat');
-		await chat.fetch();
-		chat.afterPick({ mission: mission + 1, round: round + 1, picks: pickNames });
+    const hammerDistance = this.get('hammerDistance');
+    let hammer = this.get('hammer');
+    let leader = this.get('leader');
 
-		this.save({}, { useMasterKey: true });
+    const round = this.get('round');
 
-		return true;
-	}
+    leader = (leader + 1) % players;
+    if (round === 0) hammer = (leader + hammerDistance) % players;
 
-	async voteForMission(data) {
-		const { username, vote } = data;
+    this.addLeader(leader);
+    this.addPicks([]);
+    this.addVotes([]);
 
-		const stage = this.get('stage');
-		if (stage !== 'VOTING') return false;
+    const picks = [];
+    const votesMission = [];
 
-		const index = this.get('playerList').indexOf(username);
-		const votesRound = this.get('votesRound');
+    this.set('stage', 'PICKING');
+    this.set('leader', leader);
+    this.set('hammer', hammer);
+    this.set('picks', picks);
+    this.set('votesMission', votesMission);
 
-		if (votesRound[index] === -1) {
-			votesRound[index] = vote;
+    const chat = this.get('chat');
+    await chat.fetch();
+    chat.onPick({ leader: playerList[leader] });
 
-			this.set('votesRound', votesRound);
-		} else {
-			return false;
-		}
+    this.save({}, { useMasterKey: true });
 
-		if (!votesRound.includes(-1)) {
-			const outcome = this.countVotes(votesRound);
+    return true;
+  }
 
-			if (outcome) {
-				const pickNames = this.get('pickNames');
+  async pickTeam(data) {
+    const { username, picks } = data;
 
-				this.set('stage', 'MISSION');
+    const playerList = this.get('playerList');
+    const leader = this.get('leader');
 
-				const chat = this.get('chat');
-				await chat.fetch();
+    if (username !== playerList[leader]) return false;
 
-				chat.afterPassing({ picks: pickNames });
-			} else {
-				this.newRound();
-				return true;
-			}
-		}
+    const { length: players } = playerList;
+    const { length } = picks;
 
-		this.save({}, { useMasterKey: true });
+    const stage = this.get('stage');
+    const mission = this.get('mission');
+    const round = this.get('round');
 
-		return true;
-	}
+    if (stage !== 'PICKING' || length !== playerMatrix[players - 5][mission])
+      return false;
 
-	async countVotes(votesRound) {
-		this.addVotes(votesRound);
+    const votesRound = new Array(players).fill(-1);
+    const pickNames = playerList.filter((p, i) => picks.includes(i));
 
-		const { length: players } = this.get('playerList');
+    this.addPicks(picks);
 
-		const chat = this.get('chat');
-		await chat.fetch();
+    this.set('stage', 'VOTING');
+    this.set('picks', picks);
+    this.set('picksYetToVote', picks);
+    this.set('pickNames', pickNames);
+    this.set('votesRound', votesRound);
 
-		const yes = votesRound.reduce((y, v) => (v ? y + 1 : y), 0);
+    const chat = this.get('chat');
+    await chat.fetch();
+    chat.afterPick({ mission: mission + 1, round: round + 1, picks: pickNames });
 
-		const hammerDistance = this.get('hammerDistance');
-		const mission = this.get('mission');
-		const round = this.get('round');
+    this.save({}, { useMasterKey: true });
 
-		if (yes * 2 > players) {
-			chat.afterVote({ mission: mission + 1, round: round + 1, passes: true });
-			return true;
-		}
+    return true;
+  }
 
-		await chat.afterVote({ mission: mission + 1, round: round + 1, passes: false });
+  async voteForMission(data) {
+    const { username, vote } = data;
 
-		if (round === hammerDistance) {
-			this.gameEnd(3);
-		}
+    const stage = this.get('stage');
+    if (stage !== 'VOTING') return false;
 
-		this.increment('round', 1);
+    const index = this.get('playerList').indexOf(username);
+    const votesRound = this.get('votesRound');
 
-		return false;
-	}
+    if (votesRound[index] === -1) {
+      votesRound[index] = vote;
 
-	async voteForSuccess(data) {
-		const { username, vote } = data;
+      this.set('votesRound', votesRound);
+    } else {
+      return false;
+    }
 
-		const stage = this.get('stage');
-		if (stage !== 'MISSION') return false;
+    if (!votesRound.includes(-1)) {
+      await this.save({}, { useMasterKey: true });
+      const outcome = await this.countVotes(votesRound);
 
-		const index = this.get('playerList').indexOf(username);
-		const picksYetToVote = this.get('picksYetToVote');
-		const votesMission = this.get('votesMission');
+      if (outcome) {
+        const pickNames = this.get('pickNames');
 
-		if (picksYetToVote.includes(index)) {
-			votesMission.push(vote);
+        this.set('stage', 'MISSION');
 
-			const i = picksYetToVote.indexOf(index);
-			picksYetToVote.splice(i, 1);
+        const chat = this.get('chat');
+        await chat.fetch();
 
-			this.set('votesMission', votesMission);
-			this.set('picksYetToVote', picksYetToVote);
-		} else {
-			return false;
-		}
+        chat.afterPassing({ picks: pickNames });
+      } else {
+        this.newRound();
+        return true;
+      }
+    }
 
-		if (!picksYetToVote.length) {
-			const outcome = this.didMissionPass();
-			this.addResult(outcome);
+    this.save({}, { useMasterKey: true });
 
-			const mission = this.get('mission');
-			const fails = this.get('fails');
+    return true;
+  }
 
-			const hasLady = this.get('hasLady');
-			const ended = this.get('ended');
+  async countVotes(votesRound) {
+    this.addVotes(votesRound);
 
-			const chat = this.get('chat');
-			await chat.fetch();
+    const { length: players } = this.get('playerList');
 
-			if (mission - fails > 2) {
-				const hasAssassin = this.get('hasAssassin');
+    const chat = this.get('chat');
+    await chat.fetch();
 
-				if (hasAssassin) {
-					const playerList = this.get('playerList');
-					const roleList = this.get('roleList');
+    const yes = votesRound.reduce((y, v) => (v ? y + 1 : y), 0);
 
-					const assassinIndex = roleList.indexOf('Assassin');
+    const hammerDistance = this.get('hammerDistance');
+    const mission = this.get('mission');
+    const round = this.get('round');
 
-					chat.waitingForShot({ assassin: playerList[assassinIndex] });
+    if (yes * 2 > players) {
+      chat.afterVote({ mission: mission + 1, round: round + 1, passes: true });
+      return true;
+    }
 
-					this.set('stage', 'ASSASSINATION');
-				} else {
-					this.gameEnd(4);
-				}
-			} else if (hasLady && mission > 1 && !ended) {
-				const playerList = this.get('playerList');
-				const lady = this.get('lady');
+    await chat.afterVote({ mission: mission + 1, round: round + 1, passes: false });
 
-				chat.waitingForLady({ lady: playerList[lady] });
+    if (round === hammerDistance) {
+      this.gameEnd(3);
+    }
 
-				this.set('stage', 'CARDING');
-			} else {
-				this.newRound();
-				return true;
-			}
-		}
+    this.increment('round', 1);
 
-		this.save({}, { useMasterKey: true });
+    return false;
+  }
 
-		return true;
-	}
+  async voteForSuccess(data) {
+    const { username, vote } = data;
 
-	async didMissionPass() {
-		this.increment('mission', 1);
-		this.set('round', 0);
+    const stage = this.get('stage');
+    if (stage !== 'MISSION') return false;
 
-		const votesMission = this.get('votesMission');
-		const fails = votesMission.reduce((f, v) => (v ? f : f + 1), 0);
+    const index = this.get('playerList').indexOf(username);
+    const picksYetToVote = this.get('picksYetToVote');
+    const votesMission = this.get('votesMission');
 
-		const mission = this.get('mission');
-		const { length: players } = this.get('playerList');
+    if (picksYetToVote.includes(index)) {
+      votesMission.push(vote);
 
-		const chat = this.get('chat');
-		await chat.fetch();
+      const i = picksYetToVote.indexOf(index);
+      picksYetToVote.splice(i, 1);
 
-		if (fails === 0) {
-			chat.afterMission({ mission, fails, passes: true });
-			return true;
-		} else if (fails === 1 && mission === 4 && players > 6) {
-			chat.afterMission({ mission, fails, passes: true });
-			return true;
-		}
+      this.set('votesMission', votesMission);
+      this.set('picksYetToVote', picksYetToVote);
+    } else {
+      return false;
+    }
 
-		await chat.afterMission({ mission, fails, passes: false });
+    if (!picksYetToVote.length) {
+      await this.save({}, { useMasterKey: true });
+      const outcome = await this.didMissionPass();
+      this.addResult(outcome);
 
-		const totalFails = this.get('fails');
+      const mission = this.get('mission');
+      const fails = this.get('fails');
 
-		if (totalFails === 2) {
-			this.gameEnd(2);
-		}
+      const hasLady = this.get('hasLady');
+      const ended = this.get('ended');
 
-		this.increment('fails', 1);
-		return false;
-	}
+      const chat = this.get('chat');
+      await chat.fetch();
 
-	async ladyOfTheLake(data) {
-		const { username, target } = data;
+      if (mission - fails > 2) {
+        const hasAssassin = this.get('hasAssassin');
 
-		const stage = this.get('stage');
-		if (stage !== 'CARDING') return false;
+        if (hasAssassin) {
+          const playerList = this.get('playerList');
+          const roleList = this.get('roleList');
 
-		const players = this.get('playerList');
-		const roles = this.get('roleList');
+          const assassinIndex = roleList.indexOf('Assassin');
 
-		const index = players.indexOf(username);
-		const lady = this.get('lady');
-		const ladyHolders = this.get('ladyHolders');
+          chat.waitingForShot({ assassin: playerList[assassinIndex] });
 
-		if (ladyHolders.includes(target) || index !== lady || index === target) return false;
+          this.set('stage', 'ASSASSINATION');
+        } else {
+          this.gameEnd(4);
+        }
+      } else if (hasLady && mission > 1 && !ended) {
+        const playerList = this.get('playerList');
+        const lady = this.get('lady');
 
-		ladyHolders.push(index);
+        chat.waitingForLady({ lady: playerList[lady] });
 
-		const privateKnowledge = this.get('privateKnowledge')[username];
-		const chat = this.get('chat');
-		await chat.fetch();
+        this.set('stage', 'CARDING');
+      } else {
+        this.newRound();
+        return true;
+      }
+    }
 
-		if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[target])) {
-			privateKnowledge[target] = privateKnowledge[target] === 'Merlin?' ? 'Morgana' : 'Spy';
-			chat.afterCard({ username, target: players[target], spy: true });
-		} else {
-			privateKnowledge[target] = privateKnowledge[target] === 'Merlin?' ? 'Merlin' : 'Resistance';
-			chat.afterCard({ username, target: players[target], spy: true });
-		}
+    this.save({}, { useMasterKey: true });
 
-		this.set('lady', target);
-		this.set('ladyHolders', ladyHolders);
-		this.newRound();
+    return true;
+  }
 
-		return true;
-	}
+  async didMissionPass() {
+    this.increment('mission', 1);
+    this.set('round', 0);
 
-	async shootPlayer(data) {
-		const { username, shot } = data;
+    const votesMission = this.get('votesMission');
+    const fails = votesMission.reduce((f, v) => (v ? f : f + 1), 0);
 
-		const stage = this.get('stage');
-		if (stage !== 'ASSASSINATION') return false;
+    const mission = this.get('mission');
+    const { length: players } = this.get('playerList');
 
-		const players = this.get('playerList');
-		const roles = this.get('roleList');
+    const chat = this.get('chat');
+    await chat.fetch();
 
-		const index = players.indexOf(username);
+    if (fails === 0) {
+      chat.afterMission({ mission, fails, passes: true });
+      return true;
+    } else if (fails === 1 && mission === 4 && players > 6) {
+      chat.afterMission({ mission, fails, passes: true });
+      return true;
+    }
 
-		if (roles[index] !== 'Assassin') return false;
+    await chat.afterMission({ mission, fails, passes: false });
 
-		const killed = roles[shot];
+    const totalFails = this.get('fails');
 
-		if (['Mordred', 'Spy', 'Morgana', 'Assassin'].includes(killed)) {
-			return false;
-		}
+    if (totalFails === 2) {
+      this.gameEnd(2);
+    }
 
-		const chat = this.get('chat');
-		await chat.fetch();
+    this.increment('fails', 1);
+    return false;
+  }
 
-		chat.afterShot({ target: players[shot] });
+  async ladyOfTheLake(data) {
+    const { username, target } = data;
 
-		this.set('assassination', shot);
-		this.gameEnd(killed === 'Merlin' ? 0 : 1);
+    const stage = this.get('stage');
+    if (stage !== 'CARDING') return false;
 
-		this.save({}, { useMasterKey: true });
+    const players = this.get('playerList');
+    const roles = this.get('roleList');
 
-		return true;
-	}
+    const index = players.indexOf(username);
+    const lady = this.get('lady');
+    const ladyHolders = this.get('ladyHolders');
 
-	async gameEnd(ending) {
-		// 0: "Merlin was shot! The Spies Win"
-		// 1: "Merlin was not shot! The Resistance wins"
-		// 2: "Three missions have failed! The Spies Win"
-		// 3: "The hammer was rejected! The Spies Win"
-		// 4: "Three missions have succeeded! The Resistance Wins"
+    if (ladyHolders.includes(target) || index !== lady || index === target) return false;
 
-		const environment = require('./environment').getGlobal();
-		const generalChat = environment.get('chat');
-		await generalChat.fetch();
+    ladyHolders.push(index);
 
-		const code = this.get('code');
-		const chat = this.get('chat');
-		const players = this.get('playerList');
-		const roles = this.get('roleList');
-		await chat.fetch();
+    const privateKnowledge = this.get('privateKnowledge')[username];
+    const chat = this.get('chat');
+    await chat.fetch();
 
-		this.set('ended', true);
-		this.set('cause', ending);
-		this.set('stage', 'NONE');
-		this.set('publicKnowledge', roles);
+    if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[target])) {
+      privateKnowledge[target] =
+        privateKnowledge[target] === 'Merlin?' ? 'Morgana' : 'Spy';
+      chat.afterCard({ username, target: players[target], spy: true });
+    } else {
+      privateKnowledge[target] =
+        privateKnowledge[target] === 'Merlin?' ? 'Merlin' : 'Resistance';
+      chat.afterCard({ username, target: players[target], spy: false });
+    }
 
-		const winner = [1, 4].includes(ending) ? 1 : 0;
+    this.set('lady', target);
+    this.set('ladyHolders', ladyHolders);
+    this.newRound();
 
-		this.set('winner', winner);
+    return true;
+  }
 
-		generalChat.roomFinished({ code: this.roomName, winner });
-		chat.onEnd({ ending, winner });
+  async shootPlayer(data) {
+    const { username, shot } = data;
 
-		const userQ = new Parse.Query('_User');
-		userQ.containedIn('username', players);
+    const stage = this.get('stage');
+    if (stage !== 'ASSASSINATION') return false;
 
-		userQ
-			.find({
-				useMasterKey: true,
-			})
-			.then((userList) => {
-				userList.forEach((u, i) => u.addGameToProfile({ code, role: roles[i].toLowerCase(), winner, cause: ending }));
-			})
-			.catch((err) => console.log(err));
-	}
+    const players = this.get('playerList');
+    const roles = this.get('roleList');
 
-	addPicks(data) {
-		const mission = this.get('mission');
-		const round = this.get('round');
+    const index = players.indexOf(username);
 
-		const missionPicks = this.get('missionPicks');
+    if (roles[index] !== 'Assassin') return false;
 
-		missionPicks[mission][round] = data;
+    const killed = roles[shot];
 
-		this.set('missionPicks', missionPicks);
-	}
+    if (['Mordred', 'Spy', 'Morgana', 'Assassin'].includes(killed)) {
+      return false;
+    }
 
-	addVotes(data) {
-		const mission = this.get('mission');
-		const round = this.get('round');
+    const chat = this.get('chat');
+    await chat.fetch();
 
-		const missionVotes = this.get('missionVotes');
+    chat.afterShot({ target: players[shot] });
 
-		missionVotes[mission][round] = data;
+    this.set('assassination', shot);
+    await this.gameEnd(killed === 'Merlin' ? 0 : 1);
 
-		this.set('missionVotes', missionVotes);
-	}
+    this.save({}, { useMasterKey: true });
 
-	addLeader(data) {
-		const mission = this.get('mission');
+    return true;
+  }
 
-		const missionLeader = this.get('missionLeader');
+  async gameEnd(ending) {
+    // 0: "Merlin was shot! The Spies Win"
+    // 1: "Merlin was not shot! The Resistance wins"
+    // 2: "Three missions have failed! The Spies Win"
+    // 3: "The hammer was rejected! The Spies Win"
+    // 4: "Three missions have succeeded! The Resistance Wins"
 
-		missionLeader[mission].push(data);
+    const listed = this.get('listed');
 
-		this.set('missionLeader', missionLeader);
-	}
+    const environment = require('./environment').getGlobal();
+    const generalChat = environment.get('chat');
+    await generalChat.fetch();
 
-	addResult(data) {
-		const missionResults = this.get('missionResults');
+    const code = this.get('code');
+    const chat = this.get('chat');
+    const players = this.get('playerList');
+    const roles = this.get('roleList');
+    await chat.fetch();
 
-		missionResults.push(data);
+    this.set('ended', true);
+    this.set('cause', ending);
+    this.set('stage', 'NONE');
+    this.set('publicKnowledge', roles);
 
-		this.set('missionResults', missionResults);
-	}
+    const winner = [1, 4].includes(ending) ? 1 : 0;
 
-	toRoomList() {
-		// Define state of game
-		const started = this.get('started');
-		const frozen = this.get('frozen');
-		const ended = this.get('ended');
-		let state = 0;
+    this.set('winner', winner);
 
-		if (!started) {
-			state = 0;
-		} else if (!frozen) {
-			if (!ended) {
-				state = 1;
-			} else {
-				state = 2;
-			}
-		} else {
-			if (!ended) {
-				state = 3;
-			} else {
-				state = 4;
-			}
-		}
+    if (listed) generalChat.roomFinished({ code, winner });
+    chat.onEnd({ ending, winner });
 
-		// Define players and spectators
-		const players = this.get('playerList');
-		let spectators = this.get('spectatorList');
-		spectators = Math.max(Object.keys(spectators).length - players.length, 0);
+    if (!listed) return;
 
-		// Define client
-		const client = {
-			state,
-			spectators,
-			players,
-		};
+    const userQ = new Parse.Query('_User');
+    userQ.containedIn('username', players);
 
-		const parameters = ['code', 'host', 'mode', 'missionResults'];
+    userQ
+      .find({
+        useMasterKey: true,
+      })
+      .then((userList) => {
+        userList.forEach((u) => {
+          const i = players.indexOf(u.get('username'));
 
-		for (const x in parameters) {
-			if (parameters.includes(x)) {
-				client[x] = this.get(x);
-			}
-		}
+          u.addGameToProfile({
+            code,
+            role: roles[i].toLowerCase(),
+            winner,
+            cause: ending,
+          });
+        });
+      })
+      .catch((err) => console.log(err));
+  }
 
-		return client;
-	}
+  addPicks(data) {
+    const mission = this.get('mission');
+    const round = this.get('round');
 
-	toClient() {
-		const client = {};
+    const missionPicks = this.get('missionPicks');
 
-		const parameters = [
-			'code',
-			'host',
-			'playerList',
-			'playerMax',
-			'spectatorList',
-			'kickedPlayers',
-			'roleList',
-			'roleSettings',
-			'hasAssassin',
-			'hasLady',
-			'publicKnowledge',
-			'privateKnowledge',
-			'started',
-			'ended',
-			'frozen',
-			'stage',
-			'cause',
-			'winner',
-			'picks',
-			'picksYetToVote',
-			'pickNames',
-			'votesRound',
-			'votesMission',
-			'leader',
-			'lady',
-			'hammer',
-			'hammerDistance',
-			'assassination',
-			'mission',
-			'round',
-			'fails',
-			'missionResults',
-			'missionPicks',
-			'missionVotes',
-			'missionLeader',
-			'ladyHolders',
-		];
+    missionPicks[mission][round] = data;
 
-		for (const x in parameters) {
-			const y = parameters[x];
+    this.set('missionPicks', missionPicks);
+  }
 
-			client[y] = this.get(y);
-		}
+  addVotes(data) {
+    const mission = this.get('mission');
+    const round = this.get('round');
 
-		return client;
-	}
+    const missionVotes = this.get('missionVotes');
+
+    missionVotes[mission][round] = data;
+
+    this.set('missionVotes', missionVotes);
+  }
+
+  addLeader(data) {
+    const mission = this.get('mission');
+
+    const missionLeader = this.get('missionLeader');
+
+    missionLeader[mission].push(data);
+
+    this.set('missionLeader', missionLeader);
+  }
+
+  addResult(data) {
+    const missionResults = this.get('missionResults');
+
+    missionResults.push(data);
+
+    this.set('missionResults', missionResults);
+  }
+
+  toRoomList() {
+    // Define state of game
+    const started = this.get('started');
+    const frozen = this.get('frozen');
+    const ended = this.get('ended');
+    let state = 0;
+
+    if (!started) {
+      state = 0;
+    } else if (!frozen) {
+      if (!ended) {
+        state = 1;
+      } else {
+        state = 2;
+      }
+    } else {
+      if (!ended) {
+        state = 3;
+      } else {
+        state = 4;
+      }
+    }
+
+    // Define players and spectators
+    const players = this.get('playerList');
+    let spectators = this.get('spectatorList');
+    spectators = Math.max(Object.keys(spectators).length - players.length, 0);
+
+    // Define client
+    const client = {};
+
+    const parameters = ['code', 'host', 'mode', 'missionResults'];
+
+    for (const x in parameters) {
+      const y = parameters[x];
+
+      client[y] = this.get(y);
+    }
+
+    return { ...client, players, spectators, state, avatars: [] };
+  }
+
+  toClient() {
+    const client = {};
+
+    const parameters = [
+      'code',
+      'host',
+      'active',
+      'playerList',
+      'hasClaimed',
+      'avatarList',
+      'playerMax',
+      'spectatorList',
+      'kickedPlayers',
+      'roleList',
+      'roleSettings',
+      'hasAssassin',
+      'hasLady',
+      'publicKnowledge',
+      'privateKnowledge',
+      'started',
+      'ended',
+      'frozen',
+      'stage',
+      'cause',
+      'winner',
+      'picks',
+      'picksYetToVote',
+      'pickNames',
+      'votesRound',
+      'votesMission',
+      'leader',
+      'lady',
+      'hammer',
+      'hammerDistance',
+      'assassination',
+      'mission',
+      'round',
+      'fails',
+      'missionResults',
+      'missionPicks',
+      'missionVotes',
+      'missionLeader',
+      'ladyHolders',
+    ];
+
+    for (const x in parameters) {
+      const y = parameters[x];
+
+      client[y] = this.get(y);
+    }
+
+    return client;
+  }
 }
 
 Parse.Object.registerSubclass('Game', Game);

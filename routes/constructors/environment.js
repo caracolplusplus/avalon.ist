@@ -2,298 +2,312 @@
 const Chat = require('./chat');
 const ipTree = require('../security/trees/ip-tree');
 const emailTree = require('../security/trees/email-tree');
+const discordReports = require('../security/discordReports');
 
 let globalEnvironment = null;
 
 class Environment extends Parse.Object {
-	constructor() {
-		super('Environment');
-	}
+  constructor() {
+    super('Environment');
+  }
 
-	static spawn() {
-		const env = new Environment();
-		const chat = Chat.spawn({ code: 'Global' });
+  static spawn() {
+    const env = new Environment();
+    const chat = Chat.spawn({ code: 'Global' });
 
-		env.set('code', 'Global');
-		env.set('games', 1);
+    env.set('code', 'Global');
+    env.set('games', 1);
 
-		env.set('onMaintenance', false);
+    env.set('onMaintenance', false);
 
-		env.set('discordWebhookURL', '/');
+    env.set('discordWebhookURL', '/');
 
-		env.set('ipBlacklist', require('../security/databases/untrusted-ips'));
-		env.set('emailWhitelist', require('../security/databases/trusted-emails'));
+    env.set('ipBlacklist', require('../security/databases/untrusted-ips'));
+    env.set('emailWhitelist', require('../security/databases/trusted-emails'));
 
-		env.set('avatarLogs', []);
-		env.set('announcementLogs', []);
-		env.set('moderationLogs', []);
-		env.set('errorLogs', []);
+    env.set('avatarLogs', []);
+    env.set('announcementLogs', []);
+    env.set('moderationLogs', []);
+    env.set('errorLogs', []);
 
-		env.set('instanceList', []);
-		env.set('playerList', []);
-		env.set('roomList', []);
+    env.set('playerList', []);
+    env.set('roomList', []);
 
-		env.set('chat', chat);
+    env.set('chat', chat);
 
-		return env;
-	}
+    return env;
+  }
 
-	static initialize() {
-		const envQ = new Parse.Query('Environment');
-		envQ.equalTo('code', 'Global');
+  static initialize() {
+    const envQ = new Parse.Query('Environment');
+    envQ.equalTo('code', 'Global');
 
-		envQ
-			.first({
-				useMasterKey: true,
-			})
-			.then(async (g) => {
-				if (!g) {
-					g = Environment.spawn();
-				}
+    envQ
+      .first({
+        useMasterKey: true,
+      })
+      .then(async (g) => {
+        if (!g) {
+          g = Environment.spawn();
+        }
 
-				g.updateTrees();
+        g.setDiscordHook();
 
-				g.addModerationLog({
-					action: 'ENVIRONMENT STARTED',
-					from: 'Avalon.ist',
-					to: 'Avalon.ist',
-				});
-			})
-			.catch((err) => {
-				console.log(err);
-			});
-	}
+        g.updateTrees();
 
-	static setGlobal(g) {
-		globalEnvironment = g;
-	}
+        g.addModerationLog({
+          action: 'ENVIRONMENT STARTED',
+          from: 'Avalon.ist',
+          to: 'Avalon.ist',
+        });
 
-	static getGlobal() {
-		return globalEnvironment;
-	}
+        Environment.setGlobal(g);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
 
-	validateSignupData(data) {
-		const { address } = data;
+  static setGlobal(g) {
+    globalEnvironment = g;
+  }
 
-		const errors = {
-			blacklisted: `Access denied.
+  static getGlobal() {
+    return globalEnvironment;
+  }
+
+  setDiscordHook() {
+    discordReports.newHook(this.get('discordWebhookURL'));
+  }
+
+  validateSignupData(data) {
+    const { address } = data;
+
+    const errors = {
+      blacklisted: `Access denied.
 		 You are trying to access the site from a blacklisted IP adress. 
 		 Contact the moderation team if you think this is a mistake.`,
-			maintenance: `Access denied.
+      maintenance: `Access denied.
 		 The server is currently on maintenance.`,
-		};
+    };
 
-		const maintenance = this.get('onMaintenance');
-		const blacklisted = ipTree.testIp(address);
+    const maintenance = this.get('onMaintenance');
+    const blacklisted = ipTree.testIp(address);
 
-		if (blacklisted) {
-			throw new Error(errors['blacklisted']);
-		}
+    if (blacklisted) {
+      throw new Error(errors['blacklisted']);
+    }
 
-		if (maintenance) {
-			throw new Error(errors['maintenance']);
-		}
+    if (maintenance) {
+      throw new Error(errors['maintenance']);
+    }
 
-		return true;
-	}
+    return true;
+  }
 
-	testFunction() {
-		console.log('This a test message!');
-	}
+  testFunction() {
+    console.log('This a test message!');
+  }
 
-	checkOnlinePlayers(data) {
-		const { user } = data;
+  checkOnlinePlayers(data) {
+    const { user } = data;
 
-		const userQ = new Parse.Query('_User');
-		userQ.equalTo('isOnline', true);
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('isOnline', true);
 
-		userQ
-			.find({
-				useMasterKey: true,
-			})
-			.then((userList) => {
-				let appears = -1;
-				const username = user.get('username');
+    const moderatorList = [];
 
-				const playerList = userList.map((u, i) => {
-					const client = u.toPlayerList();
-					if (client.username === username) appears = i;
+    userQ
+      .find({
+        useMasterKey: true,
+      })
+      .then((userList) => {
+        let appears = -1;
+        const username = user.get('username');
 
-					return client;
-				});
+        const playerList = userList.map((u, i) => {
+          const client = u.toPlayerList();
+          if (client.username === username) appears = i;
+          if (client.isMod || client.isAdmin) moderatorList.push(client.username);
 
-				if (user.get('isOnline')) {
-					if (appears <= -1) playerList.push(user.toPlayerList());
-				} else {
-					if (appears > -1) playerList.splice(appears, 1);
-				}
+          return client;
+        });
 
-				this.set('playerList', playerList);
+        if (user.get('isOnline')) {
+          if (appears <= -1) playerList.push(user.toPlayerList());
+        } else {
+          if (appears > -1) playerList.splice(appears, 1);
+        }
 
-				this.save({}, { useMasterKey: true, context: { playerList: true } });
-			})
-			.catch((err) => console.log(err));
+        this.set('playerList', playerList);
+        this.set('moderatorList', moderatorList);
 
-		return true;
-	}
+        this.save({}, { useMasterKey: true, context: { playerList: true } });
+      })
+      .catch((err) => console.log(err));
 
-	checkActiveGames() {
-		const gameQ = new Parse.Query('Game');
-		gameQ.equalTo('active', true);
+    return true;
+  }
 
-		gameQ
-			.find({
-				useMasterKey: true,
-			})
-			.then((gameList) => {
-				const roomList = gameList.map((g) => g.toRoomList());
+  checkActiveGames() {
+    const gameQ = new Parse.Query('Game');
+    gameQ.equalTo('active', true);
+    gameQ.equalTo('listed', true);
 
-				this.set('roomList', roomList);
+    gameQ
+      .find({
+        useMasterKey: true,
+      })
+      .then((gameList) => {
+        const roomList = gameList.map((g) => g.toRoomList());
 
-				this.save({}, { useMasterKey: true, context: { roomList: true } });
-			})
-			.catch((err) => console.log(err));
+        this.set('roomList', roomList);
 
-		return true;
-	}
+        this.save({}, { useMasterKey: true, context: { roomList: true } });
+      })
+      .catch((err) => console.log(err));
 
-	updateTrees() {
-		const ipBlacklist = this.get('ipBlacklist');
-		const emailWhitelist = this.get('emailWhitelist');
+    return true;
+  }
 
-		ipTree.setTree(ipBlacklist);
-		emailTree.setTree(emailWhitelist);
+  updateTrees() {
+    const ipBlacklist = this.get('ipBlacklist');
+    const emailWhitelist = this.get('emailWhitelist');
 
-		return true;
-	}
+    ipTree.setTree(ipBlacklist);
+    emailTree.setTree(emailWhitelist);
 
-	toggleIps(data) {
-		const { ips, add } = data;
+    return true;
+  }
 
-		const ipBlacklist = this.get('ipBlacklist');
+  toggleIps(data) {
+    const { ips, add } = data;
 
-		const set = new Set(ipBlacklist);
+    const ipBlacklist = this.get('ipBlacklist');
 
-		ips.forEach((e) => {
-			if (add) {
-				set.add(e);
-			} else {
-				set.delete(e);
-			}
-		});
+    const set = new Set(ipBlacklist);
 
-		this.set('ipBlacklist', [...set]);
+    ips.forEach((e) => {
+      if (add) {
+        set.add(e);
+      } else {
+        set.delete(e);
+      }
+    });
 
-		this.save({}, { useMasterKey: true, context: { kick: add, ips } });
+    this.set('ipBlacklist', [...set]);
 
-		return true;
-	}
+    this.save({}, { useMasterKey: true, context: { kick: add, ips } });
 
-	toggleEmails(data) {
-		const { emails, add } = data;
+    return true;
+  }
 
-		const emailWhitelist = this.get('emailWhitelist');
+  toggleEmails(data) {
+    const { emails, add } = data;
 
-		const set = new Set(emailWhitelist);
+    const emailWhitelist = this.get('emailWhitelist');
 
-		emails.forEach((e) => {
-			if (add) {
-				set.add(e);
-			} else {
-				set.delete(e);
-			}
-		});
+    const set = new Set(emailWhitelist);
 
-		this.set('emailWhitelist', [...set]);
+    emails.forEach((e) => {
+      if (add) {
+        set.add(e);
+      } else {
+        set.delete(e);
+      }
+    });
 
-		this.save({}, { useMasterKey: true });
+    this.set('emailWhitelist', [...set]);
 
-		return true;
-	}
+    this.save({}, { useMasterKey: true });
 
-	toggleMaintenance() {
-		const onMaintenance = this.get('onMaintenance');
+    return true;
+  }
 
-		this.set('onMaintenance', !onMaintenance);
+  toggleMaintenance() {
+    const onMaintenance = this.get('onMaintenance');
 
-		this.save({}, { useMasterKey: true });
+    this.set('onMaintenance', !onMaintenance);
 
-		return true;
-	}
+    this.save({}, { useMasterKey: true });
 
-	addAvatarLog(data) {
-		const avatarLogs = this.get('avatarLogs');
+    return true;
+  }
 
-		avatarLogs.push({
-			user: 'Anonymous',
-			avatar: 'https://i.ibb.co/M8RXC95/base-res.png',
-			timestamp: Date.now(),
-			...data,
-		});
+  addAvatarLog(data) {
+    const avatarLogs = this.get('avatarLogs');
 
-		this.set('avatarLogs', avatarLogs);
+    avatarLogs.push({
+      user: data.user,
+      avatar: data.res,
+      timestamp: Date.now(),
+    });
 
-		this.save({}, { useMasterKey: true });
+    this.set('avatarLogs', avatarLogs);
 
-		return true;
-	}
+    this.save({}, { useMasterKey: true });
 
-	addAnnouncement(data) {
-		const announcementLogs = this.get('announcementLogs');
+    return true;
+  }
 
-		announcementLogs.push({
-			id: 'untitled',
-			title: 'Untitled Article',
-			author: 'Anonymous',
-			timestamp: Date.now(),
-			content: 'There is nothing in this article',
-			...data,
-		});
+  async addAnnouncement(data) {
+    const announcementLogs = this.get('announcementLogs');
 
-		this.set('announcementLogs', announcementLogs);
+    announcementLogs.push({
+      id: 'untitled',
+      title: 'Untitled Article',
+      author: 'Anonymous',
+      timestamp: Date.now(),
+      content: 'There is nothing in this article',
+      ...data,
+    });
 
-		this.save({}, { useMasterKey: true });
+    this.set('announcementLogs', announcementLogs);
 
-		return true;
-	}
+    await this.save({}, { useMasterKey: true });
 
-	addModerationLog(data) {
-		const moderationLogs = this.get('moderationLogs');
+    return true;
+  }
 
-		moderationLogs.push({
-			action: 'NO ACTION',
-			from: 'Anonymous',
-			to: 'Anonymous',
-			comment: 'No comment',
-			info: {},
-			duration: NaN,
-			timestamp: Date.now(),
-			...data,
-		});
+  addModerationLog(data) {
+    const moderationLogs = this.get('moderationLogs');
 
-		this.set('moderationLogs', moderationLogs);
+    moderationLogs.push({
+      action: 'NO ACTION',
+      from: 'Anonymous',
+      to: 'Anonymous',
+      comment: 'No comment',
+      info: {},
+      duration: NaN,
+      timestamp: Date.now(),
+      ...data,
+    });
 
-		this.save({}, { useMasterKey: true });
+    this.set('moderationLogs', moderationLogs);
 
-		return true;
-	}
+    this.save({}, { useMasterKey: true });
 
-	addErrorLog(data) {
-		const errorLogs = this.get('errorLogs') || [];
+    return true;
+  }
 
-		errorLogs.push({
-			message: 'No message',
-			stack: 'No stack',
-			timestamp: Date.now(),
-			...data,
-		});
+  addErrorLog(data) {
+    const errorLogs = this.get('errorLogs') || [];
 
-		this.set('errorLogs', errorLogs);
+    errorLogs.push({
+      message: 'No message',
+      stack: 'No stack',
+      timestamp: Date.now(),
+      ...data,
+    });
 
-		this.save({}, { useMasterKey: true });
+    discordReports.newError(data);
 
-		return true;
-	}
+    this.set('errorLogs', errorLogs);
+
+    this.save({}, { useMasterKey: true });
+
+    return true;
+  }
 }
 
 Parse.Object.registerSubclass('Environment', Environment);

@@ -2,12 +2,18 @@
 const ipTree = require('../security/trees/ip-tree');
 const emailTree = require('../security/trees/email-tree');
 
+const { generalChat } = require('../rooms');
+
 Parse.User.allowCustomUserClass(true);
 
 class User extends Parse.User {
   constructor(attributes) {
     super(attributes);
 
+    this.set('socketsOnline', {});
+  }
+
+  setValid() {
     this.set('avatars', {
       spy: 'https://i.ibb.co/sJcthnM/base-spy.png',
       res: 'https://i.ibb.co/M8RXC95/base-res.png',
@@ -52,11 +58,11 @@ class User extends Parse.User {
     this.set('tauntCooldown', Date.now());
     this.set('messageCooldown', [0]);
 
-    this.set('validUser', false);
+    this.set('validUser', true);
   }
 
   validateLoginData() {
-    if (this.get('validUser')) return;
+    if (this.has('validUser')) return;
 
     const usernameRegex = /^[0-9a-zA-Z\-_.]{3,15}$/;
     const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
@@ -85,7 +91,7 @@ class User extends Parse.User {
       throw new Error(errors['domain']);
     }
 
-    this.set('validUser', true);
+    this.setValid();
 
     return true;
   }
@@ -100,10 +106,12 @@ class User extends Parse.User {
     const suspensionDate = this.get('suspensionDate');
     const currentDate = Date.now();
 
+    if (!commonUser) return false;
+
     const banned = this.get('isBanned');
     const suspended = suspensionDate > currentDate;
-    const maintenance = commonUser && environment.get('onMaintenance');
-    const ipBanned = commonUser && ipTree.testIp(address);
+    const maintenance = environment.get('onMaintenance');
+    const ipBanned = ipTree.testIp(address);
 
     const errors = {
       banned: `Access denied, your account has been permanently banned.`,
@@ -142,17 +150,18 @@ class User extends Parse.User {
   joinPresence(data) {
     const { id } = data;
 
-    const socketsOnline = this.get('socketsOnline');
+    let socketsOnline = this.get('socketsOnline');
 
-    if (!socketsOnline.sockets) {
-      socketsOnline.sockets = [];
-      socketsOnline.sockets.push(id);
+    if (!socketsOnline[generalChat]) {
+      socketsOnline = {};
+      socketsOnline[generalChat] = [];
+      socketsOnline[generalChat].push(id);
     } else {
-      socketsOnline.sockets.push(id);
+      socketsOnline[generalChat].push(id);
     }
 
     this.set('socketsOnline', socketsOnline);
-    this.set('isOnline', socketsOnline.sockets.length > 0);
+    this.set('isOnline', socketsOnline[generalChat].length > 0);
 
     this.save({}, { useMasterKey: true });
 
@@ -164,15 +173,17 @@ class User extends Parse.User {
 
     const socketsOnline = this.get('socketsOnline');
 
-    if (!socketsOnline.sockets) {
+    if (!(generalChat in socketsOnline)) {
       console.log(`Trying to leave presence has failed.`);
-    } else {
-      const index = socketsOnline.sockets.indexOf(id);
-      if (index > -1) socketsOnline.sockets.splice(index, 1);
-    }
 
-    this.set('socketsOnline', socketsOnline);
-    this.set('isOnline', socketsOnline.sockets.length > 0);
+      this.set('isOnline', false);
+    } else {
+      const index = socketsOnline[generalChat].indexOf(id);
+      if (index > -1) socketsOnline[generalChat].splice(index, 1);
+
+      this.set('socketsOnline', socketsOnline);
+      this.set('isOnline', socketsOnline[generalChat].length > 0);
+    }
 
     this.save({}, { useMasterKey: true });
 
@@ -193,7 +204,7 @@ class User extends Parse.User {
     hours = parseFloat(hours);
     hours = isNaN(hours) ? 1 : hours;
 
-    this.get('suspensionDate', Date.now() + hours * 3600000);
+    this.set('suspensionDate', Date.now() + hours * 3600000);
 
     this.save({}, { useMasterKey: true, context: { kick: true } });
 
@@ -214,6 +225,8 @@ class User extends Parse.User {
     this.set('bio', bio);
     this.set('nationality', nationality);
 
+    console.log('hello');
+
     this.save({}, { useMasterKey: true });
 
     return true;
@@ -228,7 +241,15 @@ class User extends Parse.User {
   }
 
   setTheme(data) {
-    const { playArea, playTabs, playFontSize, avatarSize, avatarStyle, themeLight, coloredNames } = data;
+    const {
+      playArea,
+      playTabs,
+      playFontSize,
+      avatarSize,
+      avatarStyle,
+      themeLight,
+      coloredNames,
+    } = data;
 
     this.set('playArea', playArea);
     this.set('playTabs', playTabs);
@@ -273,6 +294,14 @@ class User extends Parse.User {
     this.set('games', games);
     this.set('gameStats', gameStats);
     this.set('gameShots', gameShots);
+
+    this.save({}, { useMasterKey: true });
+
+    return true;
+  }
+
+  addTaunt() {
+    this.set('tauntCooldown', Date.now() + 15000);
 
     this.save({}, { useMasterKey: true });
 

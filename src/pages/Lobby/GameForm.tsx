@@ -1,5 +1,6 @@
 // External
 
+// eslint-disable-next-line no-unused-vars
 import React, { FormEvent } from 'react';
 import { Redirect } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -29,7 +30,7 @@ interface GameFormProps {
     assassin: boolean;
     oberon: boolean;
     mordred: boolean;
-    card: boolean;
+    lady: boolean;
   };
   initialPlayerMax?: number;
 }
@@ -44,11 +45,12 @@ interface GameFormState {
     assassin: boolean;
     oberon: boolean;
     mordred: boolean;
-    card: boolean;
+    lady: boolean;
   };
   redirect: boolean;
   processing: boolean;
   playerRoom: number;
+  listed: boolean;
 }
 
 // Declaration
@@ -68,11 +70,12 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
             assassin: true,
             oberon: false,
             mordred: false,
-            card: false,
+            lady: false,
           },
       redirect: false,
       processing: false,
       playerRoom: -1,
+      listed: true,
     };
     this.createGameSuccess = this.createGameSuccess.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -87,7 +90,7 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
     assassin: true,
     oberon: false,
     mordred: false,
-    card: false,
+    lady: false,
   };
 
   eightPlayers = {
@@ -97,7 +100,7 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
     assassin: true,
     oberon: false,
     mordred: false,
-    card: true,
+    lady: true,
   };
 
   ninePlayers = {
@@ -107,7 +110,7 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
     assassin: true,
     oberon: false,
     mordred: true,
-    card: true,
+    lady: true,
   };
 
   tenPlayers = {
@@ -117,7 +120,7 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
     assassin: true,
     oberon: true,
     mordred: true,
-    card: true,
+    lady: true,
   };
 
   playerMaxList = [
@@ -224,7 +227,7 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
       this.setState({
         roleSettings: {
           ...this.state.roleSettings,
-          card: !this.state.roleSettings.card,
+          lady: !this.state.roleSettings.lady,
         },
       }),
   ];
@@ -233,9 +236,18 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
     socket.on('createGameSuccess', this.createGameSuccess);
   }
 
+  handleListed = () => {
+    this.setState({
+      listed: !this.state.listed,
+    });
+  };
+
   handleSubmit(event: FormEvent) {
     event.preventDefault();
-    this.setState({ processing: true }, this.props.createsGame ? this.sendCreateRequest : this.sendModifyRequest);
+    this.setState(
+      { processing: true },
+      this.props.createsGame ? this.sendCreateRequest : this.sendModifyRequest
+    );
   }
 
   createGameSuccess(data: number) {
@@ -249,14 +261,15 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
   sendCreateRequest() {
     socket.emit('createGame', {
       roleSettings: this.state.roleSettings,
-      maxPlayers: this.state.playerMax,
+      playerMax: this.state.playerMax,
+      listed: this.state.listed,
     });
   }
 
   sendModifyRequest() {
     socket.emit('editGame', {
       roleSettings: this.state.roleSettings,
-      maxPlayers: this.state.playerMax,
+      playerMax: this.state.playerMax,
     });
 
     this.props.onExit();
@@ -272,58 +285,85 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
       <div className="settings-form">
         {this.state.redirect ? <Redirect to={'/game/' + this.state.playerRoom} /> : null}
         <AvalonScrollbars>
-        <form autoComplete="off" onSubmit={this.handleSubmit}>
-          <p className="title">{this.props.title}</p>
-          <div className="input-container">
-            <p className="handle">Player Max</p>{' '}
-            <List
-              onClick={this.togglePlayerMax}
-              show={this.state.showPlayerMax}
-              title={this.state.playerMax.toString()}
-              objects={this.playerMaxList}
-            />
-          </div>
-          <p className="subtitle">Roles</p>
-          <div className="input-container">
-            <Slider value={this.state.roleSettings.merlin} onClick={this.roleSwitchList[0]} />
-            <p className="handle">Merlin</p>
-          </div>
-          <div className="input-container">
-            <Slider value={this.state.roleSettings.percival} onClick={this.roleSwitchList[1]} />
-            <p className="handle">Percival</p>
-          </div>
-          <div className="input-container">
-            <Slider value={this.state.roleSettings.morgana} onClick={this.roleSwitchList[2]} />
-            <p className="handle">Morgana</p>
-          </div>
-          <div className="input-container">
-            <Slider value={this.state.roleSettings.assassin} onClick={this.roleSwitchList[3]} />
-            <p className="handle">Assassin</p>
-          </div>
-          <div className="input-container">
-            <Slider value={this.state.roleSettings.oberon} onClick={this.roleSwitchList[4]} />
-            <p className="handle">Oberon</p>
-          </div>
-          <div className="input-container">
-            <Slider value={this.state.roleSettings.mordred} onClick={this.roleSwitchList[5]} />
-            <p className="handle">Mordred</p>
-          </div>
-          <p className="subtitle">Cards</p>
-          <div className="input-container">
-            <Slider value={this.state.roleSettings.card} onClick={this.roleSwitchList[6]} />
-            <p className="handle">Lady of the Lake</p>
-          </div>
-          {this.state.processing ? null : (
-            <div className="buttons">
-              <button className="bt-cancel" type="button" onClick={this.props.onExit}>
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-              <button className="bt-accept" type="submit">
-                <FontAwesomeIcon icon={faCheck} />
-              </button>
+          <form autoComplete="off" onSubmit={this.handleSubmit}>
+            <p className="title">{this.props.title}</p>
+            <div className="input-container">
+              <p className="handle">Player Max</p>{' '}
+              <List
+                onClick={this.togglePlayerMax}
+                show={this.state.showPlayerMax}
+                title={this.state.playerMax.toString()}
+                objects={this.playerMaxList}
+              />
             </div>
-          )}
-        </form>
+            {this.props.createsGame ? (
+              <div className="input-container">
+                <Slider value={this.state.listed} onClick={this.handleListed} />
+                <p className="handle">{this.state.listed ? 'Public' : 'Private'}</p>
+              </div>
+            ) : null}
+            <p className="subtitle">Roles</p>
+            <div className="input-container">
+              <Slider
+                value={this.state.roleSettings.merlin}
+                onClick={this.roleSwitchList[0]}
+              />
+              <p className="handle">Merlin</p>
+            </div>
+            <div className="input-container">
+              <Slider
+                value={this.state.roleSettings.percival}
+                onClick={this.roleSwitchList[1]}
+              />
+              <p className="handle">Percival</p>
+            </div>
+            <div className="input-container">
+              <Slider
+                value={this.state.roleSettings.morgana}
+                onClick={this.roleSwitchList[2]}
+              />
+              <p className="handle">Morgana</p>
+            </div>
+            <div className="input-container">
+              <Slider
+                value={this.state.roleSettings.assassin}
+                onClick={this.roleSwitchList[3]}
+              />
+              <p className="handle">Assassin</p>
+            </div>
+            <div className="input-container">
+              <Slider
+                value={this.state.roleSettings.oberon}
+                onClick={this.roleSwitchList[4]}
+              />
+              <p className="handle">Oberon</p>
+            </div>
+            <div className="input-container">
+              <Slider
+                value={this.state.roleSettings.mordred}
+                onClick={this.roleSwitchList[5]}
+              />
+              <p className="handle">Mordred</p>
+            </div>
+            <p className="subtitle">Cards</p>
+            <div className="input-container">
+              <Slider
+                value={this.state.roleSettings.lady}
+                onClick={this.roleSwitchList[6]}
+              />
+              <p className="handle">Lady of the Lake</p>
+            </div>
+            {this.state.processing ? null : (
+              <div className="buttons">
+                <button className="bt-cancel" type="button" onClick={this.props.onExit}>
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+                <button className="bt-accept" type="submit">
+                  <FontAwesomeIcon icon={faCheck} />
+                </button>
+              </div>
+            )}
+          </form>
         </AvalonScrollbars>
       </div>
     );

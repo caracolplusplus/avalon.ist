@@ -1,15 +1,21 @@
 const { gameRoom } = require('../../routes/rooms');
 
 const afterGameSave = async (request) => {
-	const game = request.object;
+  const game = request.object;
 
-	const { io } = require('../../routes/init');
+  const { io } = require('../../routes/init');
 
-	const code = game.get('code');
+  const code = game.get('code');
+  const active = game.get('active');
+  const ended = game.get('ended');
 
-	io.to(gameRoom + code).emit('gameResponse', game.toClient());
+  if (!active && !ended) {
+    io.to(gameRoom + code).emit('gameNotFound');
+    return true;
+  }
 
-	return true;
+  io.to(gameRoom + code).emit('gameResponse', game.toClient());
+  return true;
 };
 
 module.exports = afterGameSave;

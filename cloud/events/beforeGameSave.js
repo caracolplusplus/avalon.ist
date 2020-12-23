@@ -1,9 +1,9 @@
-const environment = require('../../routes/constructors/environment');
-
 const beforeGameSave = async (request) => {
-	environment.checkActiveGames();
+  const environment = require('../../routes/constructors/environment').getGlobal();
 
-	return true;
+  environment.checkActiveGames();
+
+  return true;
 };
 
 module.exports = beforeGameSave;

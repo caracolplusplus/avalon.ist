@@ -1,5 +1,6 @@
 // External
 
+// eslint-disable-next-line no-unused-vars
 import React, { ChangeEvent, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -17,43 +18,40 @@ import '../styles/Login.scss';
 
 // Declaration
 
-class Login extends React.PureComponent<
-  {},
-  {
-    error: string | null;
-    username: string;
-    password: string;
-  }
-> {
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      error: null,
-      username: '',
-      password: '',
-    };
-    this.handleUsernameChange = this.handleUsernameChange.bind(this);
-    this.handlePasswordChange = this.handlePasswordChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
+interface LoginState {
+  error: string | null;
+  username: string;
+  password: string;
+}
 
-  handleUsernameChange(event: ChangeEvent<HTMLInputElement>) {
+class Login extends React.PureComponent<{}, LoginState> {
+  state = {
+    error: null,
+    username: '',
+    password: '',
+  };
+
+  handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({
       username: event.target.value,
     });
-  }
+  };
 
-  handlePasswordChange(event: ChangeEvent<HTMLInputElement>) {
+  handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
     this.setState({
       password: event.target.value,
     });
-  }
+  };
 
-  handleSubmit(event: FormEvent) {
+  handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+
     this.setState({ error: null });
-    login(this.state.username, this.state.password, (err) => this.setState({ error: err }));
-  }
+    
+    login(this.state.username, this.state.password, (err) =>
+      this.setState({ error: err })
+    );
+  };
 
   render() {
     return (
@@ -65,16 +63,23 @@ class Login extends React.PureComponent<
               <h1>THE RESISTANCE: AVALON</h1>
               <h2>WILL GOOD TRIUMPH OVER EVIL?</h2>
               <p>
-                <strong>The Resistance: Avalon</strong> is a social deduction game created by Don Eskridge.
+                <strong>The Resistance: Avalon</strong> is a social deduction game created
+                by Don Eskridge.
               </p>
               <p className="last">
-                Based on Arthurian legend, the loyal servants of Arthur work together to find the members of the
-                Resistance while protecting the identity of Merlin. The minions of Mordred attempt to sneak onto the
-                Resistance team in order to deduce the identity of Merlin and assassinate him. Will the minions of
-                Mordred kill Merlin, or will the loyal servants triumph over evil?
+                Based on Arthurian legend, the loyal servants of Arthur work together to
+                find the members of the Resistance while protecting the identity of
+                Merlin. The minions of Mordred attempt to sneak onto the Resistance team
+                in order to deduce the identity of Merlin and assassinate him. Will the
+                minions of Mordred kill Merlin, or will the loyal servants triumph over
+                evil?
               </p>
-              <p className="last">The game is free to play on this site, and always will be.</p>
-              {this.state.error ? <p className="error">Error: {this.state.error}</p> : null}
+              <p className="last">
+                The game is free to play on this site, and always will be.
+              </p>
+              {this.state.error ? (
+                <p className="error">Error: {this.state.error}</p>
+              ) : null}
               <div className="glow" />
               <div className="after-glow">
                 <Input
@@ -95,7 +100,7 @@ class Login extends React.PureComponent<
                 <p>
                   <Link to="/signup">Sign up</Link>
                 </p>
-                <p className="footnote">Avalon.ist 1.0.0.</p>
+                <p className="footnote">Avalon.ist 2021</p>
               </div>
             </form>
           </div>

@@ -33,17 +33,17 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
   }
 
   componentDidMount() {
-    socket.on('latestAvatarsResponse', this.onResponse);
+    socket.on('avatarsResponse', this.onResponse);
 
-    socket.emit('latestAvatarsRequest');
+    socket.emit('avatarsRequest');
   }
 
   componentWillUnmount() {
-    socket.off('latestAvatarsResponse', this.onResponse);
+    socket.off('avatarsResponse', this.onResponse);
   }
 
-  onResponse = (urlList: string[]) => {
-    urlList = urlList.reverse();
+  onResponse = (avatarList: any) => {
+    const urlList: string[] = avatarList.map((a: any) => a.avatar).reverse();
     this.setState({ urlList });
   };
 

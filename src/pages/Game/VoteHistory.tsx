@@ -8,6 +8,7 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons';
 
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
+// eslint-disable-next-line no-unused-vars
 import GameState from './GameState';
 
 // Styles
@@ -38,7 +39,11 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps> {
     for (let i = 0; i < 5; i++) {
       if (game.missionVotes[i].length > 0)
         items.push(
-          <th className={'vh-row mission ' + game.results[i]} colSpan={game.missionVotes[i].length} key={'Mission' + i}>
+          <th
+            className={'vh-row mission ' + game.results[i]}
+            colSpan={game.missionVotes[i].length}
+            key={'Mission' + i}
+          >
             Mission {i + 1}
           </th>
         );
@@ -64,7 +69,9 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps> {
           game.missionVotes[i].map((v, iv) => (
             <td
               className={
-                (game.missionLeader[i][iv] === props.ip ? 'leader ' : '') + 'vh-vote ' + votes[v[props.ip] + 1]
+                (game.missionLeader[i][iv] === props.ip ? 'leader ' : '') +
+                'vh-vote ' +
+                votes[v[props.ip] + 1]
               }
               key={'M' + i + iv + 'P' + props.ip}
             >
@@ -103,7 +110,11 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps> {
     }
 
     const items = holders.map((p, i) => (
-      <td className="vh-row lotl" key={'holder' + i} colSpan={game.missionVotes[i].length}>
+      <td
+        className="vh-row lotl"
+        key={'holder' + i}
+        colSpan={game.missionVotes[i].length}
+      >
         {game.players[p]}
       </td>
     ));
@@ -127,7 +138,9 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps> {
                 {this.props.game.players.map((p, i_p) => (
                   <this.SetPlayers ip={i_p} p={p} key={p} />
                 ))}
-                {this.props.game.started && this.props.game.card > -1 ? <this.DisplayCardHolders /> : null}
+                {this.props.game.started && this.props.game.card > -1 ? (
+                  <this.DisplayCardHolders />
+                ) : null}
               </tbody>
             </table>
           )}

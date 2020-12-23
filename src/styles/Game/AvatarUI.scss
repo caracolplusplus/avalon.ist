@@ -118,6 +118,20 @@
           filter: grayscale(60%);
         }
       }
+      .claim {
+        transform: translate(-50%, -50%);
+        width: 30%;
+        height: 30%;
+        top: 30%;
+        left: 5%;
+        position: absolute;
+        z-index: 2;
+        svg {
+          color: #00e0bb !important;
+          height: 100%;
+          width: 100%;
+        }
+      }
       .ave-shield {
         transform: translate(-50%, -50%);
         position: absolute;

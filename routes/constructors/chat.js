@@ -1,712 +1,528 @@
-/* global Parse, Set */
+/* global Parse */
 const messageTypes = {
-	HELP: 'help',
-	COMMAND: 'command',
-	CLIENT: 'client',
-	SERVER: 'server',
-	POSITIVE: 'positive',
-	NEGATIVE: 'negative',
-	BROADCAST: 'broadcast',
-	QUOTE: 'quote',
+  SERVER: 'server',
+  POSITIVE: 'positive',
+  NEGATIVE: 'negative',
 };
 
-const helpMod = {
-	1: [
-		'Moderation Actions',
-		"/ss {player} {hours?} - Enacts a temporary suspension on the given player's account.",
-		"/unss {player} - Lifts a temporary suspension from the given player's account.",
-		"/ban {player} - Enacts a permanent ban on the given player's account.",
-		"/unban {player} - Lifts a permanent ban from the given player's account.",
-		"/banip {player} - Enacts a permanent ban on the given player's account and its correspondent IPs.",
-		'/unbanip {ip} - Lifts a permanent ban on the given IP address.',
-		'/logs - Retrieves moderation logs and prints them in browser console.',
-		'/maintenance - Toggles the maintenance feature of the site. It will disconnect everyone if its currently on maintenance.',
-	],
-	2: [
-		'Game Moderation Actions',
-		'/pause {room code} - Pauses the specified game and no actions can be performed while the game is paused.',
-		'/unpause {room code} - Unpauses the specified game and actions can be performed again.',
-		'/end {room code} {outcome?} - Ends the specified game with the specified outcome. Entering 1 will make Resistance win, entering 0 will make Spy win. Not entering any outcome will void the game.',
-		'/close {room code} - Closes the specified game and kicks every player in the room.',
-		'/learnroles {room code} - Shows the roles of all the players in the specified game.',
-	],
-	3: [
-		'URL Handlers',
-		'/aveset {user} {res url} {spy url} - Sets the URLs for the Avatars of this player.',
-		'/discordset {url} - Sets the URL for the Reports Webhook on Discord.',
-	],
-	4: [
-		'Buzzes',
-		'/dm {player} {message} - Sends a direct message to the player specified. The direct message will send a notification to the player.',
-		'/lick {player} - Show your love to someone by licking them!',
-		'/slap {player} - If you prefer something more aggressive, try slapping them!',
-		'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
-	],
-	5: [
-		'Miscelaneous',
-		'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
-		'/flip - Flips a coin.',
-		'/clear - Clears the chat.',
-	],
-};
+const gameName = 'Avalon.ist Game';
 
-const helpClient = {
-	1: [
-		'Buzzes',
-		'/dm {moderator} {message} - Sends a direct message to the moderator specified.',
-		'/lick {player} - Show your love to someone by licking them!',
-		'/slap {player} - If you prefer something more aggressive, try slapping them!',
-		'/buzz {player} - However, if you just want to call their attention, try buzzing them!',
-	],
-	2: [
-		'Miscelaneous',
-		'/roll {sides?} - Rolls a die. Enter a number to change the number of sides.',
-		'/flip - Flips a coin.',
-		'/clear - Clears the chat.',
-	],
-};
+const addMessage = (data) => {
+  // This function must be updated in client as well
 
-const serverName = 'Avalon.ist';
+  const { SERVER } = messageTypes;
+
+  const timestamp = Date.now();
+  const id = timestamp;
+
+  const message = {
+    _public: true,
+    type: SERVER,
+    from: gameName,
+    to: [],
+    content: 'Hello World!',
+    timestamp,
+    ...data,
+    id,
+  };
+
+  return message;
+};
 
 class Chat extends Parse.Object {
-	constructor() {
-		super('Chat');
+  constructor() {
+    super('Chat');
+  }
 
-		this.set('messages', []);
-		this.set('messageCap', 1000);
-	}
+  static spawn({ code }) {
+    const chat = new Chat();
 
-	static spawn({ code }) {
-		const chat = new Chat();
+    chat.set('code', code);
+    chat.set('messages', []);
+    chat.set('messageCap', 1000);
 
-		chat.set('code', code);
-		chat.set('messages', []);
-		chat.set('messageCap', 1000);
+    return chat;
+  }
 
-		return chat;
-	}
+  async saveMessages(newMessages) {
+    await this.fetch();
 
-	setCode(code) {
-		this.set('code', code);
-	}
+    const messages = this.get('messages');
+    const messageCap = this.get('messageCap');
 
-	addMessage(data) {
-		const { SERVER } = messageTypes;
+    const env = require('./environment').getGlobal();
+    const modList = env.get('moderatorList');
 
-		const messages = this.get('messages');
-		const messageCap = this.get('messageCap');
+    newMessages = newMessages.filter((m) => {
+      const { type, to, from } = m;
 
-		const timestamp = Date.now();
-		const id = `${timestamp}.${messages.length}`;
+      if (type !== 'direct' || modList.includes(from) || modList.includes(to[0]))
+        return true;
 
-		messages.push({
-			_public: true,
-			type: SERVER,
-			from: serverName,
-			to: [],
-			content: 'Hello World!',
-			timestamp,
-			...data,
-			id,
-		});
+      return false;
+    });
 
-		while (messages.length > messageCap) messages.shift();
+    if (!newMessages.length) return false;
 
-		this.set('messages', messages);
+    messages.push(...newMessages);
 
-		return true;
-	}
+    while (messages.length > messageCap) messages.shift();
 
-	zalgoTest(data) {
-		const zalgo = /%CC%/g;
+    this.set('messages', messages);
 
-		return zalgo.test(encodeURIComponent(data));
-	}
+    this.save({}, { useMasterKey: true, context: { messages: newMessages } });
 
-	sendMessage(data) {
-		const { COMMAND, CLIENT } = messageTypes;
-		const { username, content } = data;
+    return true;
+  }
 
-		const hasZalgo = this.zalgoTest(content);
+  moderationAction(data) {
+    const { content, username, target, comment, action } = data;
+    const environment = require('./environment').getGlobal();
 
-		this.addMessage(
-			hasZalgo
-				? {
-						type: COMMAND,
-						_public: false,
-						content: 'You are trying to post a message with invalid characters. Please, refrain from doing it.',
-						to: [username],
-				  }
-				: {
-						type: CLIENT,
-						from: username,
-						content,
-				  }
-		);
+    this.saveMessages([
+      addMessage({
+        content,
+      }),
+    ]);
 
-		this.save({}, { useMasterKey: true });
+    environment.addModerationLog({
+      action,
+      from: username,
+      to: target,
+      comment,
+    });
 
-		return true;
-	}
+    return true;
+  }
 
-	findQuote(data) {
-		const { CLIENT, QUOTE, COMMAND } = messageTypes;
-		const { username, content } = data;
-		const messages = this.get('messages');
+  newAnnouncement(content) {
+    this.saveMessages([
+      addMessage({
+        content,
+      }),
+    ]);
 
-		let quotesExist = false;
+    return true;
+  }
 
-		const quoteTrimmer = (x) => x.trim();
-		const quoteRegex = /[0-9]{2}:[0-9]{2} /;
+  newTaunt(data) {
+    const { title, target } = data;
 
-		let quotes = content.split(quoteRegex).map(quoteTrimmer);
+    this.saveMessages([
+      addMessage({
+        content: title.replace('You', target).replace('have', 'has'),
+      }),
+    ]);
 
-		quotes = new Set(quotes);
+    return true;
+  }
 
-		messages.forEach((message) => {
-			const { type, _public, from, content: _content } = message;
+  roomCreated(data) {
+    const { username, code } = data;
 
-			if (_public) {
-				const referent = type === CLIENT ? `${from}:${_content}` : _content;
+    this.saveMessages([
+      addMessage({
+        content: `${username} has created Room #${code}.`,
+      }),
+    ]);
 
-				if (!quotes.has(referent)) return false;
+    return true;
+  }
 
-				quotes.delete(referent);
+  roomFinished(data) {
+    const { POSITIVE, NEGATIVE } = messageTypes;
+    const { code, winner } = data;
+
+    const outcome = winner ? 'The Resistance Wins' : 'The Spies Win';
+
+    this.saveMessages([
+      addMessage({
+        content: `Game #${code} has finished. ${outcome}.`,
+        type: winner ? POSITIVE : NEGATIVE,
+      }),
+    ]);
 
-				if (!quotesExist) {
-					this.addMessage({
-						content: `${username} quotes:`,
-					});
+    return true;
+  }
 
-					quotesExist = true;
-				}
+  onStart(data) {
+    const { settings, code } = data;
+
+    const arr = [];
 
-				const quote = { ...message, type: QUOTE };
+    const roles = {
+      merlin: 'Merlin',
+      percival: 'Percival',
+      morgana: 'Morgana',
+      assassin: 'Assassin',
+      oberon: 'Oberon',
+      mordred: 'Mordred',
+      lady: 'Lady of the Lake',
+      empty: 'No special roles',
+    };
 
-				this.addMessage(quote);
-			}
-		});
+    for (const r in settings) {
+      const active = settings[r];
 
-		if (!quotesExist)
-			this.addMessage({
-				type: COMMAND,
-				_public: false,
-				content: `Quote received doesn't exist`,
-				to: [username],
-			});
+      if (active) arr.push(roles[r]);
+    }
 
-		this.save({}, { useMasterKey: true });
+    if (!arr.length) arr.push(roles['empty']);
 
-		return true;
-	}
+    this.saveMessages([
+      addMessage({
+        content: `Room ${code} starts with: ${arr.join(', ')}.`,
+      }),
+    ]);
 
-	roomCreated(data) {
-		const { username, code } = data;
+    return true;
+  }
 
-		this.addMessage({
-			content: `${username} has created Room ${code}.`,
-		});
+  onPick(data) {
+    const { leader } = data;
 
-		this.save({}, { useMasterKey: true });
+    this.saveMessages([
+      addMessage({
+        content: `Waiting for ${leader} to select a team.`,
+      }),
+    ]);
 
-		return true;
-	}
+    return true;
+  }
 
-	roomFinished(data) {
-		const { code, winner } = data;
-		const outcome = winner ? 'The Resistance Wins' : 'The Spies Win';
+  afterPick(data) {
+    const { mission, round, picks } = data;
+
+    this.saveMessages([
+      addMessage({
+        content: `Mission ${mission}.${round} picked: ${picks.join(', ')}.`,
+      }),
+      addMessage({
+        content: 'Everybody vote.',
+      }),
+    ]);
 
-		this.addMessage({
-			content: `Game ${code} has finished. ${outcome}.`,
-		});
+    return true;
+  }
+
+  async afterVote(data) {
+    const { mission, round, passes } = data;
+
+    const result = passes ? 'approved' : 'rejected';
+
+    this.saveMessages([
+      addMessage({
+        content: `Everybody has voted! Mission ${mission}.${round} has been ${result}.`,
+      }),
+    ]);
+
+    return true;
+  }
 
-		this.save({}, { useMasterKey: true });
+  afterPassing(data) {
+    const { picks } = data;
 
-		return true;
-	}
-
-	onStart(data) {
-		const { settings, code } = data;
-
-		const arr = [];
-
-		const roles = {
-			merlin: 'Merlin',
-			percival: 'Percival',
-			morgana: 'Morgana',
-			assassin: 'Assassin',
-			oberon: 'Oberon',
-			mordred: 'Mordred',
-			lady: 'Lady of the Lake',
-			empty: 'No special roles',
-		};
-
-		for (const r in settings) {
-			const active = settings[r];
-
-			if (active) arr.push(roles[r]);
-		}
-
-		if (!arr.length) arr.push(roles['empty']);
-
-		this.addMessage({
-			content: `Room ${code} starts with: ${arr.join(', ')}.`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	onPick(data) {
-		const { leader } = data;
-
-		this.addMessage({
-			content: `Waiting for ${leader} to select a team.`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	afterPick(data) {
-		const { mission, round, picks } = data;
-
-		this.addMessage({
-			content: `Mission ${mission}.${round} picked: ${picks.join(', ')}.`,
-		});
-		this.addMessage({
-			content: 'Everybody vote.',
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	async afterVote(data) {
-		const { mission, round, passes } = data;
-
-		const result = passes ? 'approved' : 'rejected';
-
-		this.addMessage({
-			content: `Everybody has voted! Mission ${mission}.${round} has been ${result}.`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	afterPassing(data) {
-		const { picks } = data;
-
-		this.addMessage({
-			content: `Waiting for ${picks.join(', ')} to choose the fate of this mission.`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	async afterMission(data) {
-		const { NEGATIVE, POSITIVE } = messageTypes;
-		const { mission, fails, passes } = data;
-
-		const result = passes ? 'succeded' : 'failed';
-
-		const failCount = [`.`, ` with 1 fail.`, ` with ${fails} fails.`];
-
-		const failResult = fails < 2 ? failCount[fails] : failCount[2];
-
-		this.addMessage({
-			type: passes ? POSITIVE : NEGATIVE,
-			content: `Mission ${mission} has ${result}${failResult}`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	waitingForShot(data) {
-		const { assassin } = data;
-
-		this.addMessage({
-			content: `Waiting for ${assassin} to select a target.`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	waitingForLady(data) {
-		const { lady } = data;
-
-		this.addMessage({
-			content: `Waiting for ${lady} to use Lady of the Lake.`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	afterCard(data) {
-		const { NEGATIVE, POSITIVE } = messageTypes;
-		const { username, target, spy } = data;
-
-		const result = spy ? 'a Spy' : 'a member of the Resistance.';
-
-		this.addMessage({
-			content: `${username} has used Lady of the Lake on ${target}.`,
-		});
-		this.addMessage({
-			type: spy ? NEGATIVE : POSITIVE,
-			_public: false,
-			content: `${target} is ${result}`,
-			to: [username],
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	afterShot(data) {
-		const { target } = data;
-
-		this.addMessage({
-			content: `${target} was shot.`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	onEnd(data) {
-		const { NEGATIVE, POSITIVE } = messageTypes;
-		const { ending, winner } = data;
-		const code = this.get('code');
-
-		const type = winner ? POSITIVE : NEGATIVE;
-
-		const endingResult = [
-			'Merlin has been killed! The Spies Win.',
-			'Merlin was not killed! The Resistance wins.',
-			'Three missions have failed! The Spies Win.',
-			'Mission hammer was rejected! The Spies Win.',
-			'Three missions have succeeded! The Resistance wins.',
-		][ending];
-
-		this.addMessage({
-			type,
-			content: `Game ${code} has finished.`,
-		});
-		this.addMessage({
-			type,
-			content: endingResult,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	onVoid() {
-		const code = this.get('code');
-
-		this.addMessage({
-			content: `Room ${code} has been voided.`,
-		});
-
-		return true;
-	}
-
-	kickPlayer(data) {
-		const { NEGATIVE } = messageTypes;
-		const { host, player } = data;
-
-		this.addMessage({
-			type: NEGATIVE,
-			content: `${player} has been kicked by ${host}`,
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	getCommandHelp(data) {
-		const { COMMAND, HELP } = messageTypes;
-		const { username, mod, page } = data;
-
-		const pageMax = mod ? 5 : 2;
-
-		let pageInt = parseInt(page);
-		pageInt = isNaN(pageInt) || pageInt < 1 || pageInt > pageMax ? 1 : pageInt;
-
-		const help = mod ? helpMod[pageInt] : helpClient[pageInt];
-
-		help.forEach((content, i) =>
-			this.addMessage({
-				type: i ? COMMAND : HELP,
-				_public: false,
-				content,
-				to: [username],
-			})
-		);
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	suspendPlayer(data) {
-		const { COMMAND } = messageTypes;
-		const { username, target, hours, comment } = data;
-
-		const userQ = new Parse.Query('_User');
-		userQ.equalTo('username', target);
-
-		userQ
-			.first({ useMasterKey: true })
-			.then((u) => {
-				if (u) {
-					const environment = require('./environment').getGlobal();
-					const h = u.setSuspension({ hours });
-
-					this.addMessage({
-						type: COMMAND,
-						_public: false,
-						content: `${target} has been suspended for ${h} hour${h === 1 ? '' : 's'}.`,
-						to: [username],
-					});
-
-					environment.addModerationLog({
-						duration: h,
-						action: 'SUSPENSION',
-						from: username,
-						to: target,
-						comment,
-					});
-
-					this.save({}, { useMasterKey: true });
-				}
-			})
-			.catch((e) => console.log(e));
-	}
-
-	revokeSuspension(data) {
-		const { COMMAND } = messageTypes;
-		const { username, target, comment } = data;
-
-		const userQ = new Parse.Query('_User');
-		userQ.equalTo('username', target);
-
-		userQ
-			.first({ useMasterKey: true })
-			.then((u) => {
-				if (u) {
-					const environment = require('./environment').getGlobal();
-					u.revokeSuspension();
-
-					this.addMessage({
-						type: COMMAND,
-						_public: false,
-						content: `${target} has been unsuspended.`,
-						to: [username],
-					});
-
-					environment.addModerationLog({
-						action: 'REVOKE SUSPENSION',
-						from: username,
-						to: target,
-						comment,
-					});
-
-					this.save({}, { useMasterKey: true });
-				}
-			})
-			.catch((e) => console.log(e));
-	}
-
-	banPlayer(data) {
-		const { COMMAND } = messageTypes;
-		const { username, target, comment } = data;
-
-		const userQ = new Parse.Query('_User');
-		userQ.equalTo('username', target);
-
-		userQ
-			.first({ useMasterKey: true })
-			.then((u) => {
-				if (u) {
-					const environment = require('./environment').getGlobal();
-					u.toggleBan(true);
-
-					this.addMessage({
-						type: COMMAND,
-						_public: false,
-						content: `${target} has been banned.`,
-						to: [username],
-					});
-
-					environment.addModerationLog({
-						action: 'BAN',
-						from: username,
-						to: target,
-						comment,
-					});
-
-					this.save({}, { useMasterKey: true });
-				}
-			})
-			.catch((e) => console.log(e));
-	}
-
-	revokeBan(data) {
-		const { COMMAND } = messageTypes;
-		const { username, target, comment } = data;
-
-		const userQ = new Parse.Query('_User');
-		userQ.equalTo('username', target);
-
-		userQ
-			.first({ useMasterKey: true })
-			.then((u) => {
-				if (u) {
-					const environment = require('./environment').getGlobal();
-					u.toggleBan(false);
-
-					this.addMessage({
-						type: COMMAND,
-						_public: false,
-						content: `${target} has been unbanned.`,
-						to: [username],
-					});
-
-					environment.addModerationLog({
-						action: 'REVOKE BAN',
-						from: username,
-						to: target,
-						comment,
-					});
-
-					this.save({}, { useMasterKey: true });
-				}
-			})
-			.catch((e) => console.log(e));
-	}
-
-	banPlayerIP(data) {
-		const { COMMAND } = messageTypes;
-		const { username, target, comment } = data;
-
-		const userQ = new Parse.Query('_User');
-		userQ.equalTo('username', target);
-
-		userQ
-			.first({ useMasterKey: true })
-			.then((u) => {
-				if (u) {
-					const environment = require('./environment').getGlobal();
-					const ips = u.get('addressList');
-					u.toggleBan(false);
-
-					this.addMessage({
-						type: COMMAND,
-						_public: false,
-						content: `${target} has been banned and all their IP adresses are blacklisted.`,
-						to: [username],
-					});
-
-					environment.toggleIps({ ips, add: true });
-
-					environment.addModerationLog({
-						action: 'BAN IP',
-						from: username,
-						to: target,
-						comment,
-						info: {
-							ips,
-						},
-					});
-
-					this.save({}, { useMasterKey: true });
-				}
-			})
-			.catch((e) => console.log(e));
-	}
-
-	revokeIPBan(data) {
-		const { COMMAND } = messageTypes;
-		const { username, ips, comment } = data;
-
-		const environment = require('./environment').getGlobal();
-
-		this.addMessage({
-			type: COMMAND,
-			_public: false,
-			content: `Addresses ${ips.join(', ')} has been whitelisted.`,
-			to: [username],
-		});
-
-		environment.toggleIps({ ips, add: false });
-
-		environment.addModerationLog({
-			action: 'REVOKE IP BAN',
-			from: username,
-			comment,
-			info: {
-				ips,
-			},
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
-
-	getLogs(data) {
-		const { COMMAND } = messageTypes;
-		const { username } = data;
-		const environment = require('./environment').getGlobal();
-
-		this.addMessage({
-			type: COMMAND,
-			_public: false,
-			content: `Moderation Logs Received. Open Browser Console.`,
-			to: [username],
-		});
-
-		this.save({}, { useMasterKey: true });
-
-		return environment.get('moderationLogs');
-	}
-
-	toggleMaintenance(data) {
-		const { COMMAND } = messageTypes;
-		const { username } = data;
-		const environment = require('./environment').getGlobal();
-
-		this.addMessage({
-			type: COMMAND,
-			_public: false,
-			content: `Maintenance mode was toggled.`,
-			to: [username],
-		});
-
-		environment.toggleMaintenance();
-
-		this.save({}, { useMasterKey: true });
-
-		return true;
-	}
+    this.saveMessages([
+      addMessage({
+        content: `Waiting for ${picks.join(', ')} to choose the fate of this mission.`,
+      }),
+    ]);
+
+    return true;
+  }
+
+  async afterMission(data) {
+    const { NEGATIVE, POSITIVE } = messageTypes;
+    const { mission, fails, passes } = data;
+
+    const result = passes ? 'succeded' : 'failed';
+
+    const failCount = [`.`, ` with 1 fail.`, ` with ${fails} fails.`];
+
+    const failResult = fails < 2 ? failCount[fails] : failCount[2];
+
+    this.saveMessages([
+      addMessage({
+        type: passes ? POSITIVE : NEGATIVE,
+        content: `Mission ${mission} has ${result}${failResult}`,
+      }),
+    ]);
+
+    return true;
+  }
+
+  waitingForShot(data) {
+    const { assassin } = data;
+
+    this.saveMessages([
+      addMessage({
+        content: `Waiting for ${assassin} to select a target.`,
+      }),
+    ]);
+
+    return true;
+  }
+
+  waitingForLady(data) {
+    const { lady } = data;
+
+    this.saveMessages([
+      addMessage({
+        content: `Waiting for ${lady} to use Lady of the Lake.`,
+      }),
+    ]);
+
+    this.save({}, { useMasterKey: true });
+
+    return true;
+  }
+
+  afterCard(data) {
+    const { NEGATIVE, POSITIVE } = messageTypes;
+    const { username, target, spy } = data;
+
+    const result = spy ? 'a Spy' : 'a member of the Resistance.';
+
+    this.saveMessages([
+      addMessage({
+        content: `${username} has used Lady of the Lake on ${target}.`,
+      }),
+      addMessage({
+        type: spy ? NEGATIVE : POSITIVE,
+        _public: false,
+        content: `${target} is ${result}`,
+        to: [username],
+      }),
+    ]);
+
+    return true;
+  }
+
+  afterShot(data) {
+    const { target } = data;
+
+    this.saveMessages([
+      addMessage({
+        content: `${target} was shot.`,
+      }),
+    ]);
+
+    return true;
+  }
+
+  onEnd(data) {
+    const { NEGATIVE, POSITIVE } = messageTypes;
+    const { ending, winner } = data;
+
+    const code = this.get('code');
+
+    const type = winner ? POSITIVE : NEGATIVE;
+
+    const endingResult = [
+      'Merlin has been killed! The Spies Win.',
+      'Merlin was not killed! The Resistance wins.',
+      'Three missions have failed! The Spies Win.',
+      'Mission hammer was rejected! The Spies Win.',
+      'Three missions have succeeded! The Resistance wins.',
+    ][ending];
+
+    this.saveMessages([
+      addMessage({
+        type,
+        content: `Game ${code} has finished.`,
+      }),
+      addMessage({
+        type,
+        content: endingResult,
+      }),
+    ]);
+
+    return true;
+  }
+
+  onVoid() {
+    const code = this.get('code');
+
+    this.saveMessages([
+      addMessage({
+        content: `Room ${code} has been voided.`,
+      }),
+    ]);
+
+    return true;
+  }
+
+  async suspendPlayer(data) {
+    const { username, target, hours, comment } = data;
+
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('username', target);
+
+    return await userQ
+      .first({ useMasterKey: true })
+      .then((u) => {
+        if (u) {
+          const environment = require('./environment').getGlobal();
+          const h = u.setSuspension({ hours });
+
+          environment.addModerationLog({
+            duration: h,
+            action: 'SUSPENSION',
+            from: username,
+            to: target,
+            comment,
+          });
+
+          this.save({}, { useMasterKey: true });
+
+          return `${target} has been suspended for ${h} hour${h === 1 ? '' : 's'}.`;
+        }
+
+        return `No player exists with username "${target}".`;
+      })
+      .catch((e) => console.log(e));
+  }
+
+  async revokeSuspension(data) {
+    const { username, target, comment } = data;
+
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('username', target);
+
+    return await userQ
+      .first({ useMasterKey: true })
+      .then((u) => {
+        if (u) {
+          const environment = require('./environment').getGlobal();
+          u.revokeSuspension();
+
+          environment.addModerationLog({
+            action: 'REVOKE SUSPENSION',
+            from: username,
+            to: target,
+            comment,
+          });
+
+          this.save({}, { useMasterKey: true });
+          return `${target} has been unsuspended.`;
+        }
+
+        return `No player exists with username "${target}".`;
+      })
+      .catch((e) => console.log(e));
+  }
+
+  async banPlayer(data) {
+    const { username, target, comment } = data;
+
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('username', target);
+
+    return await userQ
+      .first({ useMasterKey: true })
+      .then((u) => {
+        if (u) {
+          const environment = require('./environment').getGlobal();
+          u.toggleBan(true);
+
+          environment.addModerationLog({
+            action: 'BAN',
+            from: username,
+            to: target,
+            comment,
+          });
+
+          this.save({}, { useMasterKey: true });
+          return `${target} has been banned.`;
+        }
+
+        return `No player exists with username "${target}".`;
+      })
+      .catch((e) => console.log(e));
+  }
+
+  async revokeBan(data) {
+    const { username, target, comment } = data;
+
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('username', target);
+
+    return await userQ
+      .first({ useMasterKey: true })
+      .then((u) => {
+        if (u) {
+          const environment = require('./environment').getGlobal();
+          u.toggleBan(false);
+
+          environment.addModerationLog({
+            action: 'REVOKE BAN',
+            from: username,
+            to: target,
+            comment,
+          });
+
+          this.save({}, { useMasterKey: true });
+          return `${target} has been unbanned.`;
+        }
+
+        return `No player exists with username "${target}".`;
+      })
+      .catch((e) => console.log(e));
+  }
+
+  async banPlayerIP(data) {
+    const { username, target, comment } = data;
+
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('username', target);
+
+    return await userQ
+      .first({ useMasterKey: true })
+      .then((u) => {
+        if (u) {
+          const environment = require('./environment').getGlobal();
+          const ips = u.get('addressList');
+          u.toggleBan(false);
+
+          environment.toggleIps({ ips, add: true });
+
+          environment.addModerationLog({
+            action: 'BAN IP',
+            from: username,
+            to: target,
+            comment,
+            info: {
+              ips,
+            },
+          });
+
+          this.save({}, { useMasterKey: true });
+          return `${target} has been banned and all their IP adresses are blacklisted.`;
+        }
+
+        return `No player exists with username "${target}".`;
+      })
+      .catch((e) => console.log(e));
+  }
+
+  revokeIPBan(data) {
+    const { username, ips, comment } = data;
+
+    const environment = require('./environment').getGlobal();
+
+    environment.toggleIps({ ips, add: false });
+
+    environment.addModerationLog({
+      action: 'REVOKE IP BAN',
+      from: username,
+      comment,
+      info: {
+        ips,
+      },
+    });
+
+    return `Addresses ${ips.join(', ')} has been whitelisted.`;
+  }
 }
 
 Parse.Object.registerSubclass('Chat', Chat);
