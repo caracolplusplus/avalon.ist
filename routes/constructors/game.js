@@ -642,8 +642,8 @@ class Game extends Parse.Object {
 
     if (!picksYetToVote.length) {
       const outcome = await this.didMissionPass();
-      await this.save({}, { useMasterKey: true });
       this.addResult(outcome);
+      await this.save({}, { useMasterKey: true });
 
       const mission = this.get('mission');
       const fails = this.get('fails');
@@ -676,7 +676,7 @@ class Game extends Parse.Object {
         chat.waitingForLady({ lady: playerList[lady] });
 
         this.set('stage', 'CARDING');
-      } else {
+      } else if (!ended) {
         this.newRound();
         return true;
       }
