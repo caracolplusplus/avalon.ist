@@ -5,7 +5,7 @@ async function joinPresence(io, socket) {
   const { user, id } = socket;
   const username = user.get('username');
 
-  await user.fetch();
+  await user.fetch({ useMasterKey: true });
 
   user.joinPresence({ id });
   socket.join(generalChat);

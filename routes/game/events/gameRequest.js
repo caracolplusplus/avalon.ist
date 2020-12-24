@@ -9,7 +9,7 @@ function gameRequest(io, socket) {
 
     if (!game) return;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
 
     const code = game.get('code');
 
@@ -39,8 +39,8 @@ function gameRequest(io, socket) {
           return;
         }
 
-        await user.fetch();
-        await g.fetch();
+        await user.fetch({ useMasterKey: true });
+        await g.fetch({ useMasterKey: true });
 
         g.addClient({
           username,

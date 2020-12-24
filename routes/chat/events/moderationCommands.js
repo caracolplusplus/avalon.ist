@@ -207,7 +207,7 @@ function moderationCommands(io, socket) {
       });
 
       const chat = environment.get('chat');
-      await chat.fetch();
+      await chat.fetch({ useMasterKey: true });
       await res;
 
       chat.newAnnouncement(`New announcement: "${data.title}".`);

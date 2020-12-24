@@ -45,7 +45,7 @@ class Chat extends Parse.Object {
   }
 
   async saveMessages(newMessages) {
-    await this.fetch();
+    await this.fetch({ useMasterKey: true });
 
     const messages = this.get('messages');
     const messageCap = this.get('messageCap');

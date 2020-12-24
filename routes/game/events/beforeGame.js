@@ -22,7 +22,7 @@ function beforeGame(io, socket) {
       environment.increment('games');
 
       const chat = environment.get('chat');
-      await chat.fetch();
+      await chat.fetch({ useMasterKey: true });
 
       chat.roomCreated({ username, code });
 
@@ -62,7 +62,7 @@ function beforeGame(io, socket) {
     const { roleSettings, playerMax } = data;
     const { game } = socket;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
 
     game.editSettings({ roleSettings, playerMax });
   });
@@ -70,7 +70,7 @@ function beforeGame(io, socket) {
   socket.on('joinLeaveGame', async () => {
     const { game } = socket;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
 
     game.togglePlayer({ username, add: true });
   });
@@ -78,7 +78,7 @@ function beforeGame(io, socket) {
   socket.on('toggleClaim', async () => {
     const { game } = socket;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
 
     game.toggleClaim(username);
   });
@@ -87,7 +87,7 @@ function beforeGame(io, socket) {
     const { game } = socket;
     const { kick } = data;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
 
     await game.addToKick(data);
     game.togglePlayer({ username: kick, add: false });
@@ -96,7 +96,7 @@ function beforeGame(io, socket) {
   socket.on('startGame', async () => {
     const { game } = socket;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
 
     game.startGame({ username });
   });

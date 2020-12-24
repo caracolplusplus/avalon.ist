@@ -2,7 +2,7 @@ function editProfile(io, socket) {
 	const { user } = socket;
 
 	socket.on('editProfile', async (data) => {
-		await user.fetch();
+		await user.fetch({ useMasterKey: true });
 
 		await user.setProfile(data);
 

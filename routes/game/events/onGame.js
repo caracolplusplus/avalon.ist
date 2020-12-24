@@ -8,7 +8,7 @@ function onGame(io, socket) {
 
     if (!game) return;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
     game.pickTeam({ username, picks });
   });
 
@@ -18,7 +18,7 @@ function onGame(io, socket) {
 
     if (!game) return;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
     game.voteForMission({ username, vote });
   });
 
@@ -28,7 +28,7 @@ function onGame(io, socket) {
 
     if (!game) return;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
     game.voteForSuccess({ username, vote });
   });
 
@@ -38,7 +38,7 @@ function onGame(io, socket) {
 
     if (!game) return;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
     game.ladyOfTheLake({ username, target: carded });
   });
 
@@ -48,7 +48,7 @@ function onGame(io, socket) {
 
     if (!game) return;
 
-    await game.fetch();
+    await game.fetch({ useMasterKey: true });
     game.shootPlayer({ username, shot });
   });
 }

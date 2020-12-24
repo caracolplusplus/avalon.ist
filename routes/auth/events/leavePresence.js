@@ -5,7 +5,7 @@ function leavePresence(io, socket) {
 	const { user, id } = socket;
 
 	socket.on('disconnect', async () => {
-		await user.fetch();
+		await user.fetch({ useMasterKey: true });
 
 		user.leavePresence({ id });
 		socket.leave(generalChat);

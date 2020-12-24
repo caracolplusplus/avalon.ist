@@ -4,7 +4,7 @@ function chatRequest(io, socket) {
 
     const chat = environment.get('chat');
 
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
 
     socket.emit('generalChatResponse', chat.get('messages'));
   });
@@ -16,7 +16,7 @@ function chatRequest(io, socket) {
 
     const chat = game.get('chat');
 
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
 
     socket.emit('gameChatResponse', chat.get('messages'));
   });

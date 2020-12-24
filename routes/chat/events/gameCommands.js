@@ -38,7 +38,7 @@ function gameCommands(io, socket) {
             g.set('frozen', true);
             g.save({}, { useMasterKey: true });
 
-            await chat.fetch();
+            await chat.fetch({ useMasterKey: true });
             chat.moderationAction({
               action: 'PAUSE GAME',
               content: `Game #${code} has been paused.`,
@@ -82,7 +82,7 @@ function gameCommands(io, socket) {
             g.set('frozen', false);
             g.save({}, { useMasterKey: true });
 
-            await chat.fetch();
+            await chat.fetch({ useMasterKey: true });
             chat.moderationAction({
               action: 'UNPAUSE GAME',
               content: `Game #${code} has been resumed.`,
@@ -131,7 +131,7 @@ function gameCommands(io, socket) {
 
             g.save({}, { useMasterKey: true });
 
-            await chat.fetch();
+            await chat.fetch({ useMasterKey: true });
             chat.moderationAction({
               action: 'END GAME',
               content: `Game #${code} has been ${outcome ? 'terminated' : 'voided'}.`,
@@ -175,7 +175,7 @@ function gameCommands(io, socket) {
             g.set('active', false);
             g.save({}, { useMasterKey: true });
 
-            await chat.fetch();
+            await chat.fetch({ useMasterKey: true });
             chat.moderationAction({
               action: 'CLOSE GAME',
               content: `Game #${code} has been closed.`,
@@ -223,7 +223,7 @@ function gameCommands(io, socket) {
             g.set('privateKnowledge', knowledge);
             g.save({}, { useMasterKey: true });
 
-            await chat.fetch();
+            await chat.fetch({ useMasterKey: true });
             chat.moderationAction({
               action: 'LEARNT ROLES',
               content: `A moderator has learnt the roles for this game.`,

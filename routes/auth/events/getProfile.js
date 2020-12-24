@@ -6,7 +6,7 @@ function getProfile(io, socket) {
 
 		userQ.first({ useMasterKey: true }).then(async (u) => {
 			if (u) {
-				await u.fetch();
+				await u.fetch({ useMasterKey: true });
 
 				socket.emit('saveProfile', u.toProfilePage());
 			} else {

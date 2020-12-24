@@ -393,7 +393,7 @@ class Game extends Parse.Object {
     const chat = this.get('chat');
     const settings = this.get('roleSettings');
     const code = this.get('code');
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
 
     chat.onStart({ settings, code });
 
@@ -499,7 +499,7 @@ class Game extends Parse.Object {
     this.set('votesMission', votesMission);
 
     const chat = this.get('chat');
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
     chat.onPick({ leader: playerList[leader] });
 
     this.save({}, { useMasterKey: true });
@@ -537,7 +537,7 @@ class Game extends Parse.Object {
     this.set('votesRound', votesRound);
 
     const chat = this.get('chat');
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
     chat.afterPick({ mission: mission + 1, round: round + 1, picks: pickNames });
 
     this.save({}, { useMasterKey: true });
@@ -572,7 +572,7 @@ class Game extends Parse.Object {
         this.set('stage', 'MISSION');
 
         const chat = this.get('chat');
-        await chat.fetch();
+        await chat.fetch({ useMasterKey: true });
 
         chat.afterPassing({ picks: pickNames });
       } else {
@@ -592,7 +592,7 @@ class Game extends Parse.Object {
     const { length: players } = this.get('playerList');
 
     const chat = this.get('chat');
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
 
     const yes = votesRound.reduce((y, v) => (v ? y + 1 : y), 0);
 
@@ -650,7 +650,7 @@ class Game extends Parse.Object {
       const ended = this.get('ended');
 
       const chat = this.get('chat');
-      await chat.fetch();
+      await chat.fetch({ useMasterKey: true });
 
       if (mission - fails > 2) {
         const hasAssassin = this.get('hasAssassin');
@@ -696,7 +696,7 @@ class Game extends Parse.Object {
     const { length: players } = this.get('playerList');
 
     const chat = this.get('chat');
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
 
     if (fails === 0) {
       chat.afterMission({ mission, fails, passes: true });
@@ -737,7 +737,7 @@ class Game extends Parse.Object {
 
     const privateKnowledge = this.get('privateKnowledge')[username];
     const chat = this.get('chat');
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
 
     if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[target])) {
       privateKnowledge[target] =
@@ -776,7 +776,7 @@ class Game extends Parse.Object {
     }
 
     const chat = this.get('chat');
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
 
     chat.afterShot({ target: players[shot] });
 
@@ -799,13 +799,13 @@ class Game extends Parse.Object {
 
     const environment = require('./environment').getGlobal();
     const generalChat = environment.get('chat');
-    await generalChat.fetch();
+    await generalChat.fetch({ useMasterKey: true });
 
     const code = this.get('code');
     const chat = this.get('chat');
     const players = this.get('playerList');
     const roles = this.get('roleList');
-    await chat.fetch();
+    await chat.fetch({ useMasterKey: true });
 
     this.set('ended', true);
     this.set('cause', ending);
