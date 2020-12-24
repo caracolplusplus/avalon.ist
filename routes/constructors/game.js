@@ -608,7 +608,7 @@ class Game extends Parse.Object {
     await chat.afterVote({ mission: mission + 1, round: round + 1, passes: false });
 
     if (round === hammerDistance) {
-      this.gameEnd(3);
+      await this.gameEnd(3);
     }
 
     this.increment('round', 1);
@@ -642,6 +642,7 @@ class Game extends Parse.Object {
       await this.save({}, { useMasterKey: true });
       const outcome = await this.didMissionPass();
       this.addResult(outcome);
+      await this.save({}, { useMasterKey: true });
 
       const mission = this.get('mission');
       const fails = this.get('fails');
@@ -665,7 +666,7 @@ class Game extends Parse.Object {
 
           this.set('stage', 'ASSASSINATION');
         } else {
-          this.gameEnd(4);
+          await this.gameEnd(4);
         }
       } else if (hasLady && mission > 1 && !ended) {
         const playerList = this.get('playerList');
@@ -711,7 +712,7 @@ class Game extends Parse.Object {
     const totalFails = this.get('fails');
 
     if (totalFails === 2) {
-      this.gameEnd(2);
+      await this.gameEnd(2);
     }
 
     this.increment('fails', 1);
