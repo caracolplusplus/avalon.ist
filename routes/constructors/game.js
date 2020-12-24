@@ -642,7 +642,6 @@ class Game extends Parse.Object {
       await this.save({}, { useMasterKey: true });
       const outcome = await this.didMissionPass();
       this.addResult(outcome);
-      await this.save({}, { useMasterKey: true });
 
       const mission = this.get('mission');
       const fails = this.get('fails');
