@@ -634,13 +634,15 @@ class Game extends Parse.Object {
 
       this.set('votesMission', votesMission);
       this.set('picksYetToVote', picksYetToVote);
+
+      await this.save({}, { useMasterKey: true });
     } else {
       return false;
     }
 
     if (!picksYetToVote.length) {
-      await this.save({}, { useMasterKey: true });
       const outcome = await this.didMissionPass();
+      await this.save({}, { useMasterKey: true });
       this.addResult(outcome);
 
       const mission = this.get('mission');
@@ -679,8 +681,6 @@ class Game extends Parse.Object {
         return true;
       }
     }
-
-    this.save({}, { useMasterKey: true });
 
     return true;
   }

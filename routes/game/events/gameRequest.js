@@ -19,6 +19,7 @@ function gameRequest(io, socket) {
       id: generalChat,
     });
 
+    socket.leave(gameRoom + code);
     socket.leave(gameChat + code);
     socket.off('disconnect', gameLeave);
 
