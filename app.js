@@ -20,12 +20,12 @@ d.run(function () {
     masterKey: process.env.MASTER_KEY || 'avalonist_key',
     serverURL: process.env.SERVER_URL || 'http://localhost:1337/parse',
     logLevel: 'warn',
-    passwordPolicy: {
+    /* passwordPolicy: {
       validatorPattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{6,})/,
       validationError:
         'Password must have at least 6 characters, with 1 upper case letter and 1 digit.',
       doNotAllowUsername: true,
-    },
+    }, */
     /* EMAIL VERIFICATION REQUIRES MAILGUN */
   });
 

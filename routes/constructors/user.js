@@ -1,6 +1,6 @@
 /* global Parse */
 const ipTree = require('../security/trees/ip-tree');
-const emailTree = require('../security/trees/email-tree');
+// const emailTree = require('../security/trees/email-tree');
 
 const { generalChat } = require('../rooms');
 
@@ -69,7 +69,7 @@ class User extends Parse.User {
 
     const username = this.get('username');
     const email = this.get('email');
-    const domain = email.split('@')[1];
+    /* const domain = email.split('@')[1]; */
 
     const errors = {
       username: `Username must have 3 to 15 characters. 
@@ -87,9 +87,9 @@ class User extends Parse.User {
       throw new Error(errors['email']);
     }
 
-    if (!emailTree.testEmail(domain)) {
+    /* if (!emailTree.testEmail(domain)) {
       throw new Error(errors['domain']);
-    }
+    } */
 
     this.setValid();
 
@@ -97,6 +97,8 @@ class User extends Parse.User {
   }
 
   checkForBans(data) {
+    this.setACL(new Parse.ACL(this), { useMasterKey: true });
+
     const environment = require('./environment').getGlobal();
 
     const { address } = data;
