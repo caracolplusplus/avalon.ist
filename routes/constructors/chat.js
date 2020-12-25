@@ -235,7 +235,7 @@ class Chat extends Parse.Object {
     const { NEGATIVE, POSITIVE } = messageTypes;
     const { mission, fails, passes } = data;
 
-    const result = passes ? 'succeded' : 'failed';
+    const result = passes ? 'succeeded' : 'failed';
 
     const failCount = [`.`, ` with 1 fail.`, ` with ${fails} fails.`];
 
