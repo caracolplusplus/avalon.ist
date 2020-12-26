@@ -58,6 +58,7 @@
     "prettier": "^2.0.5",
     "proxy-addr": "^2.0.6",
     "react": "^16.13.1",
+    "react-app-polyfill": "^2.0.0",
     "react-color": "^2.18.1",
     "react-custom-scrollbars": "^4.2.1",
     "react-dom": "^16.13.1",
