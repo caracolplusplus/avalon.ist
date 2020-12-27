@@ -6,6 +6,7 @@ interface GameState {
   avatars: any[];
   clients: string[];
   kicked: boolean;
+  askedToBeReady: boolean;
   seat: number;
   imRes: boolean;
   // Game State Info

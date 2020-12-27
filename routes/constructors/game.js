@@ -33,6 +33,10 @@ class Game extends Parse.Object {
     game.set('spectatorList', {});
     game.set('kickedPlayers', []);
 
+    // Ready
+    game.set('readyPlayers', []);
+    game.set('askedToBeReady', false);
+
     // Roles
     game.set('roleList', []);
     game.set('roleSettings', {
@@ -283,10 +287,10 @@ class Game extends Parse.Object {
 
       if (client) {
         delete spectatorList[username];
+      }
 
-        if (!started) {
-          this.togglePlayer({ username, add: false });
-        }
+      if (!started) {
+        this.togglePlayer({ username, add: false });
       }
     } else {
       const index = client[id].indexOf(instance);
@@ -367,20 +371,91 @@ class Game extends Parse.Object {
     return true;
   }
 
-  async startGame(data) {
+  async askToBeReady(data) {
     const { username } = data;
-    const { shuffleArray } = this;
 
     const host = this.get('host');
+    const players = this.get('playerList');
+    const { length } = players;
+
+    // Condition
+    const canStart = host === username && length >= 5;
+    if (!canStart) return false;
+
+    this.set('readyPlayers', []);
+    this.set('askedToBeReady', true);
+
+    this.save({}, { useMasterKey: true, context: { askForReady: true } });
+
+    setTimeout(async () => {
+      await this.fetch({ useMasterKey: true });
+
+      const started = this.get('started');
+
+      if (!started) {
+        this.set('askedToBeReady', false);
+
+        const readyPlayers = this.get('readyPlayers');
+
+        let players = this.get('playerList');
+        players = players.filter((p) => !readyPlayers.includes(p));
+
+        const chat = this.get('chat');
+        await chat.fetch({ useMasterKey: true });
+
+        const msg = players.map((p) =>
+          chat.addMessage({ content: `${p} is not ready.` })
+        );
+
+        chat.saveMessages(msg);
+
+        this.save({}, { useMasterKey: true });
+      }
+    }, 10000);
+  }
+
+  async toggleReady(data) {
+    const { username, ready } = data;
+
+    const askedToBeReady = this.get('askedToBeReady');
+
+    if (!askedToBeReady) return false;
+
+    const readyPlayers = this.get('readyPlayers');
+    const chat = this.get('chat');
+    const playerSet = new Set(readyPlayers);
+
+    if (ready) {
+      playerSet.add(username);
+    }
+
+    const playersNew = [...playerSet];
+
+    this.set('readyPlayers', playersNew);
+
+    let players = this.get('playerList');
+    players = players.filter((p) => !playerSet.has(p));
+
+    await chat.fetch({ useMasterKey: true });
+    chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
+
+    if (players.length === 0) {
+      this.set('askedToBeReady', false);
+      this.startGame();
+    } else {
+      this.save({}, { useMasterKey: true });
+    }
+
+    return true;
+  }
+
+  async startGame() {
+    const { shuffleArray } = this;
 
     let players = this.get('playerList');
     const { length } = players;
 
     let roles = this.get('roleList').slice(0, length);
-
-    // Condition
-    const canStart = host === username && length >= 5;
-    if (!canStart) return false;
 
     // Start the game
 
@@ -935,6 +1010,7 @@ class Game extends Parse.Object {
       'active',
       'playerList',
       'hasClaimed',
+      'askedToBeReady',
       'avatarList',
       'playerMax',
       'spectatorList',

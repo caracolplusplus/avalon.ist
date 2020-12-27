@@ -9,6 +9,8 @@ import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import socket from '../../socket-io/socket-io';
 import GameInfo from '../Lobby/GameInfo';
 import GameForm from '../Lobby/GameForm';
+import Soundboard from '../../sounds/audio';
+import ReadyForm from './ReadyForm';
 // eslint-disable-next-line no-unused-vars
 import GameState from './GameState';
 import Button from '../../components/utils/Button';
@@ -29,6 +31,8 @@ enum FormType {
   Info = 3,
   // eslint-disable-next-line no-unused-vars
   Report = 4,
+  // eslint-disable-next-line no-unused-vars
+  Ready = 4,
 }
 
 interface ButtonProps {
@@ -66,10 +70,12 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
 
   componentDidMount = () => {
     socket.on('gameResponse', this.responseReceived);
+    socket.on('askForReady', this.popUpReady);
   };
 
   componentWillUnmount = () => {
     socket.off('gameResponse', this.responseReceived);
+    socket.off('askForReady', this.popUpReady);
   };
 
   sendServerMessage = (data: any) => {
@@ -77,6 +83,12 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       ch: data.ch,
       content: data.content,
     });
+  };
+
+  popUpReady = () => {
+    Soundboard.notification.play();
+
+    this.setState({ showForm: FormType.Ready });
   };
 
   responseReceived = () => this.setState({ waitingResponse: false });
@@ -162,10 +174,10 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   };
 
   onWaiting = (message: Message) => {
-    const { seat, players, playerMax, kicked } = this.props;
+    const { seat, players, playerMax, kicked, askedToBeReady } = this.props;
 
     if (seat === 0) {
-      const gameCantStart = players.length < 5;
+      const gameCantStart = players.length < 5 || askedToBeReady;
 
       message.text = 'Modify settings or start the game.';
       message.buttons = [
@@ -501,6 +513,9 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
           onSelect={this.reportPlayer}
         />
       );
+      if (showForm === FormType.Ready) {
+        form = <ReadyForm onExit={this.hideForm} />;
+      }
     }
 
     return code === '-1' ? null : (

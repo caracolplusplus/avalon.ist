@@ -26,10 +26,15 @@ class TooFast extends React.PureComponent<TooFastProps> {
       <div className="settings-form">
         <AvalonScrollbars>
           <form autoComplete="off">
-            <FontAwesomeIcon icon={faExclamation} className='unnecessarily-huge-exclamation-mark' />
+            <FontAwesomeIcon
+              icon={faExclamation}
+              className="unnecessarily-huge-exclamation-mark"
+            />
             <h1>CALM DOWN!</h1>
             <h2>You are sending messages too fast!</h2>
-            <p>Wait a few seconds before you start sending messages again.</p>
+            <p className="center">
+              Wait a few seconds before you start sending messages again.
+            </p>
             <div className="buttons">
               <button className="bt-cancel" type="button" onClick={this.props.onExit}>
                 <FontAwesomeIcon icon={faTimes} />

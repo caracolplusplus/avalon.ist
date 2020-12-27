@@ -32,6 +32,7 @@ d.run(function () {
   // Start Express
   const express = require('express');
   const path = require('path');
+  const ms = require('mediaserver');
 
   const app = express();
 
@@ -47,6 +48,22 @@ d.run(function () {
   app.use(mount, api);
 
   // Routing
+  app.get('/audio/notification.ogg', (req, res) => {
+    ms.pipe(req, res, __dirname + '/audio/notification.ogg');
+  });
+
+  app.get('/audio/slap.ogg', (req, res) => {
+    ms.pipe(req, res, __dirname + '/audio/slap.ogg');
+  });
+
+  app.get('/audio/rejected.ogg', (req, res) => {
+    ms.pipe(req, res, __dirname + '/audio/rejected.ogg');
+  });
+
+  app.get('/audio/lick.ogg', (req, res) => {
+    ms.pipe(req, res, __dirname + '/audio/lick.ogg');
+  });
+
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname + '/build/index.html'));
   });

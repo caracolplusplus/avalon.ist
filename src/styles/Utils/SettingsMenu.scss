@@ -54,6 +54,9 @@
         color: Globals.$gold-1;
         height: $base-font-size * 5;
         width: 100%;
+        &.blue {
+          color: Globals.$res-light;
+        }
       }
       .title {
         text-transform: uppercase;
@@ -123,6 +126,9 @@
         .bt-accept {
           background-color: Globals.$green-1;
         }
+      }
+      .center {
+        text-align: center;
       }
     }
   }

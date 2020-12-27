@@ -95,6 +95,8 @@ class Chat extends Parse.Object {
     return true;
   }
 
+  addMessage = addMessage;
+
   newAnnouncement(content) {
     this.saveMessages([
       addMessage({

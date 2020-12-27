@@ -98,7 +98,15 @@ function beforeGame(io, socket) {
 
     await game.fetch({ useMasterKey: true });
 
-    game.startGame({ username });
+    game.askToBeReady({ username });
+  });
+
+  socket.on('readyState', async (ready) => {
+    const { game } = socket;
+
+    await game.fetch({ useMasterKey: true });
+
+    game.toggleReady({ username, ready });
   });
 }
 

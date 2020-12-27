@@ -60,6 +60,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
     frozen: undefined,
     stage: undefined,
     cause: undefined,
+    askedToBeReady: false,
     assassination: -1,
     // Game UI Info
     style: {},
@@ -189,6 +190,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
       avatars,
       clients,
       seat,
+      askedToBeReady: data.askedToBeReady,
       imRes: resRoles.includes(roleList[seat]),
       active: data.active,
       started: data.started,
