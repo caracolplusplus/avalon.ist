@@ -1,9 +1,11 @@
 // External
 
+// eslint-disable-next-line no-unused-vars
 import React, { ChangeEvent } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import countries from '../../components/countries';
+import ReactMarkdown from 'react-markdown';
 
 // Internal
 
@@ -32,7 +34,10 @@ interface SelectablePlayerListState {
   show: boolean;
 }
 
-class SelectablePlayerList extends React.PureComponent<SelectablePlayerListProps, SelectablePlayerListState> {
+class SelectablePlayerList extends React.PureComponent<
+  SelectablePlayerListProps,
+  SelectablePlayerListState
+> {
   constructor(props: SelectablePlayerListProps) {
     super(props);
     this.state = {
@@ -45,7 +50,7 @@ class SelectablePlayerList extends React.PureComponent<SelectablePlayerListProps
   }
 
   onClick() {
-    if (this.state.nationality.length < 1 ||this.state.bio.length < 1) return;
+    if (this.state.nationality.length < 1 || this.state.bio.length < 1) return;
 
     this.props.onSelect(this.state);
     this.props.onExit();
@@ -82,12 +87,17 @@ class SelectablePlayerList extends React.PureComponent<SelectablePlayerListProps
                   };
                 })}
                 show={this.state.show}
-                title={this.state.nationality.length > 0 ? this.state.nationality : 'Select a country...'}
+                title={
+                  this.state.nationality.length > 0
+                    ? this.state.nationality
+                    : 'Select a country...'
+                }
                 onClick={() => {
                   this.togglePlayers();
                 }}
               />
             </div>
+            <p className="subtitle">Bio</p>
             <textarea
               value={this.state.bio}
               onChange={this.handleChange}
@@ -95,11 +105,38 @@ class SelectablePlayerList extends React.PureComponent<SelectablePlayerListProps
               placeholder="Modify your bio here."
               maxLength={500}
             />
+            <p className="subtitle">Bio Preview</p>
+            <div className="md-contain">
+              <AvalonScrollbars>
+                <ReactMarkdown
+                  className="markdown"
+                  allowedTypes={[
+                    'root',
+                    'text',
+                    'paragraph',
+                    'emphasis',
+                    'strong',
+                    'thematicBreak',
+                    'blockquote',
+                    'list',
+                    'listItem',
+                    'heading',
+                  ]}
+                >
+                  {this.state.bio}
+                </ReactMarkdown>
+              </AvalonScrollbars>
+            </div>
             <div className="buttons">
               <button className="bt-cancel" type="button" onClick={this.props.onExit}>
                 <FontAwesomeIcon icon={faTimes} />
               </button>
-              <Button className="" type="button" text={this.props.text} onClick={this.onClick} />
+              <Button
+                className=""
+                type="button"
+                text={this.props.text}
+                onClick={this.onClick}
+              />
             </div>
           </form>
         </AvalonScrollbars>

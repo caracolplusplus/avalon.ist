@@ -4,6 +4,7 @@
 import React, { ChangeEvent } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import ReactMarkdown from 'react-markdown';
 
 // Internal
 
@@ -87,6 +88,12 @@ class SelectablePlayerList extends React.PureComponent<
               spellCheck={false}
               placeholder="Write the contents of the announcement here."
             />
+            <p className="subtitle">Announcement Preview</p>
+            <div className="md-contain">
+              <AvalonScrollbars>
+                <ReactMarkdown className="markdown">{this.state.content}</ReactMarkdown>
+              </AvalonScrollbars>
+            </div>
             <div className="buttons">
               <button className="bt-cancel" type="button" onClick={this.props.onExit}>
                 <FontAwesomeIcon icon={faTimes} />

@@ -41,6 +41,17 @@
         width: 100%;
         height: $base-font-size * 0.75;
       }
+      .md-contain {
+        width: 100%;
+        height: $base-font-size * 5;
+        .markdown {
+          width: 100%;
+          word-break: break-word;
+        }
+        .thumb-vertical {
+          background-color: #00000055 !important;
+        }
+      }
       textarea {
         border: $base-font-size * 0.025 solid Globals.$light-3;
         border-radius: $base-font-size * 0.1;
@@ -48,7 +59,7 @@
         font-size: $base-font-size * 0.33;
         resize: none;
         width: 100%;
-        height: $base-font-size * 2;
+        height: $base-font-size * 4;
       }
       .unnecessarily-huge-exclamation-mark {
         color: Globals.$gold-1;
