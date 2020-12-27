@@ -59,6 +59,11 @@ function messageTo(io, socket) {
           chat.newTaunt({ title, target });
 
           u.addTaunt();
+        } else {
+          socket.emit(
+            getResponse(isGeneral),
+            `There is no user with username "${target}".`
+          );
         }
       })
       .catch((err) => {
