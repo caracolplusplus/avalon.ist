@@ -32,6 +32,7 @@ const addMessage = (data) => {
 class Chat extends Parse.Object {
   constructor() {
     super('Chat');
+    this.addMessage = addMessage;
   }
 
   static spawn({ code }) {
@@ -94,8 +95,6 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
-  addMessage = addMessage;
 
   newAnnouncement(content) {
     this.saveMessages([

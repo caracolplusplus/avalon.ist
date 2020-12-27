@@ -32,7 +32,7 @@ enum FormType {
   // eslint-disable-next-line no-unused-vars
   Report = 4,
   // eslint-disable-next-line no-unused-vars
-  Ready = 4,
+  Ready = 5,
 }
 
 interface ButtonProps {
@@ -499,6 +499,9 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
           />
         );
       }
+      if (showForm === FormType.Ready) {
+        form = <ReadyForm onExit={this.hideForm} isPlaying={seat > -1} />;
+      }
     }
     if (showForm === FormType.Report) {
       const arr = [...players];
@@ -513,9 +516,6 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
           onSelect={this.reportPlayer}
         />
       );
-      if (showForm === FormType.Ready) {
-        form = <ReadyForm onExit={this.hideForm} isPlaying={seat > -1} />;
-      }
     }
 
     return code === '-1' ? null : (
