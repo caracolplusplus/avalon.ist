@@ -11,32 +11,37 @@ interface ScrollbarProps {
 
 class AvalonScrollbars extends Component<ScrollbarProps, {}> {
   scrollbars = createRef<Scrollbars>();
-  threshold = 0.95;
+  threshold = 0.98;
+  prev = 0;
   floored = true;
 
-  constructor(props: ScrollbarProps) {
-    super(props);
-    this.autoScroll = this.autoScroll.bind(this);
-    this.checkIfFloored = this.checkIfFloored.bind(this);
-  }
-
-  checkIfFloored() {
+  checkIfFloored = () => {
     try {
       const ref = this.scrollbars.current!;
 
-      this.floored = ref.getValues().top === 1;
+      const top = ref.getValues().top;
+      const delta = top - this.prev;
+      this.prev = top;
+
+      if (delta >= 0) {
+        this.floored = top >= this.threshold;
+      } else {
+        this.floored = false;
+      }
     } catch (e) {
       console.log(e);
     }
-  }
+  };
 
-  autoScroll() {
+  autoScroll = () => {
     const ref = this.scrollbars.current!;
 
     if (this.floored) {
+      this.prev = 0;
+
       ref.scrollToBottom();
     }
-  }
+  };
 
   render() {
     return (
@@ -49,7 +54,10 @@ class AvalonScrollbars extends Component<ScrollbarProps, {}> {
         renderTrackHorizontal={(props) => <div {...props} className="track-horizontal" />}
         renderTrackVertical={(props) => <div {...props} className="track-vertical" />}
         renderThumbHorizontal={(props) => (
-          <div {...props} className={this.props.horizontal ? 'thumb-horizontal' : 'thumb-hidden'} />
+          <div
+            {...props}
+            className={this.props.horizontal ? 'thumb-horizontal' : 'thumb-hidden'}
+          />
         )}
         renderThumbVertical={(props) => <div {...props} className="thumb-vertical" />}
         renderView={(props) => <div {...props} className="view" />}
