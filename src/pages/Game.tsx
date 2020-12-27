@@ -176,9 +176,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
 
     const { avatarList, playerList, spectatorList, roleList } = data;
 
-    const avatars: any[] = playerList.map(
-      (p: any) => avatarList[username.replace(/\./gi, '/')]
-    );
+    const avatars: any[] = playerList.map((p: any) => avatarList[p.replace(/\./gi, '/')]);
 
     const clients = Object.keys(spectatorList).map((p) =>
       p.replace(/\//gi, '.').replace(/!/, '$')
