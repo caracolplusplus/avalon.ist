@@ -218,7 +218,7 @@ function gameCommands(io, socket) {
             const knowledge = g.get('privateKnowledge');
             const roles = g.get('roleList');
 
-            knowledge[username] = roles;
+            knowledge[username.replace(/\./gi, '/')] = roles;
 
             g.set('privateKnowledge', knowledge);
             g.save({}, { useMasterKey: true });

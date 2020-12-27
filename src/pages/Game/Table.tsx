@@ -1,15 +1,20 @@
 // External
 
+// eslint-disable-next-line no-unused-vars
 import React, { createRef, RefObject } from 'react';
 import { Redirect } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { Dispatch } from 'redux';
 
 // Internal
 
+// eslint-disable-next-line no-unused-vars
 import AvatarUIProps from './AvatarUIProps';
 import StatusBar from './StatusBar';
+// eslint-disable-next-line no-unused-vars
 import GameState from './GameState';
 import DefaultAvatars from './DefaultAvatars';
+// eslint-disable-next-line no-unused-vars
 import ConnectedAUI, { AvatarUI } from './AvatarUI';
 import Button from '../../components/utils/Button';
 

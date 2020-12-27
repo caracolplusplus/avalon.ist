@@ -514,7 +514,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
         />
       );
       if (showForm === FormType.Ready) {
-        form = <ReadyForm onExit={this.hideForm} />;
+        form = <ReadyForm onExit={this.hideForm} isPlaying={seat > -1} />;
       }
     }
 

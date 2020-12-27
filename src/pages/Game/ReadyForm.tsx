@@ -17,6 +17,7 @@ import '../../styles/Utils/SettingsMenu.scss';
 
 interface TooFastProps {
   onExit: (...args: any[]) => void;
+  isPlaying: boolean;
 }
 
 // Declaration
@@ -84,6 +85,7 @@ class TooFast extends React.PureComponent<TooFastProps> {
 
   render() {
     const { seconds } = this.state;
+    const { isPlaying } = this.props;
 
     return (
       <div className="settings-form" onSubmit={() => null}>
@@ -95,17 +97,29 @@ class TooFast extends React.PureComponent<TooFastProps> {
             />
             <h1>ARE YOU READY?</h1>
             <h2>GAME IS ABOUT TO START</h2>
-            <p className="center">
-              Confirm that you are ready to start the game. You have {seconds} seconds
-              left.
-            </p>
+            {isPlaying ? (
+              <p className="center">
+                Confirm that you are ready to start the game. You have {seconds} seconds
+                left.
+              </p>
+            ) : (
+              <p className="center">
+                Waiting for players to confirm. {seconds} seconds remaining.
+              </p>
+            )}
             <div className="buttons">
-              <button className="bt-cancel" type="button" onClick={this.sendFalse}>
+              <button
+                className="bt-cancel"
+                type="button"
+                onClick={isPlaying ? this.sendFalse : this.props.onExit}
+              >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
-              <button className="bt-accept" type="button" onClick={this.sendTrue}>
-                <FontAwesomeIcon icon={faCheck} />
-              </button>
+              {isPlaying ? (
+                <button className="bt-accept" type="button" onClick={this.sendTrue}>
+                  <FontAwesomeIcon icon={faCheck} />
+                </button>
+              ) : null}
             </div>
           </form>
         </AvalonScrollbars>

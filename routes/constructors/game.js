@@ -254,13 +254,13 @@ class Game extends Parse.Object {
     const spectatorList = this.get('spectatorList');
     const avatarList = this.get('avatarList');
 
-    const client = spectatorList[username];
+    const client = spectatorList[username.replace(/\./gi, '/')];
 
     if (!client || !client[id]) {
-      avatarList[username] = avatars;
+      avatarList[username.replace(/\./gi, '/')] = avatars;
 
-      spectatorList[username] = {};
-      spectatorList[username][id] = [instance];
+      spectatorList[username.replace(/\./gi, '/')] = {};
+      spectatorList[username.replace(/\./gi, '/')][id] = [instance];
     } else if (!client[id].includes(instance)) {
       client[id].push(instance);
     }
@@ -280,13 +280,13 @@ class Game extends Parse.Object {
     const spectatorList = this.get('spectatorList');
     const started = this.get('started');
 
-    const client = spectatorList[username];
+    const client = spectatorList[username.replace(/\./gi, '/')];
 
     if (!client || !client[id]) {
       console.log(`${username} asked to leave Room #${room} but request failed.`);
 
       if (client) {
-        delete spectatorList[username];
+        delete spectatorList[username.replace(/\./gi, '/')];
       }
 
       if (!started) {
@@ -302,7 +302,7 @@ class Game extends Parse.Object {
         // If sockets are empty, then there are no connections for this client,
         // so remove it from the object so we can reap the room. If the client
         // reconnects, they will be readded to the clients objects anyways.
-        delete spectatorList[username];
+        delete spectatorList[username.replace(/\./gi, '/')];
 
         if (!started) {
           this.togglePlayer({ username, add: false });
@@ -535,7 +535,7 @@ class Game extends Parse.Object {
 
       knowledge[index] = role;
 
-      privateKnowledge[username] = knowledge;
+      privateKnowledge[username.replace(/\./gi, '/')] = knowledge;
     });
 
     this.set('privateKnowledge', privateKnowledge);
@@ -811,7 +811,9 @@ class Game extends Parse.Object {
 
     ladyHolders.push(index);
 
-    const privateKnowledge = this.get('privateKnowledge')[username];
+    const privateKnowledge = this.get('privateKnowledge')[
+      username.replace('.', 'dot').replace('$', 'dolla')
+    ];
     const chat = this.get('chat');
     await chat.fetch({ useMasterKey: true });
 

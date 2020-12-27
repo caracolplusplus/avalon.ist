@@ -176,9 +176,14 @@ class Game extends React.PureComponent<PageProps, GameState> {
 
     const { avatarList, playerList, spectatorList, roleList } = data;
 
-    const avatars: any[] = playerList.map((p: any) => avatarList[p]);
+    const avatars: any[] = playerList.map(
+      (p: any) => avatarList[username.replace(/\./gi, '/')]
+    );
 
-    const clients = Object.keys(spectatorList);
+    const clients = Object.keys(spectatorList).map((p) =>
+      p.replace(/\//gi, '.').replace(/!/, '$')
+    );
+
     const seat = playerList.indexOf(username);
     const hasAssassin = roleList.indexOf('Assassin');
 
@@ -203,7 +208,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
       picksYetToVote: data.picksYetToVote,
       votesRound: data.votesRound,
       publicKnowledge: data.publicKnowledge,
-      privateKnowledge: data.privateKnowledge[username] || [],
+      privateKnowledge: data.privateKnowledge[username.replace(/\./gi, '/')] || [],
       leader: data.leader,
       hammer: data.hammer,
       card: data.lady,
