@@ -1,5 +1,6 @@
 /* global Parse, Set */
 const Chat = require('./chat');
+const _ = require('lodash');
 
 const playerMatrix = [
   [2, 3, 2, 3, 3],
@@ -10,9 +11,47 @@ const playerMatrix = [
   [3, 4, 4, 5, 5],
 ];
 
+const toggleReady = _.throttle(async (data) => {
+  const { username, ready, game } = data;
+
+  await game.fetch({ useMasterKey: true });
+
+  const askedToBeReady = game.get('askedToBeReady');
+
+  if (!askedToBeReady) return false;
+
+  const readyPlayers = game.get('readyPlayers');
+  const chat = game.get('chat');
+  const playerSet = new Set(readyPlayers);
+
+  if (ready) {
+    playerSet.add(username);
+  }
+
+  const playersNew = [...playerSet];
+
+  game.set('readyPlayers', playersNew);
+
+  let players = game.get('playerList');
+  players = players.filter((p) => !playerSet.has(p));
+
+  await chat.fetch({ useMasterKey: true });
+  chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
+
+  if (players.length === 0) {
+    game.set('askedToBeReady', false);
+    game.startGame();
+  } else {
+    game.save({}, { useMasterKey: true });
+  }
+
+  return true;
+}, 100);
+
 class Game extends Parse.Object {
   constructor() {
     super('Game');
+    this.toggleReady = toggleReady;
   }
 
   static spawn(props) {
@@ -412,41 +451,6 @@ class Game extends Parse.Object {
         this.save({}, { useMasterKey: true });
       }
     }, 10000);
-  }
-
-  async toggleReady(data) {
-    const { username, ready } = data;
-
-    const askedToBeReady = this.get('askedToBeReady');
-
-    if (!askedToBeReady) return false;
-
-    const readyPlayers = this.get('readyPlayers');
-    const chat = this.get('chat');
-    const playerSet = new Set(readyPlayers);
-
-    if (ready) {
-      playerSet.add(username);
-    }
-
-    const playersNew = [...playerSet];
-
-    this.set('readyPlayers', playersNew);
-
-    let players = this.get('playerList');
-    players = players.filter((p) => !playerSet.has(p));
-
-    await chat.fetch({ useMasterKey: true });
-    chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
-
-    if (players.length === 0) {
-      this.set('askedToBeReady', false);
-      this.startGame();
-    } else {
-      this.save({}, { useMasterKey: true });
-    }
-
-    return true;
   }
 
   async startGame() {

@@ -62,6 +62,8 @@ function beforeGame(io, socket) {
     const { roleSettings, playerMax } = data;
     const { game } = socket;
 
+    if (!game) return;
+
     await game.fetch({ useMasterKey: true });
 
     game.editSettings({ roleSettings, playerMax });
@@ -70,6 +72,8 @@ function beforeGame(io, socket) {
   socket.on('joinLeaveGame', async () => {
     const { game } = socket;
 
+    if (!game) return;
+
     await game.fetch({ useMasterKey: true });
 
     game.togglePlayer({ username, add: true });
@@ -77,6 +81,8 @@ function beforeGame(io, socket) {
 
   socket.on('toggleClaim', async () => {
     const { game } = socket;
+
+    if (!game) return;
 
     await game.fetch({ useMasterKey: true });
 
@@ -87,6 +93,8 @@ function beforeGame(io, socket) {
     const { game } = socket;
     const { kick } = data;
 
+    if (!game) return;
+
     await game.fetch({ useMasterKey: true });
 
     await game.addToKick(data);
@@ -96,6 +104,8 @@ function beforeGame(io, socket) {
   socket.on('startGame', async () => {
     const { game } = socket;
 
+    if (!game) return;
+
     await game.fetch({ useMasterKey: true });
 
     game.askToBeReady({ username });
@@ -104,9 +114,9 @@ function beforeGame(io, socket) {
   socket.on('readyState', async (ready) => {
     const { game } = socket;
 
-    await game.fetch({ useMasterKey: true });
+    if (!game) return;
 
-    game.toggleReady({ username, ready });
+    game.toggleReady({ game, username, ready });
   });
 }
 
