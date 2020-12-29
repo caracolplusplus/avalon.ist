@@ -21,10 +21,11 @@ const toggleReady = _.throttle(async (data) => {
   if (!askedToBeReady) return false;
 
   const readyPlayers = game.get('readyPlayers');
+  const players = game.get('playerList');
   const chat = game.get('chat');
   const playerSet = new Set(readyPlayers);
 
-  if (ready) {
+  if (ready && players.includes(username)) {
     playerSet.add(username);
   }
 
@@ -32,21 +33,18 @@ const toggleReady = _.throttle(async (data) => {
 
   game.set('readyPlayers', playersNew);
 
-  let players = game.get('playerList');
-  players = players.filter((p) => !playerSet.has(p));
-
   await chat.fetch({ useMasterKey: true });
   chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
 
-  if (players.length === 0) {
+  if (players.length === playersNew.length && players.length > 4) {
     game.set('askedToBeReady', false);
     game.startGame();
   } else {
-    game.save({}, { useMasterKey: true });
+    await game.save({}, { useMasterKey: true });
   }
 
   return true;
-}, 100);
+}, 400);
 
 class Game extends Parse.Object {
   constructor() {
@@ -660,7 +658,7 @@ class Game extends Parse.Object {
       }
     }
 
-    this.save({}, { useMasterKey: true });
+    await this.save({}, { useMasterKey: true });
 
     return true;
   }

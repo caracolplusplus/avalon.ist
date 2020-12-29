@@ -116,7 +116,7 @@ function beforeGame(io, socket) {
 
     if (!game) return;
 
-    game.toggleReady({ game, username, ready });
+    await game.toggleReady({ game, username, ready });
   });
 }
 

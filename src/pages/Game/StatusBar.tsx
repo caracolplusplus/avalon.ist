@@ -193,8 +193,8 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
         },
         {
           text: 'STAND UP',
-          className: 'cancel',
-          onClick: this.sitAndStand,
+          className: askedToBeReady ? 'disabled' : 'cancel',
+          onClick: askedToBeReady ? undefined : this.sitAndStand,
         },
         {
           text: 'KICK',
@@ -205,8 +205,8 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
     } else {
       const host = players[0];
       const hasSeat = seat > -1;
-      const unableToSit = kicked || players.length >= playerMax;
-      const sittingClass = unableToSit ? 'disabled' : 'confirm';
+      const unableToSit = kicked || players.length >= playerMax || askedToBeReady;
+      const sittingClass = hasSeat ? 'cancel' : 'confirm';
 
       message.text = host
         ? `Waiting for ${host} to start the game.`
@@ -219,7 +219,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
         },
         {
           text: hasSeat ? 'STAND UP' : 'SIT',
-          className: hasSeat ? 'cancel' : sittingClass,
+          className: unableToSit ? 'disabled' : sittingClass,
           onClick: unableToSit ? undefined : this.sitAndStand,
         },
       ];
