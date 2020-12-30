@@ -291,16 +291,13 @@ class Game extends Parse.Object {
     const spectatorList = this.get('spectatorList');
     const avatarList = this.get('avatarList');
 
-    const client = spectatorList[username.replace(/\./gi, '/')];
+    const parsedName = username.replace(/\./gi, '/');
 
-    if (!client || !client[id]) {
-      avatarList[username.replace(/\./gi, '/')] = avatars;
-
-      spectatorList[username.replace(/\./gi, '/')] = {};
-      spectatorList[username.replace(/\./gi, '/')][id] = [instance];
-    } else if (!client[id].includes(instance)) {
-      client[id].push(instance);
-    }
+    avatarList[parsedName] = avatars;
+    spectatorList[parsedName] = {
+      instance,
+      id,
+    };
 
     this.set('avatarList', avatarList);
     this.set('spectatorList', spectatorList);
@@ -310,51 +307,36 @@ class Game extends Parse.Object {
     return true;
   }
 
-  removeClient(data) {
-    const { username, instance, id } = data;
+  async removeClient(data) {
+    const { username } = data;
 
-    const room = this.get('code');
     const spectatorList = this.get('spectatorList');
     const started = this.get('started');
+    const ended = this.get('ended');
 
-    const client = spectatorList[username.replace(/\./gi, '/')];
+    const parsedName = username.replace(/\./gi, '/');
 
-    if (!client || !client[id]) {
-      console.log(`${username} asked to leave Room #${room} but request failed.`);
+    delete spectatorList[parsedName];
 
-      if (client) {
-        delete spectatorList[username.replace(/\./gi, '/')];
-      }
-
-      if (!started) {
-        this.togglePlayer({ username, add: false });
-      }
-    } else {
-      const index = client[id].indexOf(instance);
-      if (index > -1) client[id].splice(index, 1);
-
-      const { length } = client[id];
-
-      if (length === 0) {
-        // If sockets are empty, then there are no connections for this client,
-        // so remove it from the object so we can reap the room. If the client
-        // reconnects, they will be readded to the clients objects anyways.
-        delete spectatorList[username.replace(/\./gi, '/')];
-
-        if (!started) {
-          this.togglePlayer({ username, add: false });
-        }
-      }
-    }
-
-    // If no more clients, then delete the room.
-    if (Object.keys(spectatorList).length === 0) {
-      this.set('active', false);
+    if (!started) {
+      await this.togglePlayer({ username, add: false });
     }
 
     this.set('spectatorList', spectatorList);
 
-    this.save({}, { useMasterKey: true });
+    // If no more clients, then delete the room.
+    if (Object.keys(spectatorList).length === 0) {
+      this.set('active', false);
+
+      if (!ended) {
+        await this.get('chat').destroy({ useMasterKey: true });
+        await this.destroy({ useMasterKey: true });
+      } else {
+        this.save({}, { useMasterKey: true });
+      }
+    } else {
+      this.save({}, { useMasterKey: true });
+    }
 
     return true;
   }
@@ -402,6 +384,7 @@ class Game extends Parse.Object {
 
     this.set('host', playersNew[0]);
     this.set('playerList', playersNew);
+    this.set('askedToBeReady', false);
 
     await this.save({}, { useMasterKey: true });
 

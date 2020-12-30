@@ -5,7 +5,7 @@ function gameRequest(io, socket) {
   const username = user.get('username');
 
   const gameLeave = async () => {
-    const { game, id } = socket;
+    const { game } = socket;
 
     if (!game) return;
 
@@ -13,11 +13,11 @@ function gameRequest(io, socket) {
 
     const code = game.get('code');
 
-    game.removeClient({
-      username,
-      instance: id,
-      id: generalChat,
-    });
+    game
+      .removeClient({
+        username,
+      })
+      .catch((err) => console.log(err));
 
     socket.leave(gameRoom + code);
     socket.leave(gameChat + code);

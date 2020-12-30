@@ -28,7 +28,7 @@ const linkSocketIO = async (request) => {
   link(socket);
 
   if (user) {
-    user.checkForBans({ address });
+    user.checkForBans({ address, io });
     socket.emit('updateStyle', user.toStyle());
   }
 

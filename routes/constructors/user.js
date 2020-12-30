@@ -2,8 +2,6 @@
 const ipTree = require('../security/trees/ip-tree');
 // const emailTree = require('../security/trees/email-tree');
 
-const { generalChat } = require('../rooms');
-
 Parse.User.allowCustomUserClass(true);
 
 class User extends Parse.User {
@@ -49,6 +47,7 @@ class User extends Parse.User {
     this.set('isContrib', false);
 
     this.set('isOnline', false);
+    this.set('lastInstance', '');
     this.set('socketsOnline', {});
 
     this.set('isBanned', false);
@@ -152,40 +151,16 @@ class User extends Parse.User {
   joinPresence(data) {
     const { id } = data;
 
-    let socketsOnline = this.get('socketsOnline');
+    this.set('isOnline', true);
+    this.set('lastInstance', id);
 
-    if (!socketsOnline[generalChat]) {
-      socketsOnline = {};
-      socketsOnline[generalChat] = [];
-      socketsOnline[generalChat].push(id);
-    } else {
-      socketsOnline[generalChat].push(id);
-    }
-
-    this.set('socketsOnline', socketsOnline);
-    this.set('isOnline', socketsOnline[generalChat].length > 0);
-
-    this.save({}, { useMasterKey: true });
+    this.save({}, { useMasterKey: true, context: { another: id } });
 
     return true;
   }
 
-  leavePresence(data) {
-    const { id } = data;
-
-    const socketsOnline = this.get('socketsOnline');
-
-    if (!(generalChat in socketsOnline)) {
-      console.log(`Trying to leave presence has failed.`);
-
-      this.set('isOnline', false);
-    } else {
-      const index = socketsOnline[generalChat].indexOf(id);
-      if (index > -1) socketsOnline[generalChat].splice(index, 1);
-
-      this.set('socketsOnline', socketsOnline);
-      this.set('isOnline', socketsOnline[generalChat].length > 0);
-    }
+  leavePresence() {
+    this.set('isOnline', false);
 
     this.save({}, { useMasterKey: true });
 

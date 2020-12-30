@@ -25,3 +25,5 @@ Parse.Cloud.afterSave(Parse.User, afterUserSave);
 Parse.Cloud.afterSave('Environment', afterEnvSave);
 Parse.Cloud.afterSave('Game', afterGameSave);
 Parse.Cloud.afterSave('Chat', afterChatSave);
+
+Parse.Cloud.beforeDelete('Game', beforeGameSave);
