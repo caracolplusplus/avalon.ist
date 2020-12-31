@@ -1,4 +1,5 @@
 const generator = require('generate-password');
+const { gameRoom } = require('../../rooms');
 const Game = require('../../constructors/game');
 
 function beforeGame(io, socket) {
@@ -108,7 +109,18 @@ function beforeGame(io, socket) {
 
     await game.fetch({ useMasterKey: true });
 
-    game.askToBeReady({ username });
+    const host = game.get('host');
+    const code = game.get('code');
+
+    if (host !== username) return;
+
+    game.startGame({ username });
+
+    io.to(gameRoom + code).emit('printNotification', {
+      audio: 'notification',
+      title: `Room ${code} has started`,
+      body: ``,
+    });
   });
 
   socket.on('readyState', async (ready) => {

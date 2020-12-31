@@ -1,6 +1,6 @@
 /* global Parse, Set */
 const Chat = require('./chat');
-const _ = require('lodash');
+// const _ = require('lodash');
 
 const playerMatrix = [
   [2, 3, 2, 3, 3],
@@ -11,7 +11,7 @@ const playerMatrix = [
   [3, 4, 4, 5, 5],
 ];
 
-const toggleReady = _.throttle(async (data) => {
+/* const toggleReady = _.throttle(async (data) => {
   const { username, ready, game } = data;
 
   await game.fetch({ useMasterKey: true });
@@ -44,12 +44,11 @@ const toggleReady = _.throttle(async (data) => {
   }
 
   return true;
-}, 400);
+}, 400); */
 
 class Game extends Parse.Object {
   constructor() {
     super('Game');
-    this.toggleReady = toggleReady;
   }
 
   static spawn(props) {
