@@ -4,17 +4,17 @@ const afterChatSave = async (request) => {
   const chat = request.object;
   const { context } = request;
 
-  if (!('messages' in context)) return true;
+  if (context && context.messages) {
+    const { io } = require('../../routes/init');
 
-  const { io } = require('../../routes/init');
-
-  const code = chat.get('code');
-  const isGeneral = code === 'Global';
-
-  io.to(isGeneral ? generalChat : gameChat + code).emit(
-    isGeneral ? 'generalChatResponse' : 'gameChatResponse',
-    context.messages
-  );
+    const code = chat.get('code');
+    const isGeneral = code === 'Global';
+  
+    io.to(isGeneral ? generalChat : gameChat + code).emit(
+      isGeneral ? 'generalChatResponse' : 'gameChatResponse',
+      context.messages
+    );
+  }
 
   return true;
 };

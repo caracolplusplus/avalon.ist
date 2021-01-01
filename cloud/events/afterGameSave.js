@@ -17,7 +17,9 @@ const afterGameSave = async (request) => {
 
   io.to(gameRoom + code).emit('gameResponse', game.toClient());
 
-  if ('askForReady' in context) {
+  const { askForReady } = context;
+
+  if (askForReady) {
     io.to(gameRoom + code).emit('askForReady');
   }
 

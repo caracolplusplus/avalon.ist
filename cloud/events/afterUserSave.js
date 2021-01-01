@@ -1,24 +1,18 @@
+
 const afterUserSave = async (request) => {
   const user = request.object;
+  const { context } = request;
+  
+  if (context) {
+    const { io, sockets } = require('../../routes/init');
+    const { kick, another } = context;
 
-  if ('context' in request) {
-    const { context } = request;
-
-    if ('kick' in context) {
-      const { kick } = context;
-
-      if (!kick) return true;
-
-      const { io } = require('../../routes/init');
-
+    if (kick) {
       const username = user.get('username');
       io.to(username).emit('reloadPage');
     }
 
-    if ('another' in context) {
-      const { another } = context;
-      const { sockets } = require('../../routes/init');
-
+    if (another) {
       const socket = sockets.find((s) => s.id === another);
 
       if (!socket) return;
@@ -27,6 +21,8 @@ const afterUserSave = async (request) => {
       socket.to(username).emit('anotherDevice');
       socket.join(username);
     }
+
+    return true;
   }
 
   return true;
