@@ -1,41 +1,23 @@
 const afterEnvSave = async (request) => {
   const Environment = require('../../routes/constructors/environment');
-
-  const { object: env } = request;
-
+  const { object: env, context } = request;
+  
   Environment.setGlobal(env);
+  
+  if (context) {
+    const { io } = require('../../routes/init');
+    const { playerList, roomList, kick, ips } = context;
 
-  if ('context' in request) {
-    const { context } = request;
-
-    if ('playerList' in context) {
-      const { playerList } = context;
-
-      if (!playerList) return true;
-
-      const { io } = require('../../routes/init');
-
+    if (playerList) {
       io.emit('playerListResponse', env.get('playerList'));
     }
 
-    if ('roomList' in context) {
-      const { roomList } = context;
-
-      if (!roomList) return true;
-
-      const { io } = require('../../routes/init');
-
+    if (roomList) {
       io.emit('roomListResponse', env.get('roomList'));
     }
 
-    if ('kick' in context) {
+    if (kick) {
       env.updateTrees();
-
-      const { kick, ips } = context;
-
-      if (!kick) return true;
-
-      const { io } = require('../../routes/init');
 
       const qMap = ips.map((i) => {
         // eslint-disable-next-line no-undef
@@ -61,6 +43,8 @@ const afterEnvSave = async (request) => {
         })
         .catch((e) => console.log(e));
     }
+
+    return true;
   }
 
   return true;
