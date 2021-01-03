@@ -1,4 +1,4 @@
-/* global Parse, Set */
+/* global Parse */
 const Chat = require('./chat');
 // const _ = require('lodash');
 
@@ -10,41 +10,6 @@ const playerMatrix = [
   [3, 4, 4, 5, 5],
   [3, 4, 4, 5, 5],
 ];
-
-/* const toggleReady = _.throttle(async (data) => {
-  const { username, ready, game } = data;
-
-  await game.fetch({ useMasterKey: true });
-
-  const askedToBeReady = game.get('askedToBeReady');
-
-  if (!askedToBeReady) return false;
-
-  const readyPlayers = game.get('readyPlayers');
-  const players = game.get('playerList');
-  const chat = game.get('chat');
-  const playerSet = new Set(readyPlayers);
-
-  if (ready && players.includes(username)) {
-    playerSet.add(username);
-  }
-
-  const playersNew = [...playerSet];
-
-  game.set('readyPlayers', playersNew);
-
-  await chat.fetch({ useMasterKey: true });
-  chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
-
-  if (players.length === playersNew.length && players.length > 4) {
-    game.set('askedToBeReady', false);
-    game.startGame();
-  } else {
-    await game.save({}, { useMasterKey: true });
-  }
-
-  return true;
-}, 400); */
 
 class Game extends Parse.Object {
   constructor() {
@@ -67,6 +32,7 @@ class Game extends Parse.Object {
     game.set('avatarList', {});
     game.set('playerMax', 6);
     game.set('spectatorList', {});
+    game.set('spectatorListNew', []);
     game.set('kickedPlayers', []);
 
     // Ready
@@ -154,6 +120,46 @@ class Game extends Parse.Object {
     }
 
     return array;
+  }
+
+  async toggleReady(data) {
+    const { username, ready } = data;
+
+    await this.fetch({ useMasterKey: true });
+
+    const askedToBeReady = this.get('askedToBeReady');
+
+    if (!askedToBeReady) return false;
+
+    const players = this.get('playerList');
+    const chat = this.get('chat');
+
+    if (ready && players.includes(username)) {
+      this.addUnique('readyPlayers', username);
+    }
+
+    return await this.save({}, { useMasterKey: true })
+      .then(async (g) => {
+        await chat.fetch({ useMasterKey: true });
+        chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
+
+        if (
+          g.get('playerList').length === g.get('readyPlayers').length &&
+          g.get('askedToBeReady')
+        ) {
+          g.set('askedToBeReady', false);
+          g.startGame();
+
+          return true;
+        }
+
+        return false;
+      })
+      .catch((e) => {
+        console.log(e);
+
+        return false;
+      });
   }
 
   async editSettings(data) {
@@ -273,12 +279,7 @@ class Game extends Parse.Object {
   async addToKick(data) {
     const { kick } = data;
 
-    let kicked = this.get('kickedPlayers');
-
-    kicked = new Set(kicked);
-    kicked.add(kick);
-
-    this.set('kickedPlayers', [...kicked]);
+    this.addUnique('kickedPlayers', kick);
 
     await this.save({}, { useMasterKey: true });
 
@@ -286,20 +287,14 @@ class Game extends Parse.Object {
   }
 
   addClient(data) {
-    const { username, avatars, instance, id } = data;
-    const spectatorList = this.get('spectatorList');
+    const { username, avatars } = data;
     const avatarList = this.get('avatarList');
 
     const parsedName = username.replace(/\./gi, '/');
-
     avatarList[parsedName] = avatars;
-    spectatorList[parsedName] = {
-      instance,
-      id,
-    };
 
     this.set('avatarList', avatarList);
-    this.set('spectatorList', spectatorList);
+    this.addUnique('spectatorListNew', username);
 
     this.save({}, { useMasterKey: true });
 
@@ -309,22 +304,19 @@ class Game extends Parse.Object {
   async removeClient(data) {
     const { username } = data;
 
-    const spectatorList = this.get('spectatorList');
     const started = this.get('started');
     const ended = this.get('ended');
 
-    const parsedName = username.replace(/\./gi, '/');
-
-    delete spectatorList[parsedName];
+    this.remove('spectatorListNew', username);
 
     if (!started) {
       await this.togglePlayer({ username, add: false });
     }
 
-    this.set('spectatorList', spectatorList);
+    await this.save({}, { useMasterKey: true });
 
     // If no more clients, then delete the room.
-    if (Object.keys(spectatorList).length === 0) {
+    if (this.get('spectatorListNew').length === 0) {
       this.set('active', false);
 
       if (!ended) {
@@ -333,8 +325,6 @@ class Game extends Parse.Object {
       } else {
         this.save({}, { useMasterKey: true });
       }
-    } else {
-      this.save({}, { useMasterKey: true });
     }
 
     return true;
@@ -343,19 +333,11 @@ class Game extends Parse.Object {
   toggleClaim(username) {
     const players = this.get('hasClaimed');
 
-    const playerSet = new Set(players);
-
-    const has = playerSet.has(username);
-
-    if (has) {
-      playerSet.delete(username);
+    if (players.includes(username)) {
+      this.remove('hasClaimed', username);
     } else {
-      playerSet.add(username);
+      this.addUnique('hasClaimed', username);
     }
-
-    const playersNew = [...playerSet];
-
-    this.set('hasClaimed', playersNew);
 
     this.save({}, { useMasterKey: true });
 
@@ -369,23 +351,20 @@ class Game extends Parse.Object {
     const playerMax = this.get('playerMax');
     const kicked = this.get('kickedPlayers');
 
-    const playerSet = new Set(players);
-
-    const has = playerSet.has(username);
+    const has = players.includes(username);
 
     if (has) {
-      playerSet.delete(username);
+      this.remove('playerList', username);
     } else if (add && players.length < playerMax && !kicked.includes(username)) {
-      playerSet.add(username);
+      this.addUnique('playerList', username);
     }
 
-    const playersNew = [...playerSet];
-
-    this.set('host', playersNew[0]);
-    this.set('playerList', playersNew);
     this.set('askedToBeReady', false);
 
     await this.save({}, { useMasterKey: true });
+
+    this.set('host', this.get('playerList')[0]);
+    this.save({}, { useMasterKey: true });
 
     return true;
   }
@@ -561,7 +540,7 @@ class Game extends Parse.Object {
     await chat.fetch({ useMasterKey: true });
     chat.onPick({ leader: playerList[leader] });
 
-    this.save({}, { useMasterKey: true });
+    await this.save({}, { useMasterKey: true });
 
     return true;
   }
@@ -683,22 +662,17 @@ class Game extends Parse.Object {
 
     const index = this.get('playerList').indexOf(username);
     const picksYetToVote = this.get('picksYetToVote');
-    const votesMission = this.get('votesMission');
 
     if (picksYetToVote.includes(index)) {
-      votesMission.push(vote);
+      this.add('votesMission', vote);
+      this.remove('picksYetToVote', index);
 
-      const i = picksYetToVote.indexOf(index);
-      picksYetToVote.splice(i, 1);
-
-      this.set('votesMission', votesMission);
-      this.set('picksYetToVote', picksYetToVote);
+      await this.save({}, { useMasterKey: true });
     } else {
       return false;
     }
 
-    if (!picksYetToVote.length) {
-      await this.save({}, { useMasterKey: true });
+    if (!this.get('picksYetToVote').length) {
       const outcome = await this.didMissionPass();
       this.addResult(outcome);
       await this.save({}, { useMasterKey: true });
@@ -727,6 +701,8 @@ class Game extends Parse.Object {
         } else {
           await this.gameEnd(4);
         }
+
+        await this.save({}, { useMasterKey: true });
       } else if (hasLady && mission > 1 && !ended) {
         const playerList = this.get('playerList');
         const lady = this.get('lady');
@@ -734,13 +710,12 @@ class Game extends Parse.Object {
         chat.waitingForLady({ lady: playerList[lady] });
 
         this.set('stage', 'CARDING');
+
+        await this.save({}, { useMasterKey: true });
       } else if (!ended) {
         this.newRound();
-        return true;
       }
     }
-
-    await this.save({}, { useMasterKey: true });
 
     return true;
   }
@@ -969,9 +944,10 @@ class Game extends Parse.Object {
     }
 
     // Define players and spectators
-    const players = this.get('playerList');
-    let spectators = this.get('spectatorList');
-    spectators = Math.max(Object.keys(spectators).length - players.length, 0);
+    let spectators = this.get('spectatorListNew') || [];
+    const players = this.get('playerList').filter((p) => spectators.includes(p));
+
+    spectators = Math.max(spectators.length - players.length, 0);
 
     // Define client
     const client = {};
@@ -1000,6 +976,7 @@ class Game extends Parse.Object {
       'avatarList',
       'playerMax',
       'spectatorList',
+      'spectatorListNew',
       'kickedPlayers',
       'roleList',
       'roleSettings',

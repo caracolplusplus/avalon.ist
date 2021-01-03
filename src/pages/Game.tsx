@@ -174,13 +174,11 @@ class Game extends React.PureComponent<PageProps, GameState> {
   parseGame = (data: any) => {
     const { username } = this.props;
 
-    const { avatarList, playerList, spectatorList, roleList } = data;
+    const { avatarList, playerList, roleList } = data;
 
     const avatars: any[] = playerList.map((p: any) => avatarList[p.replace(/\./gi, '/')]);
 
-    const clients = Object.keys(spectatorList).map((p) =>
-      p.replace(/\//gi, '.').replace(/!/, '$')
-    );
+    const clients = data.spectatorListNew;
 
     const seat = playerList.indexOf(username);
     const hasAssassin = roleList.indexOf('Assassin');

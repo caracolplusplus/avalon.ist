@@ -48,8 +48,7 @@ class Chat extends Parse.Object {
   async saveMessages(newMessages) {
     await this.fetch({ useMasterKey: true });
 
-    const messages = this.get('messages');
-    const messageCap = this.get('messageCap');
+    let messages = 0;
 
     const env = require('./environment').getGlobal();
     const modList = env.get('moderatorList');
@@ -57,19 +56,17 @@ class Chat extends Parse.Object {
     newMessages = newMessages.filter((m) => {
       const { type, to, from } = m;
 
-      if (type !== 'direct' || modList.includes(from) || modList.includes(to[0]))
+      if (type !== 'direct' || modList.includes(from) || modList.includes(to[0])) {
+        this.addUnique('messages', m);
+        messages++;
+
         return true;
+      }
 
       return false;
     });
 
-    if (!newMessages.length) return false;
-
-    messages.push(...newMessages);
-
-    while (messages.length > messageCap) messages.shift();
-
-    this.set('messages', messages);
+    if (!messages) return false;
 
     this.save({}, { useMasterKey: true, context: { messages: newMessages } });
 

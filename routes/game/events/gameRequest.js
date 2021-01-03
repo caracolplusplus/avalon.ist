@@ -1,7 +1,7 @@
-const { generalChat, gameChat, gameRoom } = require('../../rooms');
+const { gameChat, gameRoom } = require('../../rooms');
 
 function gameRequest(io, socket) {
-  const { user, id } = socket;
+  const { user } = socket;
   const username = user.get('username');
 
   const gameLeave = async () => {
@@ -46,8 +46,6 @@ function gameRequest(io, socket) {
         g.addClient({
           username,
           avatars: user.get('avatars'),
-          instance: id,
-          id: generalChat,
         });
 
         socket

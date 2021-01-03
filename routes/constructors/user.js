@@ -246,12 +246,11 @@ class User extends Parse.User {
 
     const res = ['resistance', 'percival', 'merlin'].includes(role) ? 1 : 0;
 
-    const gameHistory = this.get('gameHistory');
     const games = this.get('games');
     const gameStats = this.get('gameStats');
     const gameShots = this.get('gameShots');
 
-    gameHistory.push(code);
+    this.addUnique('gameHistory', code);
 
     games[1]++;
     gameStats[role][1]++;
@@ -267,7 +266,6 @@ class User extends Parse.User {
       if (cause < 1) gameShots[0]++;
     }
 
-    this.set('gameHistory', gameHistory);
     this.set('games', games);
     this.set('gameStats', gameStats);
     this.set('gameShots', gameShots);
