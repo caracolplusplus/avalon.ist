@@ -122,46 +122,6 @@ class Game extends Parse.Object {
     return array;
   }
 
-  async toggleReady(data) {
-    const { username, ready } = data;
-
-    await this.fetch({ useMasterKey: true });
-
-    const askedToBeReady = this.get('askedToBeReady');
-
-    if (!askedToBeReady) return false;
-
-    const players = this.get('playerList');
-    const chat = this.get('chat');
-
-    if (ready && players.includes(username)) {
-      this.addUnique('readyPlayers', username);
-    }
-
-    return await this.save({}, { useMasterKey: true })
-      .then(async (g) => {
-        await chat.fetch({ useMasterKey: true });
-        chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
-
-        if (
-          g.get('playerList').length === g.get('readyPlayers').length &&
-          g.get('askedToBeReady')
-        ) {
-          g.set('askedToBeReady', false);
-          g.startGame();
-
-          return true;
-        }
-
-        return false;
-      })
-      .catch((e) => {
-        console.log(e);
-
-        return false;
-      });
-  }
-
   async editSettings(data) {
     const { roleSettings, playerMax } = data;
 
@@ -410,6 +370,46 @@ class Game extends Parse.Object {
         this.save({}, { useMasterKey: true });
       }
     }, 10000);
+  }
+
+  async toggleReady(data) {
+    const { username, ready } = data;
+
+    await this.fetch({ useMasterKey: true });
+
+    const askedToBeReady = this.get('askedToBeReady');
+
+    if (!askedToBeReady) return false;
+
+    const players = this.get('playerList');
+    const chat = this.get('chat');
+
+    if (ready && players.includes(username)) {
+      this.addUnique('readyPlayers', username);
+    }
+
+    return await this.save({}, { useMasterKey: true })
+      .then(async (g) => {
+        await chat.fetch({ useMasterKey: true });
+        chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
+
+        if (
+          g.get('playerList').length === g.get('readyPlayers').length &&
+          g.get('askedToBeReady')
+        ) {
+          g.set('askedToBeReady', false);
+          g.startGame();
+
+          return true;
+        }
+
+        return false;
+      })
+      .catch((e) => {
+        console.log(e);
+
+        return false;
+      });
   }
 
   async startGame() {

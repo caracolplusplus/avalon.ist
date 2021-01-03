@@ -110,17 +110,10 @@ function beforeGame(io, socket) {
     await game.fetch({ useMasterKey: true });
 
     const host = game.get('host');
-    const code = game.get('code');
 
     if (host !== username) return;
 
-    game.startGame({ username });
-
-    io.to(gameRoom + code).emit('printNotification', {
-      audio: 'notification',
-      title: `Room ${code} has started`,
-      body: ``,
-    });
+    game.askToBeReady({ username });
   });
 
   socket.on('readyState', async (ready) => {
@@ -128,7 +121,15 @@ function beforeGame(io, socket) {
 
     if (!game) return;
 
-    await game.toggleReady({ game, username, ready });
+    const code = game.get('code');
+    const result = await game.toggleReady({ game, username, ready });
+
+    if (result)
+      io.to(gameRoom + code).emit('printNotification', {
+        audio: 'notification',
+        title: `Room ${code} has started`,
+        body: ``,
+      });
   });
 }
 
