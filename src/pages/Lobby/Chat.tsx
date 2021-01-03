@@ -456,9 +456,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         <span className={`hour ${color}`}>{snap.hour}</span>
         <p className="text">
           {snap.from ? (
-            <Link className={`username ${color}`} to={`/profile/${snap.from}`}>
+            <span className={`username ${color}`}>
               {snap.from}:
-            </Link>
+            </span>
           ) : null}
           <span className="content">{snap.content}</span>
         </p>
