@@ -283,7 +283,7 @@ class Game extends Parse.Object {
         await this.get('chat').destroy({ useMasterKey: true });
         await this.destroy({ useMasterKey: true });
       } else {
-        this.save({}, { useMasterKey: true });
+        await this.save({}, { useMasterKey: true });
       }
     }
 
@@ -313,7 +313,7 @@ class Game extends Parse.Object {
 
     const has = players.includes(username);
 
-    if (has) {
+    if (has && !add) {
       this.remove('playerList', username);
     } else if (add && players.length < playerMax && !kicked.includes(username)) {
       this.addUnique('playerList', username);
