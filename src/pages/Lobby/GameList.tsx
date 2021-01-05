@@ -21,6 +21,7 @@ interface AvatarProps {
 }
 
 interface GameLinkProps {
+  gameId: string;
   code: string;
   missionResults: (boolean | undefined)[];
   avatars: string[];
@@ -46,8 +47,7 @@ class GameLink extends React.PureComponent<GameLinkProps> {
   gameState = ['Waiting', 'In Progress', 'Finished', 'Paused', 'Frozen'];
 
   render() {
-    const { code, state, host, mode, spectators, missionResults, avatars } = this.props;
-
+    const { gameId, code, state, host, mode, spectators, missionResults, avatars } = this.props;
     const _missionResults: (boolean | undefined)[] = new Array(5);
     _missionResults.fill(undefined);
     _missionResults.unshift(...missionResults);
@@ -121,7 +121,6 @@ class GameList extends React.PureComponent<{}, GameListState> {
 
   render() {
     const { games, showCreate }: GameListState = this.state;
-
     return (
       <div id="Game-List" className="row">
         <h3>

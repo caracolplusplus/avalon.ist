@@ -26,7 +26,8 @@ import '../styles/Game.scss';
 // Declaration
 
 interface GameProps {
-  id: string;
+  gameId: string;
+  code: string;
 }
 
 interface PageProps extends RouteComponentProps<GameProps> {
@@ -88,6 +89,8 @@ class Game extends React.PureComponent<PageProps, GameState> {
     missionVotes: [[], [], [], [], []],
     missionTeams: [[], [], [], [], []],
     missionLeader: [],
+    // Game Id
+    gameId: '-1',
     // Room Number
     code: '-1',
     // Game Settings
@@ -144,9 +147,8 @@ class Game extends React.PureComponent<PageProps, GameState> {
   };
 
   triggerRequest = () => {
-    const { id: code } = this.props.match.params;
-
-    socket.emit('gameRequest', code);
+    const { gameId, code } = this.props.match.params;
+    socket.emit('gameRequest', gameId, code);
   };
 
   gameNotFound = () => {
@@ -186,6 +188,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
     const hasAssassin = roleList.indexOf('Assassin');
 
     this.setState({
+      gameId: data.gameId,
       code: data.code,
       players: playerList,
       kicked: data.kickedPlayers.includes(username),

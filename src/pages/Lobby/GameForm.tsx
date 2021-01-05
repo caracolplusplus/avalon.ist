@@ -49,6 +49,7 @@ interface GameFormState {
   };
   redirect: boolean;
   processing: boolean;
+  roomId: string;
   playerRoom: number;
   listed: boolean;
 }
@@ -74,6 +75,7 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
           },
       redirect: false,
       processing: false,
+      roomId: '-1',
       playerRoom: -1,
       listed: true,
     };
@@ -250,11 +252,12 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
     );
   }
 
-  createGameSuccess(data: number) {
+  createGameSuccess(data: number, roomId: string) {
     this.setState({
       processing: false,
       redirect: true,
       playerRoom: data,
+      roomId,
     });
   }
 
@@ -283,7 +286,7 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
   render() {
     return (
       <div className="settings-form">
-        {this.state.redirect ? <Redirect to={'/game/' + this.state.playerRoom} /> : null}
+        {this.state.redirect ? <Redirect to={`/game/${this.state.roomId}/${this.state.playerRoom}`} /> : null}
         <AvalonScrollbars>
           <form autoComplete="off" onSubmit={this.handleSubmit}>
             <p className="title">{this.props.title}</p>
