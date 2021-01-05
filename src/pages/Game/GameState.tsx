@@ -43,6 +43,8 @@ interface GameState {
   missionLeader: number[][];
   missionVotes: number[][][];
   missionTeams: number[][][];
+  // Game Id
+  gameId: string;
   // Room Number
   code: string;
   // Game Settings
