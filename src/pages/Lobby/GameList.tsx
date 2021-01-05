@@ -53,7 +53,7 @@ class GameLink extends React.PureComponent<GameLinkProps> {
     _missionResults.unshift(...missionResults);
 
     return (
-      <Link className="game" to={`/game/${code}`}>
+      <Link className="game" to={`/game/${gameId}/${code}`}>
         <h3>
           <p>ROOM #{code}</p>
           {state > -1 ? (
