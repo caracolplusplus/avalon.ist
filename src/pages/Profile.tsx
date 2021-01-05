@@ -31,6 +31,7 @@ import '../styles/Profile.scss';
 
 const SPY_ROLES = new Set(['morgana', 'oberon', 'mordred', 'assassin', 'spy']);
 const UN_FLAG = `https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Flag_of_the_United_Nations.svg/800px-Flag_of_the_United_Nations.svg.png`;
+const STONEWALL_FLAG = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Gay_Pride_Flag.svg/2560px-Gay_Pride_Flag.svg.png';
 const gummy = DefaultAvatars.gummy;
 
 const Percent = (n: number) => Math.trunc(n * 10000) / 100;
@@ -223,6 +224,15 @@ class Profile extends React.PureComponent<
     const winRate = games[1] > 0 ? Percent(totalWon / games[1]) : 0;
     const shotRate = gameShots[1] > 0 ? Percent(gameShots[0] / gameShots[1]) : 0;
 
+    let countryFlag = <img alt={'UN'} src={UN_FLAG} />;
+    if (country) {
+      if (country.text == 'Stonewall') {
+        countryFlag = <img alt={'Stonewall'} src={STONEWALL_FLAG} />
+      } else {
+        countryFlag = <Flag code={country.value} />
+      }
+    }
+
     return redirect ? (
       <Redirect to="/profile-not-found" />
     ) : (
@@ -239,11 +249,7 @@ class Profile extends React.PureComponent<
                   onMouseLeave={this.onStopHover}
                 />
                 <div className="user-tag">
-                  {country ? (
-                    <Flag code={country.value} />
-                  ) : (
-                    <img alt={'UN'} src={UN_FLAG} />
-                  )}
+                  {countryFlag}
                   <p>
                     <b>{username}</b>
                     <br />
