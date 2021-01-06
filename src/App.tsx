@@ -230,7 +230,7 @@ class App extends React.PureComponent<appProps, appState> {
             <UnverifiedOnly exact path="/verify" {...routeProps} component={Verify} />
             <LoggedInOnly exact path="/lobby" {...routeProps} component={Lobby} />
             <LoggedInOnly path="/profile/:username" {...routeProps} component={Profile} />
-            <LoggedInOnly path="/game/:id" {...routeProps} component={Game} />
+            <LoggedInOnly path="/game/:gameId/:code" {...routeProps} component={Game} />
             <Route path="/article/:id" component={Article} />
             <Route component={NoMatch} />
           </Switch>

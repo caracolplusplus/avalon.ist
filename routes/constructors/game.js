@@ -21,6 +21,7 @@ class Game extends Parse.Object {
     const game = new Game();
 
     // Meta
+    game.set('gameId', '-1');
     game.set('code', code);
     game.set('host', 'Anonymous');
     game.set('mode', 'Unrated');
@@ -927,19 +928,19 @@ class Game extends Parse.Object {
     const ended = this.get('ended');
     let state = 0;
 
-    if (!started) {
-      state = 0;
-    } else if (!frozen) {
-      if (!ended) {
-        state = 1;
+    if (started) {
+      if (!frozen) {
+        if (!ended) {
+          state = 1;
+        } else {
+          state = 2;
+        }
       } else {
-        state = 2;
-      }
-    } else {
-      if (!ended) {
-        state = 3;
-      } else {
-        state = 4;
+        if (!ended) {
+          state = 3;
+        } else {
+          state = 4;
+        }
       }
     }
 
@@ -952,13 +953,13 @@ class Game extends Parse.Object {
     // Define client
     const client = {};
 
-    const parameters = ['code', 'host', 'mode', 'missionResults'];
+    const parameters = ['gameId', 'code', 'host', 'mode', 'missionResults'];
 
-    for (const x in parameters) {
-      const y = parameters[x];
+    parameters.forEach((parameter) => {
+      client[parameter] = this.get(parameter);
+    })
 
-      client[y] = this.get(y);
-    }
+    client['gameId'] = this.id;
 
     return { ...client, players, spectators, state, avatars: [] };
   }
@@ -967,6 +968,7 @@ class Game extends Parse.Object {
     const client = {};
 
     const parameters = [
+      'gameId',
       'code',
       'host',
       'active',
@@ -1010,11 +1012,11 @@ class Game extends Parse.Object {
       'ladyHolders',
     ];
 
-    for (const x in parameters) {
-      const y = parameters[x];
+    parameters.forEach((parameter) => {
+      client[parameter] = this.get(parameter);
+    })
 
-      client[y] = this.get(y);
-    }
+    client['gameId'] = this.id;
 
     return client;
   }

@@ -37,7 +37,7 @@ function beforeGame(io, socket) {
     await game.editSettings({ roleSettings, playerMax });
     await game.togglePlayer({ username, add: true });
 
-    socket.emit('createGameSuccess', code);
+    socket.emit('createGameSuccess', code, game.id);
   });
 
   socket.on('reportPlayer', (data) => {

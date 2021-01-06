@@ -203,6 +203,7 @@ const countries = [
   { text: 'South Georgia and the South Sandwich Islands', value: 'GS' },
   { text: 'Spain', value: 'ES' },
   { text: 'Sri Lanka', value: 'LK' },
+  { text: 'Stonewall', value: 'Stonewall' },
   { text: 'Sudan', value: 'SD' },
   { text: 'Suriname', value: 'SR' },
   { text: 'Svalbard and Jan Mayen', value: 'SJ' },

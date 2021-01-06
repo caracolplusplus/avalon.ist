@@ -26,16 +26,16 @@ function gameRequest(io, socket) {
     delete socket.game;
   };
 
-  socket.on('gameRequest', (code) => {
+  socket.on('gameRequest', (gameId, code) => {
     // eslint-disable-next-line no-undef
     const gameQ = new Parse.Query('Game');
-    gameQ.equalTo('code', code);
 
-    gameQ.first({ useMasterKey: true }).then(async (g) => {
+    gameQ.get(gameId).then(async (g) => {
       if (g) {
         socket.game = g;
 
         if (!g.get('active') && !g.get('ended')) {
+          console.log('not found', g);
           socket.emit('gameNotFound');
           return;
         }
