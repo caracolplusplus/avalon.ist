@@ -45,32 +45,32 @@ class Chat extends Parse.Object {
     return chat;
   }
 
-  async saveMessages(newMessages) {
-    await this.fetch({ useMasterKey: true });
+  saveMessages(newMessages) {
+    this.fetch({ useMasterKey: true })
+      .then((c) => {
+        let messages = 0;
 
-    let messages = 0;
+        const env = require('./environment').getGlobal();
+        const modList = env.get('moderatorList');
 
-    const env = require('./environment').getGlobal();
-    const modList = env.get('moderatorList');
+        newMessages = newMessages.filter((m) => {
+          const { type, to, from } = m;
 
-    newMessages = newMessages.filter((m) => {
-      const { type, to, from } = m;
+          if (type !== 'direct' || modList.includes(from) || modList.includes(to[0])) {
+            this.addUnique('messages', m);
+            messages++;
 
-      if (type !== 'direct' || modList.includes(from) || modList.includes(to[0])) {
-        this.addUnique('messages', m);
-        messages++;
+            return true;
+          }
 
-        return true;
-      }
+          return false;
+        });
 
-      return false;
-    });
+        if (!messages) return false;
 
-    if (!messages) return false;
-
-    this.save({}, { useMasterKey: true, context: { messages: newMessages } });
-
-    return true;
+        this.save({}, { useMasterKey: true, context: { messages: newMessages } });
+      })
+      .catch((err) => console.log(err));
   }
 
   moderationAction(data) {
@@ -120,7 +120,7 @@ class Chat extends Parse.Object {
 
     this.saveMessages([
       addMessage({
-        content: `${username} has created Room #${code}.`,
+        content: `${username} has created Room ${code}.`,
       }),
     ]);
 
@@ -135,7 +135,7 @@ class Chat extends Parse.Object {
 
     this.saveMessages([
       addMessage({
-        content: `Game #${code} has finished. ${outcome}.`,
+        content: `Game ${code} has finished. ${outcome}.`,
         type: winner ? POSITIVE : NEGATIVE,
       }),
     ]);
@@ -203,7 +203,7 @@ class Chat extends Parse.Object {
     return true;
   }
 
-  async afterVote(data) {
+  afterVote(data) {
     const { mission, round, passes } = data;
 
     const result = passes ? 'approved' : 'rejected';
@@ -229,7 +229,7 @@ class Chat extends Parse.Object {
     return true;
   }
 
-  async afterMission(data) {
+  afterMission(data) {
     const { NEGATIVE, POSITIVE } = messageTypes;
     const { mission, fails, passes } = data;
 
@@ -310,9 +310,7 @@ class Chat extends Parse.Object {
 
   onEnd(data) {
     const { NEGATIVE, POSITIVE } = messageTypes;
-    const { ending, winner } = data;
-
-    const code = this.get('code');
+    const { ending, winner, code } = data;
 
     const type = winner ? POSITIVE : NEGATIVE;
 
@@ -350,13 +348,13 @@ class Chat extends Parse.Object {
     return true;
   }
 
-  async suspendPlayer(data) {
+  suspendPlayer(data) {
     const { username, target, hours, comment } = data;
 
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', target);
 
-    return await userQ
+    return userQ
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
@@ -381,13 +379,13 @@ class Chat extends Parse.Object {
       .catch((e) => console.log(e));
   }
 
-  async revokeSuspension(data) {
+  revokeSuspension(data) {
     const { username, target, comment } = data;
 
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', target);
 
-    return await userQ
+    return userQ
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
@@ -410,13 +408,13 @@ class Chat extends Parse.Object {
       .catch((e) => console.log(e));
   }
 
-  async banPlayer(data) {
+  banPlayer(data) {
     const { username, target, comment } = data;
 
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', target);
 
-    return await userQ
+    return userQ
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
@@ -439,13 +437,13 @@ class Chat extends Parse.Object {
       .catch((e) => console.log(e));
   }
 
-  async revokeBan(data) {
+  revokeBan(data) {
     const { username, target, comment } = data;
 
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', target);
 
-    return await userQ
+    return userQ
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
@@ -468,13 +466,13 @@ class Chat extends Parse.Object {
       .catch((e) => console.log(e));
   }
 
-  async banPlayerIP(data) {
+  banPlayerIP(data) {
     const { username, target, comment } = data;
 
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', target);
 
-    return await userQ
+    return userQ
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {

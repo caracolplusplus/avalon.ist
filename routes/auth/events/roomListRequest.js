@@ -1,9 +1,11 @@
-function roomListRequest(io, socket) {
-	socket.on('roomListRequest', () => {
-		const environment = require('../../constructors/environment').getGlobal();
+const Environment = require('../../constructors/environment');
 
-		socket.emit('roomListResponse', environment.get('roomList'));
-	});
+function roomListRequest(io, socket) {
+  socket.on('roomListRequest', () => {
+    const environment = Environment.getGlobal();
+
+    socket.emit('roomListResponse', environment.get('roomList'));
+  });
 }
 
 module.exports = roomListRequest;

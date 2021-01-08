@@ -1,5 +1,7 @@
+const Environment = require('../../routes/constructors/environment');
+
 const beforeGameSave = async (request) => {
-  const environment = require('../../routes/constructors/environment').getGlobal();
+  const environment = Environment.getGlobal();
 
   environment.checkActiveGames();
 

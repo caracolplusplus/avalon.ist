@@ -71,6 +71,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
     picks: [],
     picksYetToVote: [],
     votesRound: [],
+    votesPending: [],
     // Game Knowledge
     publicKnowledge: [],
     privateKnowledge: [],
@@ -147,8 +148,8 @@ class Game extends React.PureComponent<PageProps, GameState> {
   };
 
   triggerRequest = () => {
-    const { gameId, code } = this.props.match.params;
-    socket.emit('gameRequest', gameId, code);
+    const { gameId } = this.props.match.params;
+    socket.emit('gameRequest', gameId);
   };
 
   gameNotFound = () => {
@@ -180,6 +181,10 @@ class Game extends React.PureComponent<PageProps, GameState> {
 
     const avatars: any[] = playerList.map((p: any) => avatarList[p.replace(/\./gi, '/')]);
 
+    const votesRound = playerList.map((p: string) =>
+      data.votesRound.includes(p) ? 0 : 1
+    );
+
     const clients = data.spectatorListNew;
 
     const seat = playerList.indexOf(username);
@@ -205,7 +210,8 @@ class Game extends React.PureComponent<PageProps, GameState> {
       assassination: data.assassination,
       picks: data.picks,
       picksYetToVote: data.picksYetToVote,
-      votesRound: data.votesRound,
+      votesRound,
+      votesPending: data.votesPending,
       publicKnowledge: data.publicKnowledge,
       privateKnowledge: data.privateKnowledge[username.replace(/\./gi, '/')] || [],
       leader: data.leader,

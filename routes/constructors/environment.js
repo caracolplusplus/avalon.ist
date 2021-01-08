@@ -46,7 +46,7 @@ class Environment extends Parse.Object {
       .first({
         useMasterKey: true,
       })
-      .then(async (g) => {
+      .then((g) => {
         if (!g) {
           g = Environment.spawn();
         }
@@ -250,10 +250,8 @@ class Environment extends Parse.Object {
     return true;
   }
 
-  async addAnnouncement(data) {
-    const announcementLogs = this.get('announcementLogs');
-
-    announcementLogs.push({
+  addAnnouncement(data) {
+    this.addUnique('announcementLogs', {
       id: 'untitled',
       title: 'Untitled Article',
       author: 'Anonymous',
@@ -262,9 +260,7 @@ class Environment extends Parse.Object {
       ...data,
     });
 
-    this.set('announcementLogs', announcementLogs);
-
-    await this.save({}, { useMasterKey: true });
+    this.save({}, { useMasterKey: true });
 
     return true;
   }

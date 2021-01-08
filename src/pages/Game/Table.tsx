@@ -181,7 +181,8 @@ class Table extends React.PureComponent<
       : DefaultAvatars.classic;
 
     // Pre Conditions
-    const imKilling = game.assassin && game.stage === 'ASSASSINATION';
+    const imKilling =
+      game.assassinName === game.username && game.stage === 'ASSASSINATION';
     const imPicking = game.seat === game.leader && game.stage === 'PICKING';
     const imCarding = game.seat === game.card && game.stage === 'CARDING';
     const imVoting = game.stage === 'VOTING';

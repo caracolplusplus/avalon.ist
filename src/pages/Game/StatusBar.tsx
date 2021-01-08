@@ -260,9 +260,9 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   };
 
   onVoting = (message: Message) => {
-    const { seat, leader, players, picks, votesRound } = this.props;
+    const { seat, leader, players, username, picks, votesPending } = this.props;
 
-    if (seat > -1 && votesRound[seat] < 0) {
+    if (seat > -1 && votesPending.includes(username)) {
       const _leader = players[leader];
       const team = players.filter((p, i) => picks.includes(i)).toString();
 
@@ -283,18 +283,18 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
         },
       ];
     } else {
-      const remaining = players.filter((p, i) => votesRound[i] < 0).toString();
-
-      message.text = `Waiting for ${remaining.replace(/,/g, ', ')} to vote.`;
+      message.text = `Waiting for ${votesPending
+        .toString()
+        .replace(/,/g, ', ')} to vote.`;
     }
 
     return message;
   };
 
   onMission = (message: Message) => {
-    const { seat, imRes, picksYetToVote } = this.props;
+    const { username, seat, imRes, picksYetToVote } = this.props;
 
-    if (seat > -1 && picksYetToVote.includes(seat)) {
+    if (seat > -1 && picksYetToVote.includes(username)) {
       message.text = 'Its your turn to vote. Choose the fate of this mission.';
       message.buttons = [
         {
@@ -309,11 +309,9 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
         },
       ];
     } else {
-      const remaining = this.props.players
-        .filter((p, i) => this.props.picksYetToVote.includes(i))
-        .toString();
-
-      message.text = `Waiting for ${remaining.replace(/,/g, ', ')} to vote.`;
+      message.text = `Waiting for ${picksYetToVote
+        .toString()
+        .replace(/,/g, ', ')} to vote.`;
     }
 
     return message;

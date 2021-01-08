@@ -31,7 +31,8 @@ import '../styles/Profile.scss';
 
 const SPY_ROLES = new Set(['morgana', 'oberon', 'mordred', 'assassin', 'spy']);
 const UN_FLAG = `https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Flag_of_the_United_Nations.svg/800px-Flag_of_the_United_Nations.svg.png`;
-const STONEWALL_FLAG = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Gay_Pride_Flag.svg/2560px-Gay_Pride_Flag.svg.png';
+const STONEWALL_FLAG =
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Gay_Pride_Flag.svg/2560px-Gay_Pride_Flag.svg.png';
 const gummy = DefaultAvatars.gummy;
 
 const Percent = (n: number) => Math.trunc(n * 10000) / 100;
@@ -226,10 +227,10 @@ class Profile extends React.PureComponent<
 
     let countryFlag = <img alt={'UN'} src={UN_FLAG} />;
     if (country) {
-      if (country.text == 'Stonewall') {
-        countryFlag = <img alt={'Stonewall'} src={STONEWALL_FLAG} />
+      if (country.text === 'Stonewall') {
+        countryFlag = <img alt={'Stonewall'} src={STONEWALL_FLAG} />;
       } else {
-        countryFlag = <Flag code={country.value} />
+        countryFlag = <Flag code={country.value} />;
       }
     }
 
@@ -290,7 +291,7 @@ class Profile extends React.PureComponent<
                     </tr>
                     <tr>
                       <td>Total Games Played</td>
-                      <td>{this.state.games[1]}</td>
+                      <td>{games[1]}</td>
                     </tr>
                     <tr>
                       <td>Total Games Won</td>
@@ -346,18 +347,35 @@ class Profile extends React.PureComponent<
                 <table>
                   <tbody>
                     <tr>
-                      <th>Game Link</th>
+                      <th>Game</th>
+                      <th>Role</th>
+                      <th>Size</th>
+                      <th>Winner</th>
+                      <th>Date</th>
                     </tr>
                     {gameHistory
-                      .reverse()
                       .slice(-10)
-                      .map((g: string, i) => (
-                        <tr key={'Game' + g + i}>
-                          <td>
-                            <Link to={'/game/' + g}>Game #{g}</Link>
-                          </td>
-                        </tr>
-                      ))}
+                      .reverse()
+                      .map((g: any, i) => {
+                        const date = new Date(g.date);
+                        const month = ('00' + (date.getUTCMonth() + 1)).slice(-2);
+                        const day = ('00' + date.getUTCDate()).slice(-2);
+                        const year = date.getUTCFullYear();
+
+                        return (
+                          <tr key={'Game' + g.id}>
+                            <td>
+                              <Link to={'/game/' + g.id}>#{g.code}</Link>
+                            </td>
+                            <td>{g.role}</td>
+                            <td>{g.size}</td>
+                            <td>{g.winner ? 'Resistance' : 'Spy'}</td>
+                            <td>
+                              {year}-{month}-{day}
+                            </td>
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </table>
               </div>

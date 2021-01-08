@@ -1,10 +1,12 @@
+const Environment = require('../../constructors/environment');
+
 function moderationCommands(io, socket) {
   const { user } = socket;
   const username = user.get('username');
   const allowed = user.get('isMod') || user.get('isAdmin');
 
   const getChat = () => {
-    const environment = require('../../constructors/environment').getGlobal();
+    const environment = Environment.getGlobal();
 
     return environment.get('chat');
   };
@@ -16,7 +18,7 @@ function moderationCommands(io, socket) {
   const warning = 'You must fill all the required variables for this command to work.';
   const unauthorized = 'You are not authorized to use this command.';
 
-  socket.on('suspendPlayer', async (data) => {
+  socket.on('suspendPlayer', (data) => {
     const { isGeneral } = data;
 
     if (allowed) {
@@ -29,20 +31,21 @@ function moderationCommands(io, socket) {
 
       const chat = getChat();
 
-      const content = await chat.suspendPlayer({
-        username,
-        target,
-        hours,
-        comment,
-      });
-
-      socket.emit(getResponse(isGeneral), content);
+      chat
+        .suspendPlayer({
+          username,
+          target,
+          hours,
+          comment,
+        })
+        .then((result) => socket.emit(getResponse(isGeneral), result))
+        .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
     }
   });
 
-  socket.on('revokeSuspension', async (data) => {
+  socket.on('revokeSuspension', (data) => {
     const { isGeneral } = data;
 
     if (allowed) {
@@ -55,19 +58,20 @@ function moderationCommands(io, socket) {
 
       const chat = getChat();
 
-      const content = await chat.revokeSuspension({
-        username,
-        target,
-        comment,
-      });
-
-      socket.emit(getResponse(isGeneral), content);
+      chat
+        .revokeSuspension({
+          username,
+          target,
+          comment,
+        })
+        .then((result) => socket.emit(getResponse(isGeneral), result))
+        .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
     }
   });
 
-  socket.on('banPlayer', async (data) => {
+  socket.on('banPlayer', (data) => {
     const { isGeneral } = data;
 
     if (allowed) {
@@ -80,19 +84,20 @@ function moderationCommands(io, socket) {
 
       const chat = getChat();
 
-      const content = await chat.banPlayer({
-        username,
-        target,
-        comment,
-      });
-
-      socket.emit(getResponse(isGeneral), content);
+      chat
+        .banPlayer({
+          username,
+          target,
+          comment,
+        })
+        .then((result) => socket.emit(getResponse(isGeneral), result))
+        .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
     }
   });
 
-  socket.on('revokeBan', async (data) => {
+  socket.on('revokeBan', (data) => {
     const { isGeneral } = data;
 
     if (allowed) {
@@ -105,19 +110,20 @@ function moderationCommands(io, socket) {
 
       const chat = getChat();
 
-      const content = await chat.revokeBan({
-        username,
-        target,
-        comment,
-      });
-
-      socket.emit(getResponse(isGeneral), content);
+      chat
+        .revokeBan({
+          username,
+          target,
+          comment,
+        })
+        .then((result) => socket.emit(getResponse(isGeneral), result))
+        .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
     }
   });
 
-  socket.on('banPlayerIP', async (data) => {
+  socket.on('banPlayerIP', (data) => {
     const { isGeneral } = data;
 
     if (allowed) {
@@ -130,13 +136,14 @@ function moderationCommands(io, socket) {
 
       const chat = getChat();
 
-      const content = await chat.banPlayerIP({
-        username,
-        target,
-        comment,
-      });
-
-      socket.emit(getResponse(isGeneral), content);
+      chat
+        .banPlayerIP({
+          username,
+          target,
+          comment,
+        })
+        .then((result) => socket.emit(getResponse(isGeneral), result))
+        .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
     }
@@ -171,7 +178,7 @@ function moderationCommands(io, socket) {
     const { isGeneral } = data;
 
     if (allowed) {
-      const environment = require('../../constructors/environment').getGlobal();
+      const environment = Environment.getGlobal();
       const logs = environment.get('moderationLogs');
 
       const content = `Moderation Logs Received. Open Browser Console.`;
@@ -186,7 +193,7 @@ function moderationCommands(io, socket) {
     const { isGeneral } = data;
 
     if (allowed) {
-      const environment = require('../../constructors/environment').getGlobal();
+      const environment = Environment.getGlobal();
       environment.toggleMaintenance();
 
       const content = `Maintenance mode was toggled.`;
@@ -198,21 +205,24 @@ function moderationCommands(io, socket) {
     }
   });
 
-  socket.on('createAnnouncement', async (data) => {
+  socket.on('createAnnouncement', (data) => {
     if (allowed) {
-      const environment = require('../../constructors/environment').getGlobal();
-      const res = environment.addAnnouncement({
+      const environment = Environment.getGlobal();
+
+      environment.addAnnouncement({
         ...data,
         author: username,
       });
 
       const chat = environment.get('chat');
-      await chat.fetch({ useMasterKey: true });
-      await res;
+      chat
+        .fetch({ useMasterKey: true })
+        .then((c) => {
+          c.newAnnouncement(`New announcement: "${data.title}".`);
 
-      chat.newAnnouncement(`New announcement: "${data.title}".`);
-
-      io.emit('announcementResponse', environment.get('announcementLogs').slice(-5));
+          io.emit('announcementResponse', environment.get('announcementLogs').slice(-5));
+        })
+        .catch((err) => console.log(err));
     }
   });
 
@@ -235,7 +245,7 @@ function moderationCommands(io, socket) {
 
             u.save({}, { useMasterKey: true });
 
-            const environment = require('../../constructors/environment').getGlobal();
+            const environment = Environment.getGlobal();
             environment.addAvatarLog(data);
           }
         })
@@ -256,18 +266,21 @@ function moderationCommands(io, socket) {
     }
   });
 
-  socket.on('discordSet', async (data) => {
+  socket.on('discordSet', (data) => {
     const { isGeneral, url } = data;
 
     if (allowed) {
-      const environment = require('../../constructors/environment').getGlobal();
+      const environment = Environment.getGlobal();
 
       environment.set('discordWebhookURL', url);
-      await environment.save({}, { useMasterKey: true });
+      environment
+        .save({}, { useMasterKey: true })
+        .then((e) => {
+          e.setDiscordHook();
 
-      environment.setDiscordHook();
-
-      socket.emit(getResponse(isGeneral), 'Discord Webhook Set.');
+          socket.emit(getResponse(isGeneral), 'Discord Webhook Set.');
+        })
+        .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
     }

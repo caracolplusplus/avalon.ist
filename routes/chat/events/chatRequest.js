@@ -1,24 +1,37 @@
+const Environment = require('../../constructors/environment');
+
 function chatRequest(io, socket) {
-  socket.on('generalChatRequest', async () => {
-    const environment = require('../../constructors/environment').getGlobal();
+  socket.on('generalChatRequest', () => {
+    const environment = Environment.getGlobal();
 
     const chat = environment.get('chat');
 
-    await chat.fetch({ useMasterKey: true });
-
-    socket.emit('generalChatResponse', chat.get('messages'));
+    chat
+      .fetch({ useMasterKey: true })
+      .then((c) => {
+        socket.emit('generalChatResponse', c.get('messages'));
+      })
+      .catch((err) => console.log(err));
   });
 
-  socket.on('gameChatRequest', async () => {
+  socket.on('gameChatRequest', () => {
     const { game } = socket;
 
     if (!game) return;
 
-    const chat = game.get('chat');
+    game
+      .fetch({ useMasterKey: true })
+      .then((g) => {
+        const chat = g.get('chat');
 
-    await chat.fetch({ useMasterKey: true });
-
-    socket.emit('gameChatResponse', chat.get('messages'));
+        chat
+          .fetch({ useMasterKey: true })
+          .then((c) => {
+            socket.emit('gameChatResponse', c.get('messages'));
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch((err) => console.log(err));
   });
 }
 

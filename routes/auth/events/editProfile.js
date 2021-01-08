@@ -1,13 +1,16 @@
 function editProfile(io, socket) {
-	const { user } = socket;
+  const { user } = socket;
 
-	socket.on('editProfile', async (data) => {
-		await user.fetch({ useMasterKey: true });
+  socket.on('editProfile', (data) => {
+    user
+      .fetch({ useMasterKey: true })
+      .then((u) => {
+        u.setProfile(data);
 
-		await user.setProfile(data);
-
-		socket.emit('saveProfile', user.toProfilePage());
-	});
+        socket.emit('saveProfile', user.toProfilePage());
+      })
+      .catch((err) => console.log(err));
+  });
 }
 
 module.exports = editProfile;

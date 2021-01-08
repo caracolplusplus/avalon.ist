@@ -1,4 +1,6 @@
 /* global Parse */
+const Environment = require('./environment');
+
 const Chat = require('./chat');
 // const _ = require('lodash');
 
@@ -21,7 +23,7 @@ class Game extends Parse.Object {
     const game = new Game();
 
     // Meta
-    game.set('gameId', '-1');
+    game.set('unique', true);
     game.set('code', code);
     game.set('host', 'Anonymous');
     game.set('mode', 'Unrated');
@@ -70,11 +72,12 @@ class Game extends Parse.Object {
     game.set('winner', -1);
 
     // Mission Votes
+    game.set('pickNames', []);
     game.set('picks', []);
     game.set('picksYetToVote', []);
-    game.set('pickNames', []);
-    game.set('votesRound', []);
     game.set('votesMission', []);
+    game.set('votesPending', []);
+    game.set('votesRound', []);
 
     // Positions
     game.set('leader', 0);
@@ -88,9 +91,6 @@ class Game extends Parse.Object {
     game.set('round', 0);
     game.set('fails', 0);
 
-    // Chat
-    game.set('chat', Chat.spawn({ code: code }));
-
     // Mission History
     game.set('missionResults', []);
     game.set('missionPicks', [[], [], [], [], []]);
@@ -101,6 +101,13 @@ class Game extends Parse.Object {
     game.set('ladyHolders', []);
 
     return game;
+  }
+
+  buildChat() {
+    // Chat
+    this.set('chat', Chat.spawn({ code: this.id }));
+
+    return true;
   }
 
   shuffleArray(array) {
@@ -123,7 +130,7 @@ class Game extends Parse.Object {
     return array;
   }
 
-  async editSettings(data) {
+  editSettings(data) {
     const { roleSettings, playerMax } = data;
 
     const { length } = this.get('playerList');
@@ -232,17 +239,14 @@ class Game extends Parse.Object {
     this.set('roleSettings', newSettings);
     this.set('roleList', newRoles);
 
-    await this.save({}, { useMasterKey: true });
-
     return true;
   }
 
-  async addToKick(data) {
+  addToKick(data) {
     const { kick } = data;
 
     this.addUnique('kickedPlayers', kick);
-
-    await this.save({}, { useMasterKey: true });
+    this.togglePlayer({ username: kick, add: false });
 
     return true;
   }
@@ -262,7 +266,7 @@ class Game extends Parse.Object {
     return true;
   }
 
-  async removeClient(data) {
+  removeClient(data) {
     const { username } = data;
 
     const started = this.get('started');
@@ -271,22 +275,27 @@ class Game extends Parse.Object {
     this.remove('spectatorListNew', username);
 
     if (!started) {
-      await this.togglePlayer({ username, add: false });
+      this.togglePlayer({ username, add: false });
     }
 
-    await this.save({}, { useMasterKey: true });
+    this.save({}, { useMasterKey: true })
+      .then((g) => {
+        // If no more clients, then delete the room.
+        if (g.get('spectatorListNew').length === 0) {
+          g.set('active', false);
 
-    // If no more clients, then delete the room.
-    if (this.get('spectatorListNew').length === 0) {
-      this.set('active', false);
-
-      if (!ended) {
-        await this.get('chat').destroy({ useMasterKey: true });
-        await this.destroy({ useMasterKey: true });
-      } else {
-        await this.save({}, { useMasterKey: true });
-      }
-    }
+          if (!ended) {
+            const chat = g.get('chat');
+            chat
+              .destroy({ useMasterKey: true })
+              .then(() => g.destroy({ useMasterKey: true }))
+              .catch((err) => console.log(err));
+          } else {
+            g.save({}, { useMasterKey: true });
+          }
+        }
+      })
+      .catch((err) => console.log(err));
 
     return true;
   }
@@ -305,7 +314,7 @@ class Game extends Parse.Object {
     return true;
   }
 
-  async togglePlayer(data) {
+  togglePlayer(data) {
     const { username, add } = data;
 
     const players = this.get('playerList');
@@ -314,7 +323,7 @@ class Game extends Parse.Object {
 
     const has = players.includes(username);
 
-    if (has && !add) {
+    if (has) {
       this.remove('playerList', username);
     } else if (add && players.length < playerMax && !kicked.includes(username)) {
       this.addUnique('playerList', username);
@@ -322,135 +331,176 @@ class Game extends Parse.Object {
 
     this.set('askedToBeReady', false);
 
-    await this.save({}, { useMasterKey: true });
-
-    this.set('host', this.get('playerList')[0]);
-    this.save({}, { useMasterKey: true });
+    this.save({}, { useMasterKey: true }).then((g) => {
+      g.set('host', g.get('playerList')[0]);
+      g.save({}, { useMasterKey: true });
+    });
 
     return true;
   }
 
-  async askToBeReady(data) {
+  askToBeReady(data) {
+    // Identifies username who made this request
     const { username } = data;
 
     const host = this.get('host');
     const players = this.get('playerList');
     const { length } = players;
 
-    // Condition
+    // If player is host and the game can start this request will not return
     const canStart = host === username && length >= 5;
     if (!canStart) return false;
 
+    // Sets ready players to an empty array
+    // And asked to be ready is set to true
+    // This allows player to join the ready player list
+    // And tells the game that ready was asked for
     this.set('readyPlayers', []);
     this.set('askedToBeReady', true);
 
     this.save({}, { useMasterKey: true, context: { askForReady: true } });
 
-    setTimeout(async () => {
-      await this.fetch({ useMasterKey: true });
+    // Sets a timeout for the ready button
+    setTimeout(() => {
+      this.fetch({ useMasterKey: true })
+        .then((g) => {
+          // If the game has started ignore
+          const started = g.get('started');
 
-      const started = this.get('started');
+          if (!started) {
+            // Sets ready asked to be false
+            g.set('askedToBeReady', false);
 
-      if (!started) {
-        this.set('askedToBeReady', false);
+            // Gets the players who readied
+            const readyPlayers = g.get('readyPlayers');
 
-        const readyPlayers = this.get('readyPlayers');
+            // And compares to player list to find out who didnt ready
+            let players = g.get('playerList');
+            players = players.filter((p) => !readyPlayers.includes(p));
 
-        let players = this.get('playerList');
-        players = players.filter((p) => !readyPlayers.includes(p));
+            // Sends a chat message
+            g.get('chat')
+              .fetch({ useMasterKey: true })
+              .then((c) => {
+                // For each player that is not ready
+                const msg = players.map((p) =>
+                  c.addMessage({ content: `${p} is not ready.` })
+                );
 
-        const chat = this.get('chat');
-        await chat.fetch({ useMasterKey: true });
+                // Then these messages are saved
+                c.saveMessages(msg);
+              })
+              .catch((err) => console.log(err));
 
-        const msg = players.map((p) =>
-          chat.addMessage({ content: `${p} is not ready.` })
-        );
-
-        chat.saveMessages(msg);
-
-        this.save({}, { useMasterKey: true });
-      }
+            // Saves the game
+            g.save({}, { useMasterKey: true });
+          }
+        })
+        .catch((err) => console.log(err));
     }, 10000);
   }
 
-  async toggleReady(data) {
+  toggleReady(data) {
+    // Unpacks username and if the player is ready or not
     const { username, ready } = data;
 
-    await this.fetch({ useMasterKey: true });
+    // Fetch from database
+    this.fetch({ useMasterKey: true })
+      .then((g) => {
+        // Ready button was active when request was made
+        const askedToBeReady = g.get('askedToBeReady');
 
-    const askedToBeReady = this.get('askedToBeReady');
+        // If not, return
+        if (!askedToBeReady) return;
 
-    if (!askedToBeReady) return false;
+        const players = g.get('playerList');
+        const chat = g.get('chat');
 
-    const players = this.get('playerList');
-    const chat = this.get('chat');
-
-    if (ready && players.includes(username)) {
-      this.addUnique('readyPlayers', username);
-    }
-
-    return await this.save({}, { useMasterKey: true })
-      .then(async (g) => {
-        await chat.fetch({ useMasterKey: true });
-        chat.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
-
-        if (
-          g.get('playerList').length === g.get('readyPlayers').length &&
-          g.get('askedToBeReady')
-        ) {
-          g.set('askedToBeReady', false);
-          g.startGame();
-
-          return true;
+        // If the player is ready and the player requesting is in game, add them to the ready array
+        if (ready && players.includes(username)) {
+          g.addUnique('readyPlayers', username);
         }
 
-        return false;
-      })
-      .catch((e) => {
-        console.log(e);
+        // Fetches chat
+        chat
+          .fetch({ useMasterKey: true })
+          .then((c) => {
+            // Announces that this player is ready
+            c.newAnnouncement(`${username} is ${ready ? 'ready' : 'not ready'}.`);
+          })
+          .catch((err) => console.log(err));
 
-        return false;
-      });
+        // Saves the game
+        g.save({}, { useMasterKey: true })
+          .then((_g) => {
+            // After the game is saved properly
+            // If the player list length is the same as the amount of ready players
+            // And the game is on a ready state
+            // Start the game and prevent future requests for this function
+            if (
+              _g.get('playerList').length === _g.get('readyPlayers').length &&
+              _g.get('askedToBeReady')
+            ) {
+              _g.set('askedToBeReady', false);
+              _g.startGame();
+            }
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch((err) => console.log(err));
   }
 
-  async startGame() {
+  startGame() {
+    // Imports shuffle array function
     const { shuffleArray } = this;
 
+    // Gets the player list
     let players = this.get('playerList');
     const { length } = players;
 
+    // Gets the role list
     let roles = this.get('roleList').slice(0, length);
 
-    // Start the game
-
+    // Shuffles both arrays
     players = shuffleArray(players);
     roles = shuffleArray(roles);
 
+    // Prepares role knowledge for each player
     this.setRoleKnowledge({ players, length, roles });
 
-    // Chat
+    // Sends a message to chat indicating the start of the game
     const chat = this.get('chat');
     const settings = this.get('roleSettings');
     const code = this.get('code');
-    await chat.fetch({ useMasterKey: true });
 
-    chat.onStart({ settings, code });
+    chat
+      .fetch({ useMasterKey: true })
+      .then((c) => {
+        c.onStart({ settings, code });
+      })
+      .catch((err) => console.log(err));
 
-    // Lady
+    // Prepares lady of the lake if active
     const hasLady = this.get('hasLady');
     const leader = Math.floor(Math.random() * length);
     const lady = (leader + length) % length;
 
     if (hasLady) this.set('lady', lady);
 
-    // Set everything
+    // Sets the remaining variables
     this.set('leader', leader);
     this.set('playerList', players);
     this.set('roleList', roles);
     this.set('started', true);
 
-    await this.save({}, { useMasterKey: true });
-    this.newRound();
+    // Saves the game
+    // Sends a notification through the use of context
+    // Starts the first round
+    this.save({}, { useMasterKey: true, context: { started: true } })
+      .then((g) => {
+        g.newRound();
+      })
+      .catch((err) => console.log(err));
 
     return true;
   }
@@ -507,7 +557,7 @@ class Game extends Parse.Object {
     return true;
   }
 
-  async newRound() {
+  newRound() {
     const ended = this.get('ended');
 
     if (ended) return false;
@@ -538,15 +588,16 @@ class Game extends Parse.Object {
     this.set('votesMission', votesMission);
 
     const chat = this.get('chat');
-    await chat.fetch({ useMasterKey: true });
-    chat.onPick({ leader: playerList[leader] });
+    chat.fetch({ useMasterKey: true }).then((c) => {
+      c.onPick({ leader: playerList[leader] });
+    });
 
-    await this.save({}, { useMasterKey: true });
+    this.save({}, { useMasterKey: true });
 
     return true;
   }
 
-  async pickTeam(data) {
+  pickTeam(data) {
     const { username, picks } = data;
 
     const playerList = this.get('playerList');
@@ -564,90 +615,103 @@ class Game extends Parse.Object {
     if (stage !== 'PICKING' || length !== playerMatrix[players - 5][mission])
       return false;
 
-    const votesRound = new Array(players).fill(-1);
     const pickNames = playerList.filter((p, i) => picks.includes(i));
 
     this.addPicks(picks);
 
     this.set('stage', 'VOTING');
     this.set('picks', picks);
-    this.set('picksYetToVote', picks);
+    this.set('picksYetToVote', pickNames);
     this.set('pickNames', pickNames);
-    this.set('votesRound', votesRound);
+    this.set('votesPending', playerList);
+    this.set('votesRound', []);
 
     const chat = this.get('chat');
-    await chat.fetch({ useMasterKey: true });
-    chat.afterPick({ mission: mission + 1, round: round + 1, picks: pickNames });
+    chat
+      .fetch({ useMasterKey: true })
+      .then((c) =>
+        chat.afterPick({ mission: mission + 1, round: round + 1, picks: pickNames })
+      )
+      .catch((err) => console.log(err));
 
     this.save({}, { useMasterKey: true });
 
     return true;
   }
 
-  async voteForMission(data) {
+  voteForMission(data) {
     const { username, vote } = data;
 
     const stage = this.get('stage');
     if (stage !== 'VOTING') return false;
 
-    const index = this.get('playerList').indexOf(username);
-    const votesRound = this.get('votesRound');
+    const votesPending = this.get('votesPending');
 
-    if (votesRound[index] === -1) {
-      votesRound[index] = vote;
+    if (votesPending.includes(username)) {
+      this.remove('votesPending', username);
+      if (vote === 0) this.addUnique('votesRound', username);
 
-      this.set('votesRound', votesRound);
-    } else {
-      return false;
+      this.save({}, { useMasterKey: true })
+        .then((g) => {
+          const votesPending = g.get('votesPending');
+
+          if (!votesPending.length) {
+            g.countVotes()
+              .then((result) => {
+                const ended = g.get('ended');
+
+                if (result) {
+                  const pickNames = g.get('pickNames');
+
+                  g.set('stage', 'MISSION');
+                  g.save({}, { useMasterKey: true });
+
+                  const chat = g.get('chat');
+                  chat
+                    .fetch({ useMasterKey: true })
+                    .then((c) => c.afterPassing({ picks: pickNames }))
+                    .catch((err) => console.log(err));
+                } else if (!ended) {
+                  g.newRound();
+                } else {
+                  g.save({}, { useMasterKey: true });
+                }
+              })
+              .catch((err) => console.log(err));
+          }
+        })
+        .catch((err) => console.log(err));
+
+      return true;
     }
 
-    if (!votesRound.includes(-1)) {
-      await this.save({}, { useMasterKey: true });
-      const outcome = await this.countVotes(votesRound);
-
-      if (outcome) {
-        const pickNames = this.get('pickNames');
-
-        this.set('stage', 'MISSION');
-
-        const chat = this.get('chat');
-        await chat.fetch({ useMasterKey: true });
-
-        chat.afterPassing({ picks: pickNames });
-      } else {
-        this.newRound();
-        return true;
-      }
-    }
-
-    await this.save({}, { useMasterKey: true });
-
-    return true;
+    return false;
   }
 
-  async countVotes(votesRound) {
-    this.addVotes(votesRound);
+  async countVotes() {
+    const votesRound = this.get('votesRound');
+    const playerList = this.get('playerList');
 
-    const { length: players } = this.get('playerList');
+    this.addVotes(playerList.map((p) => (votesRound.includes(p) ? 0 : 1)));
 
     const chat = this.get('chat');
     await chat.fetch({ useMasterKey: true });
 
-    const yes = votesRound.reduce((y, v) => (v ? y + 1 : y), 0);
+    const rejects = votesRound.length;
 
     const hammerDistance = this.get('hammerDistance');
     const mission = this.get('mission');
     const round = this.get('round');
 
-    if (yes * 2 > players) {
+    if (rejects * 2 < playerList.length) {
       chat.afterVote({ mission: mission + 1, round: round + 1, passes: true });
       return true;
     }
 
-    await chat.afterVote({ mission: mission + 1, round: round + 1, passes: false });
+    chat.afterVote({ mission: mission + 1, round: round + 1, passes: false });
 
     if (round === hammerDistance) {
-      await this.gameEnd(3);
+      this.gameEnd(3);
     }
 
     this.increment('round', 1);
@@ -655,70 +719,83 @@ class Game extends Parse.Object {
     return false;
   }
 
-  async voteForSuccess(data) {
+  voteForSuccess(data) {
     const { username, vote } = data;
 
     const stage = this.get('stage');
     if (stage !== 'MISSION') return false;
 
-    const index = this.get('playerList').indexOf(username);
     const picksYetToVote = this.get('picksYetToVote');
 
-    if (picksYetToVote.includes(index)) {
-      this.add('votesMission', vote);
-      this.remove('picksYetToVote', index);
+    if (picksYetToVote.includes(username)) {
+      if (vote === 0) this.addUnique('votesMission', username);
+      this.remove('picksYetToVote', username);
 
-      await this.save({}, { useMasterKey: true });
-    } else {
-      return false;
+      this.save({}, { useMasterKey: true })
+        .then((g) => {
+          const picksYetToVote = g.get('picksYetToVote');
+
+          if (!picksYetToVote.length) {
+            g.didMissionPass()
+              .then((result) => {
+                g.addResult(result);
+
+                const mission = g.get('mission');
+                const fails = g.get('fails');
+
+                const hasLady = g.get('hasLady');
+                const ended = g.get('ended');
+
+                const chat = g.get('chat');
+
+                if (mission - fails > 2) {
+                  const hasAssassin = g.get('hasAssassin');
+
+                  if (hasAssassin) {
+                    const playerList = g.get('playerList');
+                    const roleList = g.get('roleList');
+
+                    const assassinIndex = roleList.indexOf('Assassin');
+
+                    g.set('stage', 'ASSASSINATION');
+
+                    chat
+                      .fetch({ useMasterKey: true })
+                      .then((c) =>
+                        c.waitingForShot({ assassin: playerList[assassinIndex] })
+                      )
+                      .catch((err) => console.log(err));
+                  } else {
+                    g.gameEnd(4);
+                  }
+
+                  g.save({}, { useMasterKey: true });
+                } else if (hasLady && mission > 1 && !ended) {
+                  const playerList = g.get('playerList');
+                  const lady = g.get('lady');
+
+                  chat
+                    .fetch({ useMasterKey: true })
+                    .then((c) => c.waitingForLady({ lady: playerList[lady] }))
+                    .catch((err) => console.log(err));
+
+                  g.set('stage', 'CARDING');
+                  g.save({}, { useMasterKey: true });
+                } else if (!ended) {
+                  g.newRound();
+                } else {
+                  g.save({}, { useMasterKey: true });
+                }
+              })
+              .catch((err) => console.log(err));
+          }
+        })
+        .catch((err) => console.log(err));
+
+      return true;
     }
 
-    if (!this.get('picksYetToVote').length) {
-      const outcome = await this.didMissionPass();
-      this.addResult(outcome);
-      await this.save({}, { useMasterKey: true });
-
-      const mission = this.get('mission');
-      const fails = this.get('fails');
-
-      const hasLady = this.get('hasLady');
-      const ended = this.get('ended');
-
-      const chat = this.get('chat');
-      await chat.fetch({ useMasterKey: true });
-
-      if (mission - fails > 2) {
-        const hasAssassin = this.get('hasAssassin');
-
-        if (hasAssassin) {
-          const playerList = this.get('playerList');
-          const roleList = this.get('roleList');
-
-          const assassinIndex = roleList.indexOf('Assassin');
-
-          chat.waitingForShot({ assassin: playerList[assassinIndex] });
-
-          this.set('stage', 'ASSASSINATION');
-        } else {
-          await this.gameEnd(4);
-        }
-
-        await this.save({}, { useMasterKey: true });
-      } else if (hasLady && mission > 1 && !ended) {
-        const playerList = this.get('playerList');
-        const lady = this.get('lady');
-
-        chat.waitingForLady({ lady: playerList[lady] });
-
-        this.set('stage', 'CARDING');
-
-        await this.save({}, { useMasterKey: true });
-      } else if (!ended) {
-        this.newRound();
-      }
-    }
-
-    return true;
+    return false;
   }
 
   async didMissionPass() {
@@ -726,7 +803,7 @@ class Game extends Parse.Object {
     this.set('round', 0);
 
     const votesMission = this.get('votesMission');
-    const fails = votesMission.reduce((f, v) => (v ? f : f + 1), 0);
+    const fails = votesMission.length;
 
     const mission = this.get('mission');
     const { length: players } = this.get('playerList');
@@ -742,19 +819,19 @@ class Game extends Parse.Object {
       return true;
     }
 
-    await chat.afterMission({ mission, fails, passes: false });
+    chat.afterMission({ mission, fails, passes: false });
 
     const totalFails = this.get('fails');
 
     if (totalFails === 2) {
-      await this.gameEnd(2);
+      this.gameEnd(2);
     }
 
     this.increment('fails', 1);
     return false;
   }
 
-  async ladyOfTheLake(data) {
+  ladyOfTheLake(data) {
     const { username, target } = data;
 
     const stage = this.get('stage');
@@ -771,30 +848,35 @@ class Game extends Parse.Object {
 
     ladyHolders.push(index);
 
-    const privateKnowledge = this.get('privateKnowledge')[
-      username.replace('.', 'dot').replace('$', 'dolla')
-    ];
+    const parsedName = username.replace(/\./gi, '/');
+
+    const privateKnowledge = this.get('privateKnowledge');
     const chat = this.get('chat');
-    await chat.fetch({ useMasterKey: true });
 
-    if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[target])) {
-      privateKnowledge[target] =
-        privateKnowledge[target] === 'Merlin?' ? 'Morgana' : 'Spy';
-      chat.afterCard({ username, target: players[target], spy: true });
-    } else {
-      privateKnowledge[target] =
-        privateKnowledge[target] === 'Merlin?' ? 'Merlin' : 'Resistance';
-      chat.afterCard({ username, target: players[target], spy: false });
-    }
+    chat
+      .fetch({ useMasterKey: true })
+      .then((c) => {
+        if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[target])) {
+          privateKnowledge[parsedName][target] =
+            privateKnowledge[parsedName][target] === 'Merlin?' ? 'Morgana' : 'Spy';
+          c.afterCard({ username, target: players[target], spy: true });
+        } else {
+          privateKnowledge[parsedName][target] =
+            privateKnowledge[parsedName][target] === 'Merlin?' ? 'Merlin' : 'Resistance';
+          c.afterCard({ username, target: players[target], spy: false });
+        }
 
-    this.set('lady', target);
-    this.set('ladyHolders', ladyHolders);
-    this.newRound();
+        this.set('privateKnowledge', privateKnowledge);
+        this.set('lady', target);
+        this.set('ladyHolders', ladyHolders);
+        this.newRound();
+      })
+      .catch((err) => console.log(err));
 
     return true;
   }
 
-  async shootPlayer(data) {
+  shootPlayer(data) {
     const { username, shot } = data;
 
     const stage = this.get('stage');
@@ -813,37 +895,39 @@ class Game extends Parse.Object {
       return false;
     }
 
-    const chat = this.get('chat');
-    await chat.fetch({ useMasterKey: true });
-
-    chat.afterShot({ target: players[shot] });
-
     this.set('assassination', shot);
-    await this.gameEnd(killed === 'Merlin' ? 0 : 1);
+    this.gameEnd(killed === 'Merlin' ? 0 : 1);
 
     this.save({}, { useMasterKey: true });
+
+    const chat = this.get('chat');
+    chat
+      .fetch({ useMasterKey: true })
+      .then((c) => c.afterShot({ target: players[shot] }))
+      .catch((err) => console.log(err));
 
     return true;
   }
 
-  async gameEnd(ending) {
+  gameEnd(ending) {
     // 0: "Merlin was shot! The Spies Win"
     // 1: "Merlin was not shot! The Resistance wins"
     // 2: "Three missions have failed! The Spies Win"
     // 3: "The hammer was rejected! The Spies Win"
     // 4: "Three missions have succeeded! The Resistance Wins"
 
+    if (this.get('ended')) return false;
+
     const listed = this.get('listed');
 
-    const environment = require('./environment').getGlobal();
+    const environment = Environment.getGlobal();
     const generalChat = environment.get('chat');
-    await generalChat.fetch({ useMasterKey: true });
 
     const code = this.get('code');
     const chat = this.get('chat');
     const players = this.get('playerList');
     const roles = this.get('roleList');
-    await chat.fetch({ useMasterKey: true });
+    chat.fetch({ useMasterKey: true });
 
     this.set('ended', true);
     this.set('cause', ending);
@@ -854,8 +938,16 @@ class Game extends Parse.Object {
 
     this.set('winner', winner);
 
-    if (listed) generalChat.roomFinished({ code, winner });
-    chat.onEnd({ ending, winner });
+    if (listed)
+      generalChat
+        .fetch({ useMasterKey: true })
+        .then((c) => c.roomFinished({ code, winner }))
+        .catch((err) => console.log(err));
+
+    chat
+      .fetch({ useMasterKey: true })
+      .then((c) => c.onEnd({ code, ending, winner }))
+      .catch((err) => console.log(err));
 
     if (!listed) return;
 
@@ -873,6 +965,9 @@ class Game extends Parse.Object {
           u.addGameToProfile({
             code,
             role: roles[i].toLowerCase(),
+            size: players.length,
+            date: this.get('createdAt'),
+            id: this.id,
             winner,
             cause: ending,
           });
@@ -957,7 +1052,7 @@ class Game extends Parse.Object {
 
     parameters.forEach((parameter) => {
       client[parameter] = this.get(parameter);
-    })
+    });
 
     client['gameId'] = this.id;
 
@@ -996,6 +1091,7 @@ class Game extends Parse.Object {
       'picksYetToVote',
       'pickNames',
       'votesRound',
+      'votesPending',
       'votesMission',
       'leader',
       'lady',
@@ -1014,7 +1110,7 @@ class Game extends Parse.Object {
 
     parameters.forEach((parameter) => {
       client[parameter] = this.get(parameter);
-    })
+    });
 
     client['gameId'] = this.id;
 

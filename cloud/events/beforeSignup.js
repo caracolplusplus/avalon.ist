@@ -1,3 +1,5 @@
+const Environment = require('../../routes/constructors/environment');
+
 const beforeSignup = async (request) => {
   /* Get IP */
   let address = null;
@@ -16,7 +18,7 @@ const beforeSignup = async (request) => {
     address = address.split(',')[0];
   }
 
-  const environment = require('../../routes/constructors/environment').getGlobal();
+  const environment = Environment.getGlobal();
 
   /* Test if environment allows it */
   environment.validateSignupData({ address });

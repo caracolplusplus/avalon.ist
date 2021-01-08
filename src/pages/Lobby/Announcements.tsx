@@ -28,8 +28,8 @@ interface AnnouncementProps {
 
 const Announcement = (props: AnnouncementProps) => {
   const dateObj = new Date(props.date);
-  const month = dateObj.getUTCMonth() + 1;
-  const day = dateObj.getUTCDate();
+  const month = ('00' + (dateObj.getUTCMonth() + 1)).slice(-2);
+  const day = ('00' + dateObj.getUTCDate()).slice(-2);
   const year = dateObj.getUTCFullYear();
 
   return (
