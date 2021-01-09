@@ -226,15 +226,9 @@ class Profile extends React.PureComponent<
     const shotRate = gameShots[1] > 0 ? Percent(gameShots[0] / gameShots[1]) : 0;
 
     let countryFlag = <img alt={'UN'} src={UN_FLAG} />;
-<<<<<<< HEAD
     if (country && country.value != 'UN') {
-       if (country.value == 'LGBT') {
-        countryFlag = <img alt={'Stonewall'} src={STONEWALL_FLAG} />
-=======
-    if (country) {
-      if (country.text === 'Stonewall') {
+      if (country.value == 'LGBT') {
         countryFlag = <img alt={'Stonewall'} src={STONEWALL_FLAG} />;
->>>>>>> 7d658639c72ecd387d1d6b0a251f7603ad586ad4
       } else {
         countryFlag = <Flag code={country.value} />;
       }

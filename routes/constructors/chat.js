@@ -1,4 +1,5 @@
 /* global Parse */
+const Environment = require('./environment');
 const messageTypes = {
   SERVER: 'server',
   POSITIVE: 'positive',
@@ -50,7 +51,7 @@ class Chat extends Parse.Object {
       .then((c) => {
         let messages = 0;
 
-        const env = require('./environment').getGlobal();
+        const env = Environment.getGlobal();
         const modList = env.get('moderatorList');
 
         newMessages = newMessages.filter((m) => {
@@ -75,7 +76,7 @@ class Chat extends Parse.Object {
 
   moderationAction(data) {
     const { content, username, target, comment, action } = data;
-    const environment = require('./environment').getGlobal();
+    const environment = Environment.getGlobal();
 
     this.saveMessages([
       addMessage({
@@ -358,7 +359,7 @@ class Chat extends Parse.Object {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = require('./environment').getGlobal();
+          const environment = Environment.getGlobal();
           const h = u.setSuspension({ hours });
 
           environment.addModerationLog({
@@ -389,7 +390,7 @@ class Chat extends Parse.Object {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = require('./environment').getGlobal();
+          const environment = Environment.getGlobal();
           u.revokeSuspension();
 
           environment.addModerationLog({
@@ -418,7 +419,7 @@ class Chat extends Parse.Object {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = require('./environment').getGlobal();
+          const environment = Environment.getGlobal();
           u.toggleBan(true);
 
           environment.addModerationLog({
@@ -447,7 +448,7 @@ class Chat extends Parse.Object {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = require('./environment').getGlobal();
+          const environment = Environment.getGlobal();
           u.toggleBan(false);
 
           environment.addModerationLog({
@@ -476,7 +477,7 @@ class Chat extends Parse.Object {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = require('./environment').getGlobal();
+          const environment = Environment.getGlobal();
           const ips = u.get('addressList');
           u.toggleBan(false);
 
@@ -504,7 +505,7 @@ class Chat extends Parse.Object {
   revokeIPBan(data) {
     const { username, ips, comment } = data;
 
-    const environment = require('./environment').getGlobal();
+    const environment = Environment.getGlobal();
 
     environment.toggleIps({ ips, add: false });
 

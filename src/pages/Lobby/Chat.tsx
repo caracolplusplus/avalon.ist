@@ -65,6 +65,7 @@ interface ChatProps {
 
 interface ChatState {
   messages: ChatSnapshotRead[];
+  playerList: string[];
   form: FormType;
 }
 
@@ -92,6 +93,7 @@ const msgBuilder = new MessageBuilder();
 class Chat extends React.PureComponent<ChatProps, ChatState> {
   state: ChatState = {
     messages: [],
+    playerList: [],
     form: FormType.None,
   };
 
@@ -99,10 +101,16 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   refInput = createRef<ChatInput>();
 
   componentDidMount = () => {
+    socket.on('playerListResponse', this.playerListResponse);
+
+    socket.emit('playerListRequest');
+
     this.startChat();
   };
 
   componentWillUnmount = () => {
+    socket.off('playerListResponse', this.playerListResponse);
+
     this.endChat();
   };
 
@@ -120,6 +128,12 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     event.preventDefault();
 
     this.sendMessage();
+  };
+
+  playerListResponse = (players: any) => {
+    const playerList: string[] = players.map((p: any) => p.username);
+
+    this.setState({ playerList });
   };
 
   startChat = () => {
@@ -476,7 +490,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         )}
         {this.props.stage === 'REPLAY' ? null : (
           <form className="message-input" onSubmit={this.handleSubmit}>
-            <ChatInput ref={this.refInput} autoComplete={this.props.players} />
+            <ChatInput ref={this.refInput} autoComplete={this.state.playerList} />
           </form>
         )}
         {form === FormType.Fast ? <TooFast onExit={this.closeForm} /> : null}

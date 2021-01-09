@@ -1,5 +1,5 @@
 /* global Parse, Set */
-const Chat = require('./chat');
+
 const ipTree = require('../security/trees/ip-tree');
 const emailTree = require('../security/trees/email-tree');
 const discordReports = require('../security/discordReports');
@@ -13,7 +13,7 @@ class Environment extends Parse.Object {
 
   static spawn() {
     const env = new Environment();
-    const chat = Chat.spawn({ code: 'Global' });
+    const chat = require('./chat').spawn({ code: 'Global' });
 
     env.set('code', 'Global');
     env.set('games', 1);
