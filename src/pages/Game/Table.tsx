@@ -5,6 +5,7 @@ import React, { createRef, RefObject } from 'react';
 import { Redirect } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { Dispatch } from 'redux';
+import { connect } from 'react-redux';
 
 // Internal
 
@@ -17,6 +18,8 @@ import DefaultAvatars from './DefaultAvatars';
 // eslint-disable-next-line no-unused-vars
 import ConnectedAUI, { AvatarUI } from './AvatarUI';
 import Button from '../../components/utils/Button';
+import { setMissionHighlight } from '../../redux/actions';
+import { rootType } from '../../redux/reducers';
 
 // Styles
 
@@ -27,13 +30,29 @@ import socket from '../../socket-io/socket-io';
 
 interface TableProps {
   game: GameState;
+  highlightedMission?: number;
+  highlightedRound?: number;
   dispatch: Dispatch;
 }
 
-class MissionTracker extends React.PureComponent<
-  { count: number; results: boolean[]; round: number },
-  {}
-> {
+interface MissionTrackerProps {
+  count: number;
+  results: boolean[];
+  mission:number;
+  round: number;
+  dispatch: Dispatch;
+}
+
+class MissionTracker extends React.PureComponent<MissionTrackerProps, {}> {
+  onMouseEnter = (mission: number, round: number) => {
+    this.props.dispatch(setMissionHighlight(mission, round));
+  }
+
+  onMouseLeave = () => {
+    // Setting mission, round to (-1, -1) will reset all highlighting.
+    this.props.dispatch(setMissionHighlight(-1, -1));
+  }
+
   render() {
     const playerMatrix = [
       ['2', '3', '2', '3', '3'],
@@ -60,14 +79,18 @@ class MissionTracker extends React.PureComponent<
       <div className="mission-tracker">
         <div className="mission-container">
           {results.map((r, i) => (
-            <div className={'mission ' + r} key={'mission' + i}>
+            <div className={'mission ' + r} key={'mission' + i}
+            onMouseEnter={this.onMouseEnter.bind(this, i, 4)}
+            onMouseLeave={this.onMouseLeave}>
               <p>{playerMatrix[this.props.count][i]}</p>{' '}
             </div>
           ))}
         </div>
         <div className="rounds-container">
           {rounds.map((r, i) => (
-            <div className={'round ' + r} key={'round' + i} />
+            <div className={'round ' + r} key={'round' + i}
+            onMouseEnter={this.onMouseEnter.bind(this, this.props.mission, i)}
+            onMouseLeave={this.onMouseLeave}/>
           ))}
         </div>
       </div>
@@ -75,9 +98,16 @@ class MissionTracker extends React.PureComponent<
   }
 }
 
+const ConnectedMissionTracker = connect(null, null, null, {})(MissionTracker);
+
 const gummy = DefaultAvatars.gummy;
 
-class Table extends React.PureComponent<
+const mapState = (state: rootType) => {
+  const { missionHighlight } = state;
+  return { highlightedMission: missionHighlight.mission, highlightedRound: missionHighlight.round };
+};
+
+export class Table extends React.PureComponent<
   TableProps,
   {
     avatars: AvatarUIProps[];
@@ -161,6 +191,26 @@ class Table extends React.PureComponent<
     socket.emit('toggleClaim');
   };
 
+  isAvatarHighlighted(seat: number) : boolean {
+    // Get current highlighted mission.
+    const mission = this.props.highlightedMission;
+    let round = this.props.highlightedRound;
+    // Bail out early if mission and rounds don't make sense.
+    if (mission === undefined || mission < 0 || round === undefined || round < 0) return false;
+    if (mission > this.props.game.mission) return false;
+    if (mission === this.props.game.mission && round > this.props.game.round) return false;
+    const missionPicks = this.props.game.missionTeams[mission];
+    if (!missionPicks) return false;
+    // Little bit of a hack, but if since we don't know the round in which a mission actually
+    // passed, if the round doesn't exist, pick the latest round and show that.
+    if (missionPicks.length <= round) {
+      round = missionPicks.length - 1;
+    }
+    const roundPicks = missionPicks[round];
+    if (!roundPicks) return false;
+    return roundPicks.includes(seat);
+  }
+
   createSeats() {
     this.seatRef = [];
     this.avatarRef = [];
@@ -218,7 +268,6 @@ class Table extends React.PureComponent<
       const isRes = resistance.includes(knowledge[i]);
       const isPickable = imPicking || imKilling || imCarding;
       const isMe = game.seat === i;
-
       const output: AvatarUIProps = {
         spyUrl: avatarUrls.spy,
         resUrl: avatarUrls.res,
@@ -246,6 +295,7 @@ class Table extends React.PureComponent<
         avatarSize: game.style.avatarSize,
         fontSize: game.style.playFontSize,
         tableWidth: ave ? ave.tableWidth : 0,
+        highlighted: this.isAvatarHighlighted(i),
         dispatch: this.props.dispatch,
       };
 
@@ -539,9 +589,10 @@ class Table extends React.PureComponent<
             <div className="table-prow">
               <div className="table-center" ref={this.centerRef}>
                 {this.props.game.started ? (
-                  <MissionTracker
+                  <ConnectedMissionTracker
                     count={Math.max(this.props.game.players.length - 5, 0)}
                     results={this.props.game.results}
+                    mission={this.props.game.mission}
                     round={this.props.game.round}
                   />
                 ) : null}
@@ -561,4 +612,4 @@ class Table extends React.PureComponent<
   }
 }
 
-export default Table;
+export default connect(mapState, null, null, { forwardRef: true } )(Table);

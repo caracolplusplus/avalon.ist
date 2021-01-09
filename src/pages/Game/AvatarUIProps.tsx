@@ -4,7 +4,7 @@ import { Dispatch } from 'redux';
 
 // Internal
 
-import Table from './Table';
+import {Table} from './Table';
 
 interface AvatarUIProps {
   spyUrl: string;
@@ -32,6 +32,7 @@ interface AvatarUIProps {
   avatarShow: boolean;
   avatarSize: number;
   fontSize: number;
+  highlighted: boolean;
   dispatch: Dispatch;
 }
 
