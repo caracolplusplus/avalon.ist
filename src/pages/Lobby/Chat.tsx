@@ -476,7 +476,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         )}
         {this.props.stage === 'REPLAY' ? null : (
           <form className="message-input" onSubmit={this.handleSubmit}>
-            <ChatInput ref={this.refInput} />
+            <ChatInput ref={this.refInput} autoComplete={this.props.players} />
           </form>
         )}
         {form === FormType.Fast ? <TooFast onExit={this.closeForm} /> : null}
