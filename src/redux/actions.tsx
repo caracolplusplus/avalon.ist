@@ -7,6 +7,7 @@ export const SET_GAME_TAB_HIGHLIGHT = 'SET_HIGHLIGHT';
 export const UPDATE_CHAT_HIGHLIGHT = 'UPDATE_CHAT_HIGHLIGHT';
 export const SET_MESSAGE_DELAY = 'SET_MESSAGE_DELAY';
 export const UPDATE_STYLE = 'UPDATE_STYLE';
+export const SET_MISSION_HIGHLIGHT = 'SET_MISSION_HIGHLIGHT';
 
 interface AddNotesAction {
   type: typeof ADD_NOTES;
@@ -45,6 +46,12 @@ interface UpdateStyle {
   style: any;
 }
 
+interface SetMissionHighlight {
+  type: typeof SET_MISSION_HIGHLIGHT;
+  mission: number;
+  round: number;
+}
+
 export type ActionTypes =
   | AddNotesAction
   | SetGameTabHighlight
@@ -52,7 +59,8 @@ export type ActionTypes =
   | SetOnlineAction
   | UpdateChatHighlight
   | SetMessageDelay
-  | UpdateStyle;
+  | UpdateStyle
+  | SetMissionHighlight;
 
 // Actions
 
@@ -104,5 +112,13 @@ export function updateStyle(style: any): ActionTypes {
   return {
     type: UPDATE_STYLE,
     style,
-  }
+  };
+}
+
+export function setMissionHighlight(mission: number, round: number): ActionTypes {
+  return {
+    type: SET_MISSION_HIGHLIGHT,
+    mission,
+    round,
+  };
 }

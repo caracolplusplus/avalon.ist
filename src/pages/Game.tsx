@@ -4,7 +4,7 @@ import React, { createRef } from 'react';
 import { Redirect } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { RouteComponentProps } from 'react-router';
-import { useDispatch, connect } from 'react-redux';
+import { connect } from 'react-redux';
 // eslint-disable-next-line no-unused-vars
 import { rootType } from '../redux/reducers';
 
@@ -15,7 +15,7 @@ import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 
 import Navbar from './Navbar';
 import Tabs from './Game/Tabs';
-import Table from './Game/Table';
+import ConnectedTable, {Table} from './Game/Table';
 // eslint-disable-next-line no-unused-vars
 import GameState from './Game/GameState';
 
@@ -270,7 +270,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
               className="column section"
               style={{ flex: '0 0 ' + (40 + this.props.style.playArea * 20) + '%' }}
             >
-              <Table ref={this.tableRef} game={this.state} dispatch={useDispatch} />
+              <ConnectedTable ref={this.tableRef} game={this.state} />
             </div>
             <div className="column section">{tabs}</div>
           </div>

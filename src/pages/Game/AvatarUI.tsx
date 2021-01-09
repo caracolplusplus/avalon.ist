@@ -153,7 +153,7 @@ export class AvatarUI extends React.PureComponent<
               className={
                 this.background[this.state.currentBackground] +
                 ' ' +
-                (this.state.avatarSelected && this.props.isPickable ? 'picked' : '')
+                ((this.state.avatarSelected && this.props.isPickable) || (this.props.highlighted) ? 'picked' : '')
               }
             />
 

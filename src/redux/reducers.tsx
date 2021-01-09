@@ -12,6 +12,7 @@ import {
 	UPDATE_CHAT_HIGHLIGHT,
 	SET_MESSAGE_DELAY,
 	UPDATE_STYLE,
+	SET_MISSION_HIGHLIGHT,
 	ActionTypes,
 } from './actions';
 
@@ -76,6 +77,18 @@ function messageDelay(state: number[] = [0, 0, 0, 0, 0], action: ActionTypes): n
 	}
 }
 
+function missionHighlight(state: { mission: number, round: number } = { mission: -1, round: -1 }, action: ActionTypes): { mission: number, round: number } {
+	switch (action.type) {
+		case SET_MISSION_HIGHLIGHT:
+			return {
+				mission: action.mission,
+				round: action.round,
+			}
+		default:
+			return state;
+	}
+}
+
 /* Set the same starting value on profile */
 
 function style(
@@ -106,7 +119,8 @@ export const rootReducer = combineReducers({
 	highlighted,
 	chatHighlights,
 	messageDelay,
-	style
+	style,
+	missionHighlight
 });
 
 export type rootType = ReturnType<typeof rootReducer>;
