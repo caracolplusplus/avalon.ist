@@ -1,14 +1,17 @@
 // Add user to presence
 const { generalChat } = require('../../rooms');
 
-async function joinPresence(io, socket) {
+function joinPresence(io, socket) {
   const { user, id } = socket;
 
-  await user.fetch({ useMasterKey: true });
-
-  user.joinPresence({ id });
-  socket.join(generalChat);
-  socket.emit('rejoin');
+  user
+    .fetch({ useMasterKey: true })
+    .then((u) => {
+      u.joinPresence({ id });
+      socket.join(generalChat);
+      socket.emit('rejoin');
+    })
+    .catch((err) => console.log(err));
 }
 
 module.exports = joinPresence;

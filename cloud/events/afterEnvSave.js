@@ -1,9 +1,9 @@
 const afterEnvSave = async (request) => {
   const Environment = require('../../routes/constructors/environment');
   const { object: env, context } = request;
-  
+
   Environment.setGlobal(env);
-  
+
   if (context) {
     const { io } = require('../../routes/init');
     const { playerList, roomList, kick, ips } = context;
@@ -14,6 +14,12 @@ const afterEnvSave = async (request) => {
 
     if (roomList) {
       io.emit('roomListResponse', env.get('roomList'));
+    }
+
+    if (kick === false) {
+      env.updateTrees();
+
+      console.log('test');
     }
 
     if (kick) {

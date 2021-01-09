@@ -181,7 +181,8 @@ class Table extends React.PureComponent<
       : DefaultAvatars.classic;
 
     // Pre Conditions
-    const imKilling = game.assassin && game.stage === 'ASSASSINATION';
+    const imKilling =
+      game.assassinName === game.username && game.stage === 'ASSASSINATION';
     const imPicking = game.seat === game.leader && game.stage === 'PICKING';
     const imCarding = game.seat === game.card && game.stage === 'CARDING';
     const imVoting = game.stage === 'VOTING';
@@ -206,7 +207,7 @@ class Table extends React.PureComponent<
       // Data
       const username = p;
       const role = knowledge[i];
-      const vote = game.ended || imVoting ? -1 : game.votesRound[i];
+      const vote = !game.started || game.ended || imVoting ? -1 : game.votesRound[i];
       const leader =
         !game.ended && (game.leader === i || (game.started === false && i === 0));
       const hammer = game.hammer === i;

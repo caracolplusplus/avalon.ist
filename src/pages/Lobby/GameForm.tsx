@@ -252,11 +252,10 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
     );
   }
 
-  createGameSuccess(data: number, roomId: string) {
+  createGameSuccess(roomId: string) {
     this.setState({
       processing: false,
       redirect: true,
-      playerRoom: data,
       roomId,
     });
   }
@@ -286,7 +285,7 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
   render() {
     return (
       <div className="settings-form">
-        {this.state.redirect ? <Redirect to={`/game/${this.state.roomId}/${this.state.playerRoom}`} /> : null}
+        {this.state.redirect ? <Redirect to={`/game/${this.state.roomId}`} /> : null}
         <AvalonScrollbars>
           <form autoComplete="off" onSubmit={this.handleSubmit}>
             <p className="title">{this.props.title}</p>

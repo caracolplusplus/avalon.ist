@@ -246,13 +246,13 @@ class MessageBuilder implements MessageBuilderType {
   rollDie(data: any) {
     const { username, split } = data;
 
-    let die: any = parseInt(split[1]);
+    let die: any = Math.min(Math.max(parseInt(split[1]), 3), 10000);
 
     die = isNaN(die) ? 100 : die;
     const roll = Math.floor(Math.random() * die) + 1;
 
     return this.sendServerMessage({
-      content: `${username} has rolled ${roll}/${die}!`,
+      content: `${username} has rolled ${roll} out of ${die}!`,
       ch: 0,
     });
   }

@@ -1,3 +1,5 @@
+const Environment = require('../../constructors/environment');
+
 function messageTo(io, socket) {
   const getResponse = (isGeneral) => {
     return isGeneral ? 'generalCommandResponse' : 'gameCommandResponse';
@@ -21,7 +23,7 @@ function messageTo(io, socket) {
     let chat = null;
 
     if (isGeneral) {
-      const environment = require('../../constructors/environment').getGlobal();
+      const environment = Environment.getGlobal();
 
       chat = environment.get('chat');
     } else {
@@ -71,25 +73,25 @@ function messageTo(io, socket) {
       });
   });
 
-  socket.on('messageToGeneral', async (messages) => {
-    const environment = require('../../constructors/environment').getGlobal();
+  socket.on('messageToGeneral', (messages) => {
+    const environment = Environment.getGlobal();
 
     const chat = environment.get('chat');
-    const result = await chat.saveMessages(messages);
+    chat.saveMessages(messages);
 
-    if (result) notifyDM(messages[0], 'General');
+    notifyDM(messages[0], 'General');
   });
 
-  socket.on('messageToGame', async (messages) => {
+  socket.on('messageToGame', (messages) => {
     const { game } = socket;
 
     if (!game) return;
 
     const chat = game.get('chat');
     const code = game.get('code');
-    const result = await chat.saveMessages(messages);
+    chat.saveMessages(messages);
 
-    if (result) notifyDM(messages[0], `Game #${code}`);
+    notifyDM(messages[0], `Game #${code}`);
   });
 }
 

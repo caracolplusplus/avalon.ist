@@ -47,13 +47,22 @@ class GameLink extends React.PureComponent<GameLinkProps> {
   gameState = ['Waiting', 'In Progress', 'Finished', 'Paused', 'Frozen'];
 
   render() {
-    const { gameId, code, state, host, mode, spectators, missionResults, avatars } = this.props;
+    const {
+      gameId,
+      code,
+      state,
+      host,
+      mode,
+      spectators,
+      missionResults,
+      avatars,
+    } = this.props;
     const _missionResults: (boolean | undefined)[] = new Array(5);
     _missionResults.fill(undefined);
     _missionResults.unshift(...missionResults);
 
     return (
-      <Link className="game" to={`/game/${gameId}/${code}`}>
+      <Link className="game" to={`/game/${gameId}`}>
         <h3>
           <p>ROOM #{code}</p>
           {state > -1 ? (

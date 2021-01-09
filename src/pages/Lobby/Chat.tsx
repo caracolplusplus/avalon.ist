@@ -6,7 +6,6 @@ import React, { FormEvent, createRef } from 'react';
 import { rootType } from '../../redux/reducers';
 import { setMessageDelay } from '../../redux/actions';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 import { ChatInput } from '../../components/utils/Input';
 import MessageBuilder from './MessageBuilder';
@@ -252,7 +251,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
     const quote = /^[0-9]{2}:[0-9]{2} (.*)$/g;
 
-    let output: ChatSnapshot[] = msgBuilder.waitingForServerResponse(username);
+    let output: ChatSnapshot[] = [];
 
     if (content.startsWith('/')) {
       const split = content.split(' ');
@@ -455,11 +454,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       >
         <span className={`hour ${color}`}>{snap.hour}</span>
         <p className="text">
-          {snap.from ? (
-            <Link className={`username ${color}`} to={`/profile/${snap.from}`}>
-              {snap.from}:
-            </Link>
-          ) : null}
+          {snap.from ? <span className={`username ${color}`}>{snap.from}:</span> : null}
           <span className="content">{snap.content}</span>
         </p>
       </div>

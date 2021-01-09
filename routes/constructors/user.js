@@ -1,4 +1,5 @@
 /* global Parse */
+const Environment = require('./environment');
 const ipTree = require('../security/trees/ip-tree');
 // const emailTree = require('../security/trees/email-tree');
 
@@ -98,7 +99,7 @@ class User extends Parse.User {
   checkForBans(data) {
     this.setACL(new Parse.ACL(this), { useMasterKey: true });
 
-    const environment = require('./environment').getGlobal();
+    const environment = Environment.getGlobal();
 
     const { address } = data;
     const addressList = this.get('addressList') || [];
@@ -202,8 +203,6 @@ class User extends Parse.User {
     this.set('bio', bio);
     this.set('nationality', nationality);
 
-    console.log('hello');
-
     this.save({}, { useMasterKey: true });
 
     return true;
@@ -242,16 +241,24 @@ class User extends Parse.User {
   }
 
   addGameToProfile(data) {
-    const { code, role, winner, cause } = data;
+    const { code, role, winner, cause, date, size, id } = data;
+
+    console.log(this.get('username'), data);
 
     const res = ['resistance', 'percival', 'merlin'].includes(role) ? 1 : 0;
 
-    const gameHistory = this.get('gameHistory');
     const games = this.get('games');
     const gameStats = this.get('gameStats');
     const gameShots = this.get('gameShots');
 
-    gameHistory.push(code);
+    this.addUnique('gameHistory', {
+      code,
+      id,
+      role: role.charAt(0).toUpperCase() + role.slice(1),
+      size,
+      date,
+      winner,
+    });
 
     games[1]++;
     gameStats[role][1]++;
@@ -267,7 +274,6 @@ class User extends Parse.User {
       if (cause < 1) gameShots[0]++;
     }
 
-    this.set('gameHistory', gameHistory);
     this.set('games', games);
     this.set('gameStats', gameStats);
     this.set('gameShots', gameShots);

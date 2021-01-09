@@ -1,6 +1,5 @@
-const generator = require('generate-password');
-const { gameRoom } = require('../../rooms');
 const Game = require('../../constructors/game');
+const Environment = require('../../constructors/environment');
 
 function beforeGame(io, socket) {
   const { user } = socket;
@@ -8,48 +7,78 @@ function beforeGame(io, socket) {
   // eslint-disable-next-line no-unused-vars
   const { game } = socket;
 
-  socket.on('createGame', async (data) => {
+  // Creates a game with a unique ID
+  socket.on('createGame', (data) => {
+    // Gets data from client
     const { roleSettings, playerMax, listed } = data;
 
-    const environment = require('../../constructors/environment').getGlobal();
+    // Gets environment global variables
+    const environment = Environment.getGlobal();
 
-    let code = generator.generate({
-      length: 20,
-      numbers: true,
-    });
+    // Gets the game count of session variable
+    const code = environment.get('games').toString();
+    environment.increment('games');
 
-    if (listed) {
-      code = environment.get('games').toString();
-      environment.increment('games');
+    // Gets the general chat from environment
+    const chat = environment.get('chat');
+    chat
+      .fetch({ useMasterKey: true })
+      .then((c) => {
+        // Sends message to general chat
+        // Room was created
+        c.roomCreated({ username, code });
 
-      const chat = environment.get('chat');
-      await chat.fetch({ useMasterKey: true });
+        environment.save({}, { useMasterKey: true });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
 
-      chat.roomCreated({ username, code });
-
-      await environment.save({}, { useMasterKey: true });
-    }
-
+    // Creates the game object
     const game = Game.spawn({ code });
-
     game.set('listed', listed);
 
-    await game.editSettings({ roleSettings, playerMax });
-    await game.togglePlayer({ username, add: true });
+    // Set game's initial settings
+    game.editSettings({ roleSettings, playerMax });
 
-    socket.emit('createGameSuccess', code, game.id);
+    game
+      .save({}, { useMasterKey: true })
+      .then((g) => {
+        // Create game chat
+        g.buildChat(g);
+        // Adds as client
+        g.addClient({
+          username,
+          avatars: user.get('avatars'),
+        });
+        // Toggle seat for this player
+        g.togglePlayer({ username, add: true });
+
+        // Redirect to room with game id
+        socket.emit('createGameSuccess', game.id);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   });
 
+  // Reports a player through discord webhook
   socket.on('reportPlayer', (data) => {
+    // Retrieve game from socket
     const { game } = socket;
 
+    // If this socket is not in a game is an error
     if (!game) return;
 
+    // Gets the code of the room
     const room = game.get('code');
 
+    // Unpacks data
     const { selected, cause, description } = data;
+    // Ask for discord webhook
     const DiscordReports = require('../../security/discordReports');
 
+    // Adds report
     DiscordReports.newReport({
       user: username,
       target: selected,
@@ -59,76 +88,101 @@ function beforeGame(io, socket) {
     });
   });
 
-  socket.on('editGame', async (data) => {
+  // Edits game settings
+  socket.on('editGame', (data) => {
+    // Unpacks data
     const { roleSettings, playerMax } = data;
+    // Retrieve game from socket
     const { game } = socket;
 
+    // If no game dont perform operation
     if (!game) return;
 
-    await game.fetch({ useMasterKey: true });
-
-    game.editSettings({ roleSettings, playerMax });
-  });
-
-  socket.on('joinLeaveGame', async () => {
-    const { game } = socket;
-
-    if (!game) return;
-
-    await game.fetch({ useMasterKey: true });
-
-    game.togglePlayer({ username, add: true });
-  });
-
-  socket.on('toggleClaim', async () => {
-    const { game } = socket;
-
-    if (!game) return;
-
-    await game.fetch({ useMasterKey: true });
-
-    game.toggleClaim(username);
-  });
-
-  socket.on('kickPlayer', async (data) => {
-    const { game } = socket;
-    const { kick } = data;
-
-    if (!game) return;
-
-    await game.fetch({ useMasterKey: true });
-
-    await game.addToKick(data);
-    game.togglePlayer({ username: kick, add: false });
-  });
-
-  socket.on('startGame', async () => {
-    const { game } = socket;
-
-    if (!game) return;
-
-    await game.fetch({ useMasterKey: true });
-
-    const host = game.get('host');
-    const code = game.get('code');
-
-    if (host !== username) return;
-
-    game.startGame({ username });
-
-    io.to(gameRoom + code).emit('printNotification', {
-      audio: 'notification',
-      title: `Room ${code} has started`,
-      body: ``,
+    // Fetch from database
+    game.fetch({ useMasterKey: true }).then((g) => {
+      // Edit settings
+      g.editSettings({ roleSettings, playerMax });
     });
   });
 
-  socket.on('readyState', async (ready) => {
+  // Sit or stand up from game
+  socket.on('joinLeaveGame', () => {
+    // Retrieve game from socket
+    const { game } = socket;
+
+    // If no game return
+    if (!game) return;
+
+    // Fetch from database
+    game
+      .fetch({ useMasterKey: true })
+      .then((g) => {
+        // Sit or stand up
+        g.togglePlayer({ username, add: true });
+      })
+      .catch((err) => console.log(err));
+  });
+
+  // Toggle claims symbol on player who made the request
+  socket.on('toggleClaim', () => {
+    // Retrieve game from socket
+    const { game } = socket;
+
+    // If no game return
+    if (!game) return;
+
+    // Fetch from database
+    game
+      .fetch({ useMasterKey: true })
+      .then((g) => {
+        // Toggle the claim symbol for this player
+        g.toggleClaim(username);
+      })
+      .catch((err) => console.log(err));
+  });
+
+  // Host kicks player from game
+  socket.on('kickPlayer', (data) => {
     const { game } = socket;
 
     if (!game) return;
 
-    await game.toggleReady({ game, username, ready });
+    game
+      .fetch({ useMasterKey: true })
+      .then((g) => {
+        g.addToKick(data);
+      })
+      .catch((err) => console.log(err));
+  });
+
+  // Starts the game
+  socket.on('startGame', () => {
+    const { game } = socket;
+
+    if (!game) return;
+
+    // Fetch from database
+    game
+      .fetch({ useMasterKey: true })
+      .then((g) => {
+        // If player is not host, ignore this request
+        const host = g.get('host');
+
+        if (host !== username) return;
+
+        // Ready button pops up
+        g.askToBeReady({ username });
+      })
+      .catch((err) => console.log(err));
+  });
+
+  // Tells the game that this player is ready
+  socket.on('readyState', (ready) => {
+    const { game } = socket;
+
+    if (!game) return;
+
+    game.toggleReady({ username, ready });
   });
 }
 

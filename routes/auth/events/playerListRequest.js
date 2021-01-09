@@ -1,7 +1,9 @@
+const Environment = require('../../constructors/environment');
+
 // Send player list to client
 function playerListRequest(io, socket) {
   socket.on('playerListRequest', () => {
-    const environment = require('../../constructors/environment').getGlobal();
+    const environment = Environment.getGlobal();
 
     const playerList = environment.get('playerList');
 

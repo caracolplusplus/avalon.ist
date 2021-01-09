@@ -1,6 +1,8 @@
+const Environment = require('../../constructors/environment');
+
 function articleRequest(io, socket) {
   socket.on('articleRequest', (id) => {
-    const environment = require('../../constructors/environment').getGlobal();
+    const environment = Environment.getGlobal();
 
     const articles = environment.get('announcementLogs');
 

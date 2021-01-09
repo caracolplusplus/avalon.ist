@@ -1,11 +1,13 @@
+const Environment = require('../../routes/constructors/environment');
+
 const beforeUserSave = async (request) => {
-	const environment = require('../../routes/constructors/environment').getGlobal();
-	const user = request.object;
+  const environment = Environment.getGlobal();
+  const user = request.object;
 
-	user.validateLoginData();
-	environment.checkOnlinePlayers({ user });
+  user.validateLoginData();
+  environment.checkOnlinePlayers({ user });
 
-	return true;
+  return true;
 };
 
 module.exports = beforeUserSave;

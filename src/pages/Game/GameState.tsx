@@ -1,6 +1,6 @@
 interface GameState {
   // Player Info
-  username: string | null;
+  username: any;
   players: string[];
   claimed: string[];
   avatars: any[];
@@ -23,8 +23,9 @@ interface GameState {
   notFound: boolean;
   // Game Pick Info
   picks: number[];
-  picksYetToVote: number[];
+  picksYetToVote: string[];
   votesRound: number[];
+  votesPending: string[];
   // Game Knowledge
   publicKnowledge: string[];
   privateKnowledge: string[];
