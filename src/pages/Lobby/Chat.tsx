@@ -251,7 +251,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
     const quote = /^[0-9]{2}:[0-9]{2} (.*)$/g;
 
-    let output: ChatSnapshot[] = msgBuilder.waitingForServerResponse(username);
+    let output: ChatSnapshot[] = [];
 
     if (content.startsWith('/')) {
       const split = content.split(' ');

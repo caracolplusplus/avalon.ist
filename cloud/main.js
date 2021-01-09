@@ -29,6 +29,52 @@ Parse.Cloud.afterSave('Chat', afterChatSave);
 
 Parse.Cloud.beforeDelete('Game', beforeGameDelete);
 
+// This function should be run periodically
+// It cleans the general chat and it deletes closed games
+Parse.Cloud.job('deleteGeneralChatAndEmptyGames', (request) => {
+  function cleanUp() {
+    const chatQ = new Parse.Query('Chat');
+    chatQ.equalTo('code', 'Global');
+
+    chatQ
+      .first({ useMasterKey: true })
+      .then((c) => {
+        c.set('messages', []);
+
+        c.save({}, { useMasterKey: true });
+      })
+      .catch((err) => console.log(err));
+
+    const gameQ = new Parse.Query('Game');
+    gameQ.equalTo('active', false);
+    gameQ.equalTo('ended', false);
+    gameQ.limit(10000);
+
+    gameQ
+      .find({ useMasterKey: true })
+      .then((gList) => {
+        gList.forEach((g) => {
+          g.get('chat').destroy({ useMasterKey: true });
+          g.destroy({ useMasterKey: true });
+        });
+      })
+      .catch((err) => console.log(err));
+
+    const envQ = new Parse.Query('Environment');
+
+    envQ
+      .first({ useMasterKey: true })
+      .then((e) => {
+        e.set('games', 1);
+
+        e.save({}, { useMasterKey: true });
+      })
+      .catch((err) => console.log(err));
+  }
+
+  return cleanUp();
+});
+
 // This function repairs the links in the user's game history after update 7 of January of 2021
 // Should only be run once
 Parse.Cloud.job('repairGameHistory', (request) => {

@@ -126,13 +126,12 @@ function gameCommands(io, socket) {
           const code = g.get('code');
 
           if (outcome) {
-            g.gameEnd(outcome === '1' ? 4 : 2)
-              .then(() => g.save({}, { useMasterKey: true }))
-              .catch((e) => console.log(e));
+            g.gameEnd(outcome === '1' ? 4 : 2);
           } else {
             g.set('ended', true);
-            g.save({}, { useMasterKey: true });
           }
+
+          g.save({}, { useMasterKey: true });
 
           chat
             .fetch({ useMasterKey: true })
