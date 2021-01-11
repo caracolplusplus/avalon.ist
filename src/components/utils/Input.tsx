@@ -100,7 +100,7 @@ export class ChatInput extends React.PureComponent<ChatInputProps, ChatInputStat
       this.setState({
         content: content,
         autoCompleteWord: word,
-        lastAutoCompleteWord: this.props.autoComplete[newIndex],
+        lastAutoCompleteWord: matches[newIndex],
         tabbing: true,
       });
     } else if (this.state.tabbing) {
