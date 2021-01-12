@@ -1,6 +1,8 @@
 /* global Parse */
 const Environment = require('./environment');
 
+const defaultCallback = () => null;
+
 const Chat = require('./chat');
 // const _ = require('lodash');
 
@@ -251,7 +253,7 @@ class Game extends Parse.Object {
     return true;
   }
 
-  addClient(data) {
+  addClient(data, callback) {
     const { username, avatars } = data;
     const avatarList = this.get('avatarList');
 
@@ -261,7 +263,9 @@ class Game extends Parse.Object {
     this.set('avatarList', avatarList);
     this.addUnique('spectatorListNew', username);
 
-    this.save({}, { useMasterKey: true });
+    this.save({}, { useMasterKey: true })
+      .then(callback || defaultCallback)
+      .catch((err) => console.log(err));
 
     return true;
   }
@@ -314,7 +318,7 @@ class Game extends Parse.Object {
     return true;
   }
 
-  togglePlayer(data) {
+  togglePlayer(data, callback) {
     const { username, add } = data;
 
     const players = this.get('playerList');
@@ -334,6 +338,8 @@ class Game extends Parse.Object {
     this.save({}, { useMasterKey: true }).then((g) => {
       g.set('host', g.get('playerList')[0]);
       g.save({}, { useMasterKey: true });
+
+      if (callback) callback();
     });
 
     return true;

@@ -112,62 +112,65 @@ class Environment extends Parse.Object {
   checkOnlinePlayers(data) {
     const { user } = data;
 
-    const userQ = new Parse.Query('_User');
-    userQ.equalTo('isOnline', true);
+    const username = user.get('username');
+    const hasPower = user.get('isMod') || user.get('isAdmin');
 
-    const moderatorList = [];
+    if (user.get('isOnline')) {
+      if (hasPower) this.addUnique('moderatorList', username);
+      this.addUnique('playerList', username);
+    } else {
+      if (hasPower) this.remove('moderatorList', username);
+      this.remove('playerList', username);
+    }
 
-    userQ
-      .find({
-        useMasterKey: true,
-      })
-      .then((userList) => {
-        let appears = -1;
-        const username = user.get('username');
-
-        const playerList = userList.map((u, i) => {
-          const client = u.toPlayerList();
-          if (client.username === username) appears = i;
-          if (client.isMod || client.isAdmin) moderatorList.push(client.username);
-
-          return client;
-        });
-
-        if (user.get('isOnline')) {
-          if (appears <= -1) playerList.push(user.toPlayerList());
-        } else {
-          if (appears > -1) playerList.splice(appears, 1);
-        }
-
-        this.set('playerList', playerList);
-        this.set('moderatorList', moderatorList);
-
-        this.save({}, { useMasterKey: true, context: { playerList: true } });
-      })
-      .catch((err) => console.log(err));
+    this.save({}, { useMasterKey: true, context: { playerList: true } });
 
     return true;
   }
 
-  checkActiveGames() {
-    const gameQ = new Parse.Query('Game');
-    gameQ.equalTo('active', true);
-    gameQ.equalTo('listed', true);
+  checkActiveGames(data) {
+    const { game, beforeSave } = data;
 
-    gameQ
-      .find({
-        useMasterKey: true,
-      })
-      .then((gameList) => {
-        const roomList = gameList.map((g) => g.toRoomList());
+    if (!game.id) return;
 
-        this.set('roomList', roomList);
+    if (game.get('active') && game.get('listed') && beforeSave) {
+      this.addUnique('roomList', game.id);
+    } else {
+      this.remove('roomList', game.id);
+    }
 
-        this.save({}, { useMasterKey: true, context: { roomList: true } });
-      })
-      .catch((err) => console.log(err));
+    this.save({}, { useMasterKey: true, context: { roomList: true } });
 
     return true;
+  }
+
+  getOnlinePlayers(callback) {
+    const userQ = new Parse.Query('_User');
+    userQ.containedIn('username', this.get('playerList'));
+    userQ.limit(500);
+
+    userQ
+      .find({ useMasterKey: true })
+      .then((playerList) => {
+        const map = playerList.map((p) => p.toPlayerList());
+
+        callback(map);
+      })
+      .catch((err) => console.log(err));
+  }
+
+  getActiveGames(callback) {
+    const gameQ = new Parse.Query('Game');
+    gameQ.containedIn('objectId', this.get('roomList'));
+
+    gameQ
+      .find({ useMasterKey: true })
+      .then((roomList) => {
+        const map = roomList.map((r) => r.toRoomList());
+
+        callback(map);
+      })
+      .catch((err) => console.log(err));
   }
 
   updateTrees() {

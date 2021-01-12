@@ -155,7 +155,7 @@ class User extends Parse.User {
     this.set('isOnline', true);
     this.set('lastInstance', id);
 
-    this.save({}, { useMasterKey: true, context: { another: id } });
+    this.save({}, { useMasterKey: true, context: { another: id, presence: true } });
 
     return true;
   }
@@ -163,7 +163,7 @@ class User extends Parse.User {
   leavePresence() {
     this.set('isOnline', false);
 
-    this.save({}, { useMasterKey: true });
+    this.save({}, { useMasterKey: true, context: { presence: true } });
 
     return true;
   }

@@ -16,50 +16,48 @@ function beforeGame(io, socket) {
     const environment = Environment.getGlobal();
 
     // Gets the game count of session variable
-    const code = environment.get('games').toString();
     environment.increment('games');
 
-    // Gets the general chat from environment
-    const chat = environment.get('chat');
-    chat
-      .fetch({ useMasterKey: true })
-      .then((c) => {
-        // Sends message to general chat
-        // Room was created
-        c.roomCreated({ username, code });
-
-        environment.save({}, { useMasterKey: true });
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-
-    // Creates the game object
-    const game = Game.spawn({ code });
-    game.set('listed', listed);
-
-    // Set game's initial settings
-    game.editSettings({ roleSettings, playerMax });
-
-    game
+    environment
       .save({}, { useMasterKey: true })
-      .then((g) => {
-        // Create game chat
-        g.buildChat(g);
-        // Adds as client
-        g.addClient({
-          username,
-          avatars: user.get('avatars'),
-        });
-        // Toggle seat for this player
-        g.togglePlayer({ username, add: true });
+      .then((e) => {
+        const code = e.get('games').toString();
 
-        // Redirect to room with game id
-        socket.emit('createGameSuccess', game.id);
+        // Creates the game object
+        const game = Game.spawn({ code });
+        game.set('listed', listed);
+
+        game
+          .save({}, { useMasterKey: true })
+          .then((g) => {
+            // Set initial game settings
+            g.editSettings({ roleSettings, playerMax });
+            // Create game chat
+            g.buildChat(g);
+            // Toggle seat for this player
+            g.togglePlayer({ username, add: true }, () => {
+              // Redirect to room with game id
+              socket.emit('createGameSuccess', game.id);
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+
+        // Gets the general chat from environment
+        const chat = e.get('chat');
+        chat
+          .fetch({ useMasterKey: true })
+          .then((c) => {
+            // Sends message to general chat
+            // Room was created
+            c.roomCreated({ username, code });
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => console.log(err));
   });
 
   // Reports a player through discord webhook
@@ -102,6 +100,8 @@ function beforeGame(io, socket) {
     game.fetch({ useMasterKey: true }).then((g) => {
       // Edit settings
       g.editSettings({ roleSettings, playerMax });
+      // Save settings
+      g.save({}, { useMasterKey: true });
     });
   });
 

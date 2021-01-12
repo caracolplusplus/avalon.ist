@@ -5,9 +5,9 @@ function playerListRequest(io, socket) {
   socket.on('playerListRequest', () => {
     const environment = Environment.getGlobal();
 
-    const playerList = environment.get('playerList');
+    const cb = (map) => socket.emit('playerListResponse', map);
 
-    socket.emit('playerListResponse', playerList);
+    environment.getOnlinePlayers(cb);
   });
 }
 

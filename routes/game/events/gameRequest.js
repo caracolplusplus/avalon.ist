@@ -1,5 +1,4 @@
 const { gameChat, gameRoom } = require('../../rooms');
-const Environment = require('../../constructors/environment');
 
 function gameRequest(io, socket) {
   const { user } = socket;
@@ -56,10 +55,15 @@ function gameRequest(io, socket) {
         user
           .fetch({ useMasterKey: true })
           .then((u) => {
-            g.addClient({
-              username,
-              avatars: u.get('avatars'),
-            });
+            g.addClient(
+              {
+                username,
+                avatars: u.get('avatars'),
+              },
+              () => {
+                socket.emit('gameResponse', g.toClient());
+              }
+            );
           })
           .catch((err) => console.log(err));
 
@@ -67,8 +71,7 @@ function gameRequest(io, socket) {
         socket
           .join(gameRoom + gameId)
           .join(gameChat + gameId)
-          .on('disconnect', gameLeave)
-          .emit('gameResponse', g.toClient());
+          .on('disconnect', gameLeave);
       })
       .catch((err) => {
         console.log('not found', gameId);
@@ -78,13 +81,6 @@ function gameRequest(io, socket) {
 
   // Connect game leave
   socket.on('gameLeave', gameLeave);
-
-  // This gets the room list to the player
-  socket.on('roomListRequest', () => {
-    const environment = Environment.getGlobal();
-
-    socket.emit('roomListResponse', environment.get('roomList'));
-  });
 }
 
 module.exports = gameRequest;

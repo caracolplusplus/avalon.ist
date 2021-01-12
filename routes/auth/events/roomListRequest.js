@@ -4,7 +4,9 @@ function roomListRequest(io, socket) {
   socket.on('roomListRequest', () => {
     const environment = Environment.getGlobal();
 
-    socket.emit('roomListResponse', environment.get('roomList'));
+    const cb = (map) => socket.emit('roomListResponse', map);
+
+    environment.getActiveGames(cb);
   });
 }
 

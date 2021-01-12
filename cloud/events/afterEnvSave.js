@@ -1,3 +1,5 @@
+/* global Parse */
+
 const afterEnvSave = async (request) => {
   const Environment = require('../../routes/constructors/environment');
   const { object: env, context } = request;
@@ -9,11 +11,15 @@ const afterEnvSave = async (request) => {
     const { playerList, roomList, kick, ips } = context;
 
     if (playerList) {
-      io.emit('playerListResponse', env.get('playerList'));
+      const cb = (map) => io.emit('playerListResponse', map);
+
+      env.getOnlinePlayers(cb);
     }
 
     if (roomList) {
-      io.emit('roomListResponse', env.get('roomList'));
+      const cb = (map) => io.emit('roomListResponse', map);
+
+      env.getActiveGames(cb);
     }
 
     if (kick === false) {
