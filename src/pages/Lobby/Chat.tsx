@@ -66,6 +66,9 @@ interface ChatProps {
 interface ChatState {
   messages: ChatSnapshotRead[];
   playerList: string[];
+  adminList: string[];
+  modList: string[];
+  contribList: string[];
   form: FormType;
 }
 
@@ -94,6 +97,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   state: ChatState = {
     messages: [],
     playerList: [],
+    adminList: [],
+    modList: [],
+    contribList: [],
     form: FormType.None,
   };
 
@@ -131,9 +137,21 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   playerListResponse = (players: any) => {
-    const playerList: string[] = players.map((p: any) => p.username);
+    const adminList: string[] = [];
+    const modList: string[] = [];
+    const contribList: string[] = [];
 
-    this.setState({ playerList });
+    const playerList: string[] = players.map((p: any) => {
+      const { username } = p;
+
+      if (p.isAdmin) adminList.push(username);
+      if (p.isMod) modList.push(username);
+      if (p.isContrib) contribList.push(username);
+
+      return username;
+    });
+
+    this.setState({ playerList, adminList, modList, contribList });
   };
 
   startChat = () => {
@@ -456,9 +474,21 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   }, 50);
 
   messageMapper = (snap: ChatSnapshotRead) => {
+    const { adminList, modList, contribList } = this.state;
     const color = this.getColor(snap.from);
     const highlight = this.getHighlight(snap.from);
     const classname = this.getClassname(snap.type, snap.from);
+
+    let tag: any = null;
+    if (snap.from) {
+      if (adminList.includes(snap.from)) {
+        tag = <span className="playerTag admin">A</span>;
+      } else if (modList.includes(snap.from)) {
+        tag = <span className="playerTag mod">M</span>;
+      } else if (contribList.includes(snap.from)) {
+        tag = <span className="playerTag contrib">C</span>;
+      }
+    }
 
     return (
       <div
@@ -468,7 +498,12 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       >
         <span className={`hour ${color}`}>{snap.hour}</span>
         <p className="text">
-          {snap.from ? <span className={`username ${color}`}>{snap.from}:</span> : null}
+          {snap.from ? (
+            <span className={`username ${color}`}>
+              {tag}
+              {snap.from}:
+            </span>
+          ) : null}
           <span className="content">{snap.content}</span>
         </p>
       </div>

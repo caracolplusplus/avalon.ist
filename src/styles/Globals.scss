@@ -138,6 +138,28 @@ button:focus {
   .thumb-hidden {
     display: none !important;
   }
+  .playerTag {
+    display: inline-block;
+    height: 1.2em;
+    width: 2em;
+    font-size: 0.7rem;
+    margin-right: 0.4em;
+    color: white;
+    font-weight: 700;
+    line-height: 1.3em;
+    text-align: center;
+    user-select: none; /* Standard */
+    border-radius: 5em;
+    &.admin {
+      background-color: $spy-dark;
+    }
+    &.mod {
+      background-color: $res-dark;
+    }
+    &.contrib {
+      background-color: $green-1;
+    }
+  }
   /* Elements */
   h1 {
     font-size: $base-font-size;

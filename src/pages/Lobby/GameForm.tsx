@@ -238,6 +238,10 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
     socket.on('createGameSuccess', this.createGameSuccess);
   }
 
+  componentWillUnmount() {
+    socket.off('createGameSuccess', this.createGameSuccess);
+  }
+
   handleListed = () => {
     this.setState({
       listed: !this.state.listed,

@@ -46,9 +46,20 @@ interface PlayerListState {
 }
 
 const Player = (props: PlayerProps) => {
+  let tag: any = null;
+
+  if (props.isAdmin) {
+    tag = <span className="playerTag admin">A</span>;
+  } else if (props.isMod) {
+    tag = <span className="playerTag mod">M</span>;
+  } else if (props.isContrib) {
+    tag = <span className="playerTag contrib">C</span>;
+  }
+
   return (
     <p className="player">
       <Link className="player-name" to={'/profile/' + props.username}>
+        {tag}
         {props.username}
       </Link>
     </p>
@@ -119,6 +130,12 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
     const areAdmins = players.filter((p) => p.isAdmin || p.isMod);
     const areContribs = players.filter((p) => !p.isAdmin && !p.isMod && p.isContrib);
     const arePlayers = players.filter((p) => !p.isAdmin && !p.isMod && !p.isContrib);
+
+    function sortAdmins(a: PlayerProps, b: PlayerProps) {
+      return a.isAdmin ? -1 : 1;
+    }
+
+    areAdmins.sort(sortAdmins);
 
     this.setState({
       areAdmins,
