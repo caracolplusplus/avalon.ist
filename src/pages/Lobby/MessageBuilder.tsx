@@ -279,7 +279,7 @@ class MessageBuilder implements MessageBuilderType {
     const quoteTrimmer = (x: string) => x.trim();
     const quoteRegex = /[0-9]{2}:[0-9]{2} /;
 
-    let quotes = content.split(quoteRegex).map(quoteTrimmer);
+    let quotes = content.split(quoteRegex).map(quoteTrimmer).slice(0, 5);
 
     quotes = new Set(quotes);
 

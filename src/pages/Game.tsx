@@ -15,7 +15,8 @@ import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 
 import Navbar from './Navbar';
 import Tabs from './Game/Tabs';
-import ConnectedTable, {Table} from './Game/Table';
+// eslint-disable-next-line no-unused-vars
+import ConnectedTable, { Table } from './Game/Table';
 // eslint-disable-next-line no-unused-vars
 import GameState from './Game/GameState';
 
@@ -175,21 +176,36 @@ class Game extends React.PureComponent<PageProps, GameState> {
   };
 
   parseGame = (data: any) => {
+    // This function parses the game from the server to the client
+    // This is done after the socket.io event "gameResponse"
+
+    // Gets the username from props, which is on redux
     const { username } = this.props;
 
-    const { avatarList, playerList, roleList } = data;
+    // Gets these variables from the game
+    const { avatarList, playerList, roleList, votesRound: _votesRound } = data;
 
+    // Gets the avatars from the avatar list
     const avatars: any[] = playerList.map((p: any) => avatarList[p.replace(/\./gi, '/')]);
 
+    // Gets the default vote for a not fail
+    // Its -1 only on mission 1.1, this is to hide the vote display on first mission
+    // Votes round only counts for fails
+    const notFailVote = _votesRound.length ? 1 : -1;
+
+    // Turns the round votes into readable data for the avatar component
     const votesRound = playerList.map((p: string) =>
-      data.votesRound.includes(p) ? 0 : 1
+      _votesRound.includes(p) ? 0 : notFailVote
     );
 
+    // Gets the spectator list for the rest of components
     const clients = data.spectatorListNew;
 
+    // Gets the seat of the player and if the game has assassin
     const seat = playerList.indexOf(username);
     const hasAssassin = roleList.indexOf('Assassin');
 
+    // Sets state with the rest of values from the game
     this.setState({
       gameId: data.gameId,
       code: data.code,

@@ -655,13 +655,19 @@ class Game extends Parse.Object {
 
     if (votesPending.includes(username)) {
       this.remove('votesPending', username);
-      if (vote === 0) this.addUnique('votesRound', username);
+      this.add('votesRound', vote ? '-' : username);
+
+      console.log('after save picking', this.get('votesRound'));
 
       this.save({}, { useMasterKey: true })
         .then((g) => {
-          const votesPending = g.get('votesPending');
+          console.log('after save picking', g.get('votesRound'));
 
-          if (!votesPending.length) {
+          const _votesPending = g.get('votesPending');
+          const _votesRound = g.get('votesRound');
+          const playerList = g.get('playerList');
+
+          if (!_votesPending.length && _votesRound.length === playerList.length) {
             g.countVotes()
               .then((result) => {
                 const ended = g.get('ended');
@@ -703,7 +709,7 @@ class Game extends Parse.Object {
     const chat = this.get('chat');
     await chat.fetch({ useMasterKey: true });
 
-    const rejects = votesRound.length;
+    const rejects = votesRound.filter((v) => v !== '-').length;
 
     const hammerDistance = this.get('hammerDistance');
     const mission = this.get('mission');
@@ -734,14 +740,20 @@ class Game extends Parse.Object {
     const picksYetToVote = this.get('picksYetToVote');
 
     if (picksYetToVote.includes(username)) {
-      if (vote === 0) this.addUnique('votesMission', username);
       this.remove('picksYetToVote', username);
+      this.add('votesMission', vote ? '-' : username);
+
+      console.log('after save mission', this.get('votesMission'));
 
       this.save({}, { useMasterKey: true })
         .then((g) => {
-          const picksYetToVote = g.get('picksYetToVote');
+          console.log('after save mission', g.get('votesMission'));
 
-          if (!picksYetToVote.length) {
+          const _picksYetToVote = g.get('picksYetToVote');
+          const _votesMission = g.get('votesRound');
+          const playerList = g.get('playerList');
+
+          if (!_picksYetToVote.length && _votesMission.length === playerList.length) {
             g.didMissionPass()
               .then((result) => {
                 g.addResult(result);
@@ -758,7 +770,6 @@ class Game extends Parse.Object {
                   const hasAssassin = g.get('hasAssassin');
 
                   if (hasAssassin) {
-                    const playerList = g.get('playerList');
                     const roleList = g.get('roleList');
 
                     const assassinIndex = roleList.indexOf('Assassin');
@@ -777,7 +788,6 @@ class Game extends Parse.Object {
 
                   g.save({}, { useMasterKey: true });
                 } else if (hasLady && mission > 1 && !ended) {
-                  const playerList = g.get('playerList');
                   const lady = g.get('lady');
 
                   chat
@@ -809,7 +819,7 @@ class Game extends Parse.Object {
     this.set('round', 0);
 
     const votesMission = this.get('votesMission');
-    const fails = votesMission.length;
+    const fails = votesMission.filter((v) => v !== '-').length;
 
     const mission = this.get('mission');
     const { length: players } = this.get('playerList');
