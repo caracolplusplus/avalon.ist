@@ -109,7 +109,7 @@ class Environment extends Parse.Object {
     console.log('This a test message!');
   }
 
-  checkOnlinePlayers(data) {
+  async checkOnlinePlayers(data) {
     const { user } = data;
 
     const username = user.get('username');
@@ -117,10 +117,10 @@ class Environment extends Parse.Object {
 
     if (user.get('isOnline')) {
       if (hasPower) this.addUnique('moderatorList', username);
-      this.addUnique('playerList', username);
+      this.addUnique('playerList', user);
     } else {
       if (hasPower) this.remove('moderatorList', username);
-      this.remove('playerList', username);
+      this.remove('playerList', user);
     }
 
     this.save({}, { useMasterKey: true, context: { playerList: true } });
@@ -128,15 +128,17 @@ class Environment extends Parse.Object {
     return true;
   }
 
-  checkActiveGames(data) {
+  async checkActiveGames(data) {
     const { game, beforeSave } = data;
 
     if (!game.id) return;
 
+    const relation = this.get('roomListNew') || this.relation('roomListNew');
+
     if (game.get('active') && game.get('listed') && beforeSave) {
-      this.addUnique('roomList', game.id);
+      relation.add(game);
     } else {
-      this.remove('roomList', game.id);
+      relation.remove(game);
     }
 
     this.save({}, { useMasterKey: true, context: { roomList: true } });
@@ -145,12 +147,9 @@ class Environment extends Parse.Object {
   }
 
   getOnlinePlayers(callback) {
-    const userQ = new Parse.Query('_User');
-    userQ.containedIn('username', this.get('playerList'));
-    userQ.limit(500);
+    const playerQ = this.get('playerList');
 
-    userQ
-      .find({ useMasterKey: true })
+    Parse.Object.fetchAll(playerQ, { useMasterKey: true })
       .then((playerList) => {
         const map = playerList.map((p) => p.toPlayerList());
 
@@ -160,8 +159,7 @@ class Environment extends Parse.Object {
   }
 
   getActiveGames(callback) {
-    const gameQ = new Parse.Query('Game');
-    gameQ.containedIn('objectId', this.get('roomList'));
+    const gameQ = this.get('roomListNew').query();
 
     gameQ
       .find({ useMasterKey: true })

@@ -335,12 +335,16 @@ class Game extends Parse.Object {
 
     this.set('askedToBeReady', false);
 
-    this.save({}, { useMasterKey: true }).then((g) => {
-      g.set('host', g.get('playerList')[0]);
-      g.save({}, { useMasterKey: true });
-
-      if (callback) callback();
-    });
+    this.save({}, { useMasterKey: true })
+      .then((g) => {
+        g.set('host', g.get('playerList')[0]);
+        g.save({}, { useMasterKey: true })
+          .then(() => {
+            if (callback) callback();
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch((err) => console.log(err));
 
     return true;
   }
