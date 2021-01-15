@@ -409,6 +409,35 @@ class Chat extends Parse.Object {
       .catch((e) => console.log(e));
   }
 
+  verifyPlayer(data) {
+    const { username, target, comment } = data;
+
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('username', target);
+
+    return userQ
+      .first({ useMasterKey: true })
+      .then((u) => {
+        if (u) {
+          const environment = Environment.getGlobal();
+          u.toggleLock();
+
+          environment.addModerationLog({
+            action: 'TOGGLE PLAYER LOCK',
+            from: username,
+            to: target,
+            comment,
+          });
+
+          this.save({}, { useMasterKey: true });
+          return `${target} has been allowed on site.`;
+        }
+
+        return `No player exists with username "${target}".`;
+      })
+      .catch((e) => console.log(e));
+  }
+
   banPlayer(data) {
     const { username, target, comment } = data;
 

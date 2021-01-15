@@ -5,7 +5,9 @@ const beforeUserSave = async (request) => {
   const user = request.object;
   const { context } = request;
 
-  user.validateLoginData();
+  const onLockdown = environment.get('onLockdown') || false;
+
+  user.validateLoginData({ onLockdown });
 
   if (context) {
     const { presence } = context;

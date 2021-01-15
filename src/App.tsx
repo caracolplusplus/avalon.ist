@@ -112,7 +112,7 @@ class App extends React.PureComponent<appProps, appState> {
   getAuthenticated = async () => {
     const { dispatch } = this.props;
 
-    const verified = await Parse.Cloud.run('linkSocketIO', { io: socket.id });
+    const locked = await Parse.Cloud.run('linkSocketIO', { io: socket.id });
 
     const currentUser = Parse.User.current();
 
@@ -124,7 +124,7 @@ class App extends React.PureComponent<appProps, appState> {
 
       this.setState({
         authenticated: true,
-        verified,
+        verified: !locked,
         loading: false,
       });
     } else {

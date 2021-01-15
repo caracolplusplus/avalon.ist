@@ -12,7 +12,7 @@ class User extends Parse.User {
     this.set('socketsOnline', {});
   }
 
-  setValid() {
+  setValid(onLockdown) {
     this.set('avatars', {
       spy: 'https://i.ibb.co/sJcthnM/base-spy.png',
       res: 'https://i.ibb.co/M8RXC95/base-res.png',
@@ -43,6 +43,8 @@ class User extends Parse.User {
     this.set('themeLight', false);
     this.set('coloredNames', true);
 
+    this.set('lockedOut', onLockdown);
+
     this.set('isAdmin', false);
     this.set('isMod', false);
     this.set('isContrib', false);
@@ -61,7 +63,9 @@ class User extends Parse.User {
     this.set('validUser', true);
   }
 
-  validateLoginData() {
+  validateLoginData(data) {
+    const { onLockdown } = data;
+
     if (this.has('validUser')) return;
 
     const usernameRegex = /^[0-9a-zA-Z\-_.]{3,15}$/;
@@ -91,7 +95,7 @@ class User extends Parse.User {
       throw new Error(errors['domain']);
     } */
 
-    this.setValid();
+    this.setValid(onLockdown);
 
     return true;
   }
@@ -164,6 +168,14 @@ class User extends Parse.User {
     this.set('isOnline', false);
 
     this.save({}, { useMasterKey: true, context: { presence: true } });
+
+    return true;
+  }
+
+  toggleLock() {
+    this.set('lockedOut', false);
+
+    this.save({}, { useMasterKey: true });
 
     return true;
   }

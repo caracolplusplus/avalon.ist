@@ -338,6 +338,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         case '/unss':
           socket.emit('revokeSuspension', commandDefault);
           break;
+        case '/verify':
+          socket.emit('verifyPlayer', commandDefault);
+          break;
         case '/ban':
           socket.emit('banPlayer', commandDefault);
           break;
@@ -355,6 +358,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
           break;
         case '/maintenance':
           socket.emit('toggleMaintenance', { isGeneral: !code });
+          break;
+        case '/lockdown':
+          socket.emit('toggleLockdown', { isGeneral: !code });
           break;
         case '/pause':
           socket.emit('pauseGame', commandDefault);

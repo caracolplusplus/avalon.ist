@@ -71,6 +71,32 @@ function moderationCommands(io, socket) {
     }
   });
 
+  socket.on('verifyPlayer', (data) => {
+    const { isGeneral } = data;
+
+    if (allowed) {
+      const { target, comment } = data;
+
+      if (typeof target !== 'string') {
+        socket.emit(getResponse(isGeneral), warning);
+        return;
+      }
+
+      const chat = getChat();
+
+      chat
+        .verifyPlayer({
+          username,
+          target,
+          comment,
+        })
+        .then((result) => socket.emit(getResponse(isGeneral), result))
+        .catch((err) => console.log(err));
+    } else {
+      socket.emit(getResponse(isGeneral), unauthorized);
+    }
+  });
+
   socket.on('banPlayer', (data) => {
     const { isGeneral } = data;
 
@@ -200,6 +226,21 @@ function moderationCommands(io, socket) {
 
       socket.emit(getResponse(isGeneral), content);
       io.emit('reloadPage');
+    } else {
+      socket.emit(getResponse(isGeneral), unauthorized);
+    }
+  });
+
+  socket.on('toggleLockdown', (data) => {
+    const { isGeneral } = data;
+
+    if (allowed) {
+      const environment = Environment.getGlobal();
+      const onLockdown = environment.toggleLockdown();
+
+      const content = `Lockdown mode is ${onLockdown ? 'on' : 'off'}.`;
+
+      socket.emit(getResponse(isGeneral), content);
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
     }

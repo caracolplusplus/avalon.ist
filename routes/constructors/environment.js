@@ -235,6 +235,16 @@ class Environment extends Parse.Object {
     return true;
   }
 
+  toggleLockdown() {
+    const onLockdown = this.get('onLockdown') || false;
+
+    this.set('onLockdown', !onLockdown);
+
+    this.save({}, { useMasterKey: true });
+
+    return !onLockdown;
+  }
+
   addAvatarLog(data) {
     const avatarLogs = this.get('avatarLogs');
 

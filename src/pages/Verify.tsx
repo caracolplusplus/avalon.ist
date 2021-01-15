@@ -1,16 +1,16 @@
 // External
 
-import React from "react";
+import React from 'react';
 
 // Internal
 
-import AvalonScrollbars from "../components/utils/AvalonScrollbars";
+import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 
-import Navbar from "./Navbar";
+import Navbar from './Navbar';
 
 // Styles
 
-import "../styles/Verify.scss";
+import '../styles/Verify.scss';
 
 // Declaration
 
@@ -24,16 +24,19 @@ class Verify extends React.PureComponent {
         <AvalonScrollbars>
           <div
             id="Verify"
-            style={{ minHeight: this.initialHeight + "px" }}
+            style={{ minHeight: this.initialHeight + 'px' }}
             className="section"
           >
             <div className="welcome" />
-            <h2>WELCOME TO AVALON.IST</h2>
+            <h1>THE SITE IS CURRENTLY ON LOCKDOWN</h1>
+            <p className="last">
+              As a security measure, the site has been put on lockdown until further
+              notice. This means that any account created during the lockdown will have to
+              be verified before it gains access to Avalon.ist.
+            </p>
             <p>
-              You have received an email with a confirmation link. If you do not
-              see the email, please check your junk or spam folders. Contact a
-              moderator if you experience any issues. Refresh the page after
-              verification.
+              To verify your account, please contact a moderator on Discord using the
+              following link.
             </p>
           </div>
         </AvalonScrollbars>

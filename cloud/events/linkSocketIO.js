@@ -30,9 +30,11 @@ const linkSocketIO = async (request) => {
   if (user) {
     user.checkForBans({ address, io });
     socket.emit('updateStyle', user.toStyle());
+
+    return user.get('lockedOut') || false;
   }
 
-  return true;
+  return false;
 };
 
 module.exports = linkSocketIO;
