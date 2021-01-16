@@ -1,5 +1,4 @@
 /* global Set */
-import socket from '../../socket-io/socket-io';
 
 interface helpPage {
   [x: number]: string[];
@@ -140,7 +139,7 @@ class MessageBuilder implements MessageBuilderType {
       }),
     ];
 
-    socket.emit(this.emission, output);
+    // socket.emit(this.emission, output);
 
     return output;
   };
@@ -183,9 +182,10 @@ class MessageBuilder implements MessageBuilderType {
 
     const output = [message];
 
-    if (!hasZalgo) socket.emit(this.emission, output);
+    if (!hasZalgo)
+      // socket.emit(this.emission, output);
 
-    return output;
+      return output;
   };
 
   sendDirectMessage = (data: any) => {
@@ -238,9 +238,10 @@ class MessageBuilder implements MessageBuilderType {
 
     const output = [message];
 
-    if (!hasZalgo) socket.emit(this.emission, output);
+    if (!hasZalgo)
+      // socket.emit(this.emission, output);
 
-    return output;
+      return output;
   };
 
   rollDie(data: any) {
@@ -319,7 +320,7 @@ class MessageBuilder implements MessageBuilderType {
         })
       );
     } else {
-      socket.emit(this.emission, output);
+      // socket.emit(this.emission, output);
     }
 
     return output;

@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 // Internal
 
-import socket from '../../socket-io/socket-io';
+import Parse from '../../parse/parse';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
 // Styles
@@ -109,15 +109,31 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
     allPlayers: [],
     loaded: false,
   };
+  envSub: any = null;
 
   componentDidMount = () => {
-    socket.on('playerListResponse', this.playerListResponse);
-
-    socket.emit('playerListRequest');
+    this.setSubscription();
   };
 
   componentWillUnmount = () => {
-    socket.off('playerListResponse', this.playerListResponse);
+    this.envSub.unsubscribe();
+  };
+
+  setSubscription = async () => {
+    const envQ = new Parse.Query('Environment');
+
+    this.envSub = await envQ.subscribe();
+
+    this.envSub.on('open', this.playerListRequest);
+    this.envSub.on('update', (env: any) => {
+      this.playerListResponse(env.get('playerListParsed'));
+    });
+  };
+
+  playerListRequest = () => {
+    Parse.Cloud.run('playerListRequest').then((result) =>
+      this.playerListResponse(result)
+    );
   };
 
   playerListResponse = (players: PlayerProps[]) => {

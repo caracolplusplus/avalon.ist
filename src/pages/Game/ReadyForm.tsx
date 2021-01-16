@@ -3,7 +3,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faExclamation, faCheck } from '@fortawesome/free-solid-svg-icons';
-import socket from '../../socket-io/socket-io';
 
 // Internal
 
@@ -60,7 +59,6 @@ class TooFast extends React.PureComponent<TooFastProps> {
 
   sendReadyStateToServer = (ready: boolean) => {
     clearInterval(this.timer);
-    socket.emit('readyState', ready);
     this.props.onExit();
   };
 

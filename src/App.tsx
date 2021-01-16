@@ -9,7 +9,6 @@ import { connect } from 'react-redux';
 // Routes
 
 import Parse from './parse/parse';
-import socket from './socket-io/socket-io';
 import LoggedInOnly from './components/routes/LoggedInOnly';
 import LoggedOutOnly from './components/routes/LoggedOutOnly';
 import UnverifiedOnly from './components/routes/UnverifiedOnly';
@@ -65,72 +64,59 @@ const initialState: appState = {
 
 class App extends React.PureComponent<appProps, appState> {
   state = initialState;
+  envSub: any = null;
 
   componentDidMount = () => {
-    const {
-      getAuthenticated,
-      setNotifications,
-      listenForKicks,
-      listenForStyles,
-      listenForLogs,
-      updateDimensions,
-    } = this;
+    const { getAuthenticated, listenForStyles, updateDimensions } = this;
 
     window.addEventListener('resize', updateDimensions);
 
     listenForStyles();
 
-    socket.on('getAuthenticated', () =>
-      getAuthenticated()
-        .then(() => {
-          setNotifications();
-          listenForKicks();
-          listenForLogs();
-        })
-        .catch((err) => {
-          Parse.User.logOut();
-
-          socket.disconnect();
-          window.location.reload(true);
-        })
-    );
+    getAuthenticated();
   };
 
   componentWillUnmount = () => {
     const { updateDimensions } = this;
 
-    window.removeEventListener('resize', updateDimensions);
+    this.envSub.unsubscribe();
 
-    socket.disconnect();
+    window.removeEventListener('resize', updateDimensions);
   };
 
   getAuthenticated = async () => {
     const { dispatch } = this.props;
 
-    const locked = await Parse.Cloud.run('linkSocketIO', { io: socket.id });
+    const envQ = new Parse.Query('Environment');
 
-    const currentUser = Parse.User.current();
+    this.envSub = await envQ.subscribe();
 
-    if (currentUser) {
-      const username = currentUser.getUsername()!;
+    this.envSub.on('open', () => {
+      console.log(this.state);
 
-      dispatch(setUsername(username));
-      dispatch(setOnline(true));
+      Parse.Cloud.run('getAuthenticated').then((state: appState) => {
+        const { authenticated } = state;
 
-      this.setState({
-        authenticated: true,
-        verified: !locked,
-        loading: false,
+        if (authenticated) {
+          const currentUser = Parse.User.current()!;
+
+          const username = currentUser.getUsername()!;
+
+          dispatch(setUsername(username));
+          dispatch(setOnline(true));
+
+          this.setState(state);
+
+          this.envSub.on('close', () => {
+            Parse.Cloud.run('leavePresence');
+          });
+        } else {
+          dispatch(setOnline(false));
+
+          this.setState(state);
+        }
       });
-    } else {
-      dispatch(setOnline(false));
-
-      this.setState({
-        authenticated: false,
-        verified: false,
-        loading: false,
-      });
-    }
+    });
   };
 
   setNotifications = () => {
@@ -151,8 +137,6 @@ class App extends React.PureComponent<appProps, appState> {
     } else {
       // eslint-disable-next-line no-undef
       Notification.requestPermission();
-
-      socket.on('printNotification', printNotification);
     }
   };
 
@@ -160,11 +144,8 @@ class App extends React.PureComponent<appProps, appState> {
     const reloadPage = async () => {
       await Parse.User.logOut();
 
-      socket.disconnect();
       window.location.reload(true);
     };
-
-    socket.on('reloadPage', reloadPage);
   };
 
   listenForStyles = () => {
@@ -173,16 +154,12 @@ class App extends React.PureComponent<appProps, appState> {
 
       dispatch(updateStyle(style));
     };
-
-    socket.on('updateStyle', updateTheme);
   };
 
   listenForLogs = () => {
     const printLogs = (data: any) => {
       console.log(data);
     };
-
-    socket.on('printLogs', printLogs);
   };
 
   updateDimensions = () => {

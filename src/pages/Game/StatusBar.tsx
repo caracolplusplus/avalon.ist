@@ -6,7 +6,6 @@ import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 
 // Internal
 
-import socket from '../../socket-io/socket-io';
 import GameInfo from '../Lobby/GameInfo';
 import GameForm from '../Lobby/GameForm';
 import Soundboard from '../../sounds/audio';
@@ -73,13 +72,13 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   formRef = createRef<GameForm>();
 
   componentDidMount = () => {
-    socket.on('gameResponse', this.responseReceived);
-    socket.on('askForReady', this.popUpReady);
+    // socket.on('gameResponse', this.responseReceived);
+    // socket.on('askForReady', this.popUpReady);
   };
 
   componentWillUnmount = () => {
-    socket.off('gameResponse', this.responseReceived);
-    socket.off('askForReady', this.popUpReady);
+    // socket.off('gameResponse', this.responseReceived);
+    // socket.off('askForReady', this.popUpReady);
   };
 
   sendServerMessage = (data: any) => {
@@ -123,56 +122,56 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   };
 
   sitAndStand = () => {
-    socket.emit('joinLeaveGame');
+    // socket.emit('joinLeaveGame');
     this.setState({ waitingResponse: true });
   };
 
   startGame = () => {
-    socket.emit('startGame');
+    // socket.emit('startGame');
     this.setState({ waitingResponse: true });
   };
 
   pickTeam = () => {
-    socket.emit('pickTeam', {
+    /* socket.emit('pickTeam', {
       team: this.props.selected,
-    });
+    }); */
     this.setState({ waitingResponse: true });
   };
 
   voteForMission = (vote: number) => {
-    socket.emit('voteForMission', {
+    /* socket.emit('voteForMission', {
       vote,
-    });
+    }); */
     this.setState({ hasVoted: true });
   };
 
   voteForSuccess = (vote: number) => {
-    socket.emit('voteForSuccess', {
+    /* socket.emit('voteForSuccess', {
       vote,
-    });
+    }); */
     this.setState({ hasVoted: true });
   };
 
   cardPlayer = () => {
-    socket.emit('ladyOfTheLake', {
+    /* socket.emit('ladyOfTheLake', {
       carded: this.props.selected[0],
-    });
+    }); */
     this.setState({ waitingResponse: true });
   };
 
   shootPlayer = () => {
-    socket.emit('shootPlayer', {
+    /* socket.emit('shootPlayer', {
       shot: this.props.selected[0],
-    });
+    }); */
     this.setState({ waitingResponse: true });
   };
 
   kickPlayer = (player: string) => {
     const { username } = this.props;
 
-    socket.emit('kickPlayer', {
+    /* socket.emit('kickPlayer', {
       kick: player,
-    });
+    }); */
 
     msgBuilder.sendServerMessage({
       ch: 2,
@@ -183,7 +182,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   };
 
   reportPlayer = (data: any) => {
-    socket.emit('reportPlayer', data);
+    // socket.emit('reportPlayer', data);
   };
 
   onWaiting = (message: Message) => {

@@ -25,7 +25,6 @@ import EditProfile from './Lobby/EditProfile';
 import Navbar from './Navbar';
 import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 import countries from '../components/countries';
-import socket from '../socket-io/socket-io';
 
 import '../styles/Profile.scss';
 
@@ -130,24 +129,16 @@ class Profile extends React.PureComponent<
 
   componentDidMount = () => {
     const { username } = this.props.match.params;
-
-    socket.on('saveProfile', this.onProfileRequest);
-    socket.on('profileNotFound', this.onProfileNotFound);
-
-    socket.emit('getProfile', username);
   };
 
-  componentWillUnmount = () => {
-    socket.off('saveProfile', this.onProfileRequest);
-    socket.off('profileNotFound', this.onProfileNotFound);
-  };
+  componentWillUnmount = () => {};
 
   componentDidUpdate = (prevProps: RouteComponentProps<ProfileProps>) => {
     const { username } = this.props.match.params;
     const { username: prevUsername } = prevProps.match.params;
 
     if (username !== prevUsername) {
-      socket.emit('getProfile', username);
+      console.log('hai');
     }
   };
 
@@ -176,7 +167,6 @@ class Profile extends React.PureComponent<
   onFormToggle = () => this.setState({ showForm: !this.state.showForm });
 
   onEdit = (data: any) => {
-    socket.emit('editProfile', data);
     this.onFormToggle();
   };
 

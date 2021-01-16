@@ -11,7 +11,6 @@ import ReactMarkdown from 'react-markdown';
 
 // Internal
 
-import socket from '../socket-io/socket-io';
 import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 import Navbar from './Navbar';
 import Announcements from './Lobby/Announcements';
@@ -52,21 +51,13 @@ class Article extends React.PureComponent<PageProps, ArticleState> {
     };
   }
 
-  componentDidMount() {
-    socket.on('articleResponse', this.onResponse);
-    socket.on('articleNotFound', this.onRedirect);
+  componentDidMount() {}
 
-    socket.emit('articleRequest', this.props.match.params.id);
-  }
-
-  componentWillUnmount() {
-    socket.off('articleResponse', this.onResponse);
-    socket.off('articleNotFound', this.onRedirect);
-  }
+  componentWillUnmount() {}
 
   componentDidUpdate(prevProps: PageProps) {
     if (this.props.match.params.id !== prevProps.match.params.id) {
-      socket.emit('articleRequest', this.props.match.params.id);
+      console.log('hai');
     }
   }
 

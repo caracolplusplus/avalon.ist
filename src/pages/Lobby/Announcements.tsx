@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 
 // Internal
 
-import socket from '../../socket-io/socket-io';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
 // Styles
@@ -50,15 +49,9 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
     };
   }
 
-  componentDidMount() {
-    socket.on('announcementResponse', this.onResponse);
+  componentDidMount() {}
 
-    socket.emit('announcementRequest');
-  }
-
-  componentWillUnmount() {
-    socket.off('announcementResponse', this.onResponse);
-  }
+  componentWillUnmount() {}
 
   onResponse = (articles: any[]) => {
     articles = articles.reverse();

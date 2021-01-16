@@ -5,7 +5,7 @@ d.on('error', function (err) {
   const { message, stack } = err;
   console.log(err);
 
-  const environment = require('./routes/constructors/environment').getGlobal();
+  const environment = require('./cloud/constructors/environment').getGlobal();
   environment.addErrorLog({ message, stack });
 });
 
@@ -20,6 +20,9 @@ d.run(function () {
     masterKey: process.env.MASTER_KEY || 'avalonist_key',
     serverURL: process.env.SERVER_URL || 'http://localhost:1337/parse',
     logLevel: 'warn',
+    liveQuery: {
+      classNames: ['_User', 'Games', 'Chat', 'Environment'], // List of classes to support for query subscriptions
+    },
     /* passwordPolicy: {
       validatorPattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{6,})/,
       validationError:
@@ -72,24 +75,14 @@ d.run(function () {
   const port = process.env.PORT || 1337;
   const server = require('http').createServer(app);
 
-<<<<<<< HEAD
-=======
-  // Initialize SocketIO
-  const socketIO = require('socket.io');
-  const socketRoutes = require('./routes/init');
-
-  const io = socketIO(server);
-  socketRoutes.initialize(io);
-
   // eslint-disable-next-line no-undef
   Parse.enableLocalDatastore();
 
->>>>>>> e10a9416a0c89f0df5788808de2af2e1bfc981ce
   // Listen
   server.listen(port, () => {
     console.log(`Avalon.ist running on port ${port}.`);
   });
 
   // This will enable the Live Query real-time server
-  ParseServer.createLiveQueryServer(httpServer);
+  ParseServer.createLiveQueryServer(server);
 });

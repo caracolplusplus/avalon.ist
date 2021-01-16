@@ -9,7 +9,6 @@ import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 // Internal
 
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
-import socket from '../../socket-io/socket-io';
 import Slider from '../../components/utils/Slider';
 import List from '../../components/utils/ListInput';
 
@@ -235,11 +234,11 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
   ];
 
   componentDidMount() {
-    socket.on('createGameSuccess', this.createGameSuccess);
+    // socket.on('createGameSuccess', this.createGameSuccess);
   }
 
   componentWillUnmount() {
-    socket.off('createGameSuccess', this.createGameSuccess);
+    // socket.off('createGameSuccess', this.createGameSuccess);
   }
 
   handleListed = () => {
@@ -265,18 +264,18 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
   }
 
   sendCreateRequest() {
-    socket.emit('createGame', {
+    /* socket.emit('createGame', {
       roleSettings: this.state.roleSettings,
       playerMax: this.state.playerMax,
       listed: this.state.listed,
-    });
+    }); */
   }
 
   sendModifyRequest() {
-    socket.emit('editGame', {
+    /* socket.emit('editGame', {
       roleSettings: this.state.roleSettings,
       playerMax: this.state.playerMax,
-    });
+    }); */
 
     this.props.onExit();
   }

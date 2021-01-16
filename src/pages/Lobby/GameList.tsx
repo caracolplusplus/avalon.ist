@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 
 // Internal
 
-import socket from '../../socket-io/socket-io';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
 import GameForm from './GameForm';
@@ -105,13 +104,12 @@ class GameList extends React.PureComponent<{}, GameListState> {
   };
 
   componentDidMount = () => {
-    socket.on('roomListResponse', this.parseRoomList);
-
-    socket.emit('roomListRequest');
+    // socket.on('roomListResponse', this.parseRoomList);
+    // socket.emit('roomListRequest');
   };
 
   componentWillUnmount = () => {
-    socket.off('roomListResponse', this.parseRoomList);
+    // socket.off('roomListResponse', this.parseRoomList);
   };
 
   parseRoomList = (games: GameLinkProps[]) => {

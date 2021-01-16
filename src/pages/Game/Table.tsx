@@ -25,7 +25,6 @@ import { rootType } from '../../redux/reducers';
 // Styles
 
 import '../../styles/Game/Table.scss';
-import socket from '../../socket-io/socket-io';
 
 // Declaration
 
@@ -198,7 +197,7 @@ export class Table extends React.PureComponent<
   }
 
   toggleClaim = () => {
-    socket.emit('toggleClaim');
+    // socket.emit('toggleClaim');
   };
 
   isAvatarHighlighted(seat: number): boolean {

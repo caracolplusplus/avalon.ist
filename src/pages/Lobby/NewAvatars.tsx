@@ -4,8 +4,6 @@ import React from 'react';
 
 // Internal
 
-import socket from '../../socket-io/socket-io';
-
 // Styles
 
 import '../../styles/Lobby/NewAvatars.scss';
@@ -33,13 +31,12 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
   }
 
   componentDidMount() {
-    socket.on('avatarsResponse', this.onResponse);
-
-    socket.emit('avatarsRequest');
+    // socket.on('avatarsResponse', this.onResponse);
+    // socket.emit('avatarsRequest');
   }
 
   componentWillUnmount() {
-    socket.off('avatarsResponse', this.onResponse);
+    // socket.off('avatarsResponse', this.onResponse);
   }
 
   onResponse = (avatarList: any) => {

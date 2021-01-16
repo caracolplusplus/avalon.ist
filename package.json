@@ -55,7 +55,7 @@
     "mediaserver": "^0.1.1",
     "nodemon": "^2.0.4",
     "npm-watch": "^0.7.0",
-    "parse": "~1.8.0",
+    "parse": "~2.19.0",
     "parse-server": "*",
     "prettier": "^2.0.5",
     "proxy-addr": "^2.0.6",

@@ -10,7 +10,6 @@ import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 import { ChatInput } from '../../components/utils/Input';
 import MessageBuilder from './MessageBuilder';
 import TooFast from './ChatTooFast';
-import socket from '../../socket-io/socket-io';
 import Soundboard from '../../sounds/audio';
 import AnnouncementForm from './ChatAnnouncementForm';
 import AvatarForm from './ChatAvatarForm';
@@ -107,16 +106,10 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   refInput = createRef<ChatInput>();
 
   componentDidMount = () => {
-    socket.on('playerListResponse', this.playerListResponse);
-
-    socket.emit('playerListRequest');
-
     this.startChat();
   };
 
   componentWillUnmount = () => {
-    socket.off('playerListResponse', this.playerListResponse);
-
     this.endChat();
   };
 
@@ -158,16 +151,16 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     const { code } = this.props;
     const events = code ? gameEvents : generalEvents;
 
-    socket.on(events[0], this.parseMessages);
-    socket.on(events[3], this.commandResponseMessage);
+    // socket.on(events[0], this.parseMessages);
+    // socket.on(events[3], this.commandResponseMessage);
 
     this.setState({ messages: [] });
 
-    socket.emit(events[1]);
+    // socket.emit(events[1]);
 
     this.endChat = () => {
-      socket.off(events[0], this.parseMessages);
-      socket.off(events[3], this.commandResponseMessage);
+      // socket.off(events[0], this.parseMessages);
+      // socket.off(events[3], this.commandResponseMessage);
     };
   };
 
@@ -259,11 +252,11 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   createAnnouncement = (data: any) => {
-    socket.emit('createAnnouncement', data);
+    // socket.emit('createAnnouncement', data);
   };
 
   avatarSet = (data: any) => {
-    socket.emit('avatarSet', data);
+    // socket.emit('avatarSet', data);
   };
 
   activateTooFast = () => {
@@ -277,7 +270,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   writeMessage = (content: string) => {
-    const { dispatch, username, code } = this.props;
+    return true;
+
+    /* const { dispatch, username, code } = this.props;
     const events = code ? gameEvents : generalEvents;
     msgBuilder.setEmission(events[2]);
 
@@ -421,7 +416,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     }
 
     dispatch(setMessageDelay());
-    this.parseMessages(output);
+    this.parseMessages(output); */
   };
 
   commandResponseMessage = (content: string) => {

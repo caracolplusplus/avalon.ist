@@ -10,7 +10,6 @@ import { rootType } from '../redux/reducers';
 
 // Internal
 
-import socket from '../socket-io/socket-io';
 import AvalonScrollbars from '../components/utils/AvalonScrollbars';
 
 import Navbar from './Navbar';
@@ -115,28 +114,15 @@ class Game extends React.PureComponent<PageProps, GameState> {
   componentDidMount = () => {
     const { style, username } = this.props;
 
-    socket.on('generalChatResponse', this.setHighlightGeneral);
-    socket.on('gameChatResponse', this.setHighlightGame);
-    socket.on('gameResponse', this.parseGame);
-    socket.on('gameNotFound', this.gameNotFound);
-
-    socket.on('rejoin', this.triggerRequest);
     this.triggerRequest();
 
     this.setState({ style, username });
   };
 
   componentWillUnmount = () => {
-    socket.off('generalChatResponse', this.setHighlightGeneral);
-    socket.off('gameChatResponse', this.setHighlightGame);
-    socket.off('gameResponse', this.parseGame);
-    socket.off('gameNotFound', this.gameNotFound);
-
-    socket.off('rejoin', this.triggerRequest);
-
     const { active, code } = this.state;
 
-    if (active || code !== '-1') socket.emit('gameLeave');
+    // if (active || code !== '-1') socket.emit('gameLeave');
   };
 
   componentDidUpdate = (prevProps: PageProps) => {
@@ -150,7 +136,6 @@ class Game extends React.PureComponent<PageProps, GameState> {
 
   triggerRequest = () => {
     const { gameId } = this.props.match.params;
-    socket.emit('gameRequest', gameId);
   };
 
   gameNotFound = () => {

@@ -8,7 +8,6 @@ import { updateStyle } from '../../redux/actions';
 // Internal
 
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
-import socket from '../../socket-io/socket-io';
 import Slider from '../../components/utils/Slider';
 import RangeSlider from '../../components/utils/RangeSlider';
 
@@ -34,7 +33,7 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
 
   switchColoredNames = () => {
     this.setState({ coloredNames: !this.state.coloredNames });
-  }
+  };
 
   switchTheme = () => {
     this.setState({ themeLight: !this.state.themeLight });
@@ -71,7 +70,7 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
   handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    socket.emit('saveTheme', this.state);
+    // socket.emit('saveTheme', this.state);
     this.props.dispatch(updateStyle(this.state));
     this.props.onExit();
   };
@@ -87,15 +86,21 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
             <p className="subtitle">Aesthetic</p>
             <div className="input-container">
               <Slider value={this.state.themeLight} onClick={this.switchTheme} />
-              <p className="handle">{this.state.themeLight ? 'Light Theme' : 'Dark Theme'}</p>
+              <p className="handle">
+                {this.state.themeLight ? 'Light Theme' : 'Dark Theme'}
+              </p>
             </div>
             <div className="input-container">
               <Slider value={this.state.avatarStyle} onClick={this.switchAvatarStyle} />
-              <p className="handle">{this.state.avatarStyle ? 'New Avatars' : 'Classic Avatars'}</p>
+              <p className="handle">
+                {this.state.avatarStyle ? 'New Avatars' : 'Classic Avatars'}
+              </p>
             </div>
             <div className="input-container">
               <Slider value={this.state.coloredNames} onClick={this.switchColoredNames} />
-              <p className="handle">{this.state.coloredNames ? 'Colored Names' : 'Uncolored Names'}</p>
+              <p className="handle">
+                {this.state.coloredNames ? 'Colored Names' : 'Uncolored Names'}
+              </p>
             </div>
             <p className="subtitle">Accessibility</p>
             <div className="input-container">
@@ -134,7 +139,9 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
             <div className="input-container">
               <p className="handle">Game Area</p>
               <RangeSlider
-                currentDisplay={this.playAreaSizes[Math.floor(this.state.playArea / 0.25)]}
+                currentDisplay={
+                  this.playAreaSizes[Math.floor(this.state.playArea / 0.25)]
+                }
                 maxDisplay={'Max'}
                 min={0}
                 max={100}
