@@ -28,7 +28,6 @@ import Profile from './pages/Profile';
 import Game from './pages/Game';
 import Article from './pages/Article';
 import NoMatch from './pages/NoMatch';
-import AnotherDevice from './pages/AnotherDevice';
 
 import Soundboard from './sounds/audio';
 
@@ -50,7 +49,6 @@ interface appState {
   authenticated: boolean;
   verified: boolean;
   loading: boolean;
-  another: boolean;
   width: number;
   height: number;
 }
@@ -59,7 +57,6 @@ const initialState: appState = {
   authenticated: false,
   verified: false,
   loading: true,
-  another: false,
   width: 0,
   height: 0,
 };
@@ -77,7 +74,6 @@ class App extends React.PureComponent<appProps, appState> {
       listenForStyles,
       listenForLogs,
       updateDimensions,
-      listenForDevice,
     } = this;
 
     window.addEventListener('resize', updateDimensions);
@@ -90,7 +86,6 @@ class App extends React.PureComponent<appProps, appState> {
           setNotifications();
           listenForKicks();
           listenForLogs();
-          listenForDevice();
         })
         .catch((err) => {
           Parse.User.logOut();
@@ -161,14 +156,6 @@ class App extends React.PureComponent<appProps, appState> {
     }
   };
 
-  listenForDevice = () => {
-    const lockPage = () => {
-      this.setState({ another: true });
-    };
-
-    socket.on('anotherDevice', lockPage);
-  };
-
   listenForKicks = () => {
     const reloadPage = async () => {
       await Parse.User.logOut();
@@ -205,13 +192,11 @@ class App extends React.PureComponent<appProps, appState> {
   };
 
   render() {
-    const { loading, authenticated, verified, another, width, height } = this.state;
+    const { loading, authenticated, verified, width, height } = this.state;
 
     const routeProps = { authenticated, verified };
 
-    const e = another ? (
-      <AnotherDevice />
-    ) : (
+    const e = (
       <>
         <Router>
           <Switch>

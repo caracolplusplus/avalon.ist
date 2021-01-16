@@ -183,10 +183,18 @@ class Game extends React.PureComponent<PageProps, GameState> {
     const { username } = this.props;
 
     // Gets these variables from the game
-    const { avatarList, playerList, roleList, votesRound: _votesRound } = data;
+    const {
+      avatarListNew,
+      privateKnowledgeNew,
+      playerList,
+      roleList,
+      votesRound: _votesRound,
+    } = data;
 
     // Gets the avatars from the avatar list
-    const avatars: any[] = playerList.map((p: any) => avatarList[p.replace(/\./gi, '/')]);
+    const avatars: any[] = playerList.map(
+      (p: any) => avatarListNew.find((a: any) => a.username === p).avatars
+    );
 
     // Gets the default vote for a not fail
     // Its -1 only on mission 1.1, this is to hide the vote display on first mission
@@ -196,6 +204,13 @@ class Game extends React.PureComponent<PageProps, GameState> {
     // Turns the round votes into readable data for the avatar component
     const votesRound = playerList.map((p: string) =>
       _votesRound.includes(p) ? 0 : notFailVote
+    );
+
+    // Gets private knowledge
+
+    const privateKnowledge = privateKnowledgeNew.reduce(
+      (acc: any, p: any) => (p.username === username ? p.knowledge : acc),
+      []
     );
 
     // Gets the spectator list for the rest of components
@@ -209,7 +224,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
     this.setState({
       gameId: data.gameId,
       code: data.code,
-      players: playerList,
+      players: avatars.length ? playerList : [],
       kicked: data.kickedPlayers.includes(username),
       claimed: data.hasClaimed,
       avatars,
@@ -229,7 +244,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
       votesRound,
       votesPending: data.votesPending,
       publicKnowledge: data.publicKnowledge,
-      privateKnowledge: data.privateKnowledge[username.replace(/\./gi, '/')] || [],
+      privateKnowledge,
       leader: data.leader,
       hammer: data.hammer,
       card: data.lady,

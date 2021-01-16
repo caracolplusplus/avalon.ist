@@ -9,7 +9,7 @@ function onGame(io, socket) {
     if (!game) return;
 
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => g.pickTeam({ username, picks }))
       .catch((err) => console.log(err));
   });
@@ -21,7 +21,7 @@ function onGame(io, socket) {
     if (!game) return;
 
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => g.voteForMission({ username, vote }))
       .catch((err) => console.log(err));
   });
@@ -33,7 +33,7 @@ function onGame(io, socket) {
     if (!game) return;
 
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => g.voteForSuccess({ username, vote }))
       .catch((err) => console.log(err));
   });
@@ -45,7 +45,7 @@ function onGame(io, socket) {
     if (!game) return;
 
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => g.ladyOfTheLake({ username, target: carded }))
       .catch((err) => console.log(err));
   });
@@ -57,7 +57,7 @@ function onGame(io, socket) {
     if (!game) return;
 
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => g.shootPlayer({ username, shot }))
       .catch((err) => console.log(err));
   });

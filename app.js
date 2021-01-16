@@ -79,6 +79,9 @@ d.run(function () {
   const io = socketIO(server);
   socketRoutes.initialize(io);
 
+  // eslint-disable-next-line no-undef
+  Parse.enableLocalDatastore();
+
   // Listen
   server.listen(port, () => {
     console.log(`Avalon.ist running on port ${port}.`);

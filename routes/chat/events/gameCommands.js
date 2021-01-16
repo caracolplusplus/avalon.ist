@@ -221,12 +221,12 @@ function gameCommands(io, socket) {
         .then((g) => {
           const chat = g.get('chat');
 
-          const knowledge = g.get('privateKnowledge');
           const roles = g.get('roleList');
 
-          knowledge[username.replace(/\./gi, '/')] = roles;
-
-          g.set('privateKnowledge', knowledge);
+          g.add('privateKnowledgeNew', {
+            username,
+            knowledge: roles,
+          });
           g.save({}, { useMasterKey: true });
 
           chat
