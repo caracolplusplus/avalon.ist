@@ -72,15 +72,11 @@ d.run(function () {
   const port = process.env.PORT || 1337;
   const server = require('http').createServer(app);
 
-  // Initialize SocketIO
-  const socketIO = require('socket.io');
-  const socketRoutes = require('./routes/init');
-
-  const io = socketIO(server);
-  socketRoutes.initialize(io);
-
   // Listen
   server.listen(port, () => {
     console.log(`Avalon.ist running on port ${port}.`);
   });
+
+  // This will enable the Live Query real-time server
+  ParseServer.createLiveQueryServer(httpServer);
 });
