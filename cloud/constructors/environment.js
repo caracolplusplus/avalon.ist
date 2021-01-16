@@ -112,20 +112,28 @@ class Environment extends Parse.Object {
   }
 
   checkOnlinePlayers(data) {
-    const { user } = data;
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('isOnline', true);
+    userQ.limit(500);
 
-    const username = user.get('username');
-    const hasPower = user.get('isMod') || user.get('isAdmin');
+    userQ
+      .find({ useMasterKey: true })
+      .then((playerList) => {
+        const moderatorList = [];
+        const playerListMap = playerList.map((p) => {
+          if (p.get('isMod') || p.get('isAdmin')) moderatorList.push(p.get('username'));
 
-    if (user.get('isOnline')) {
-      if (hasPower) this.addUnique('moderatorList', username);
-      this.addUnique('playerList', user);
-    } else {
-      if (hasPower) this.remove('moderatorList', username);
-      this.remove('playerList', user);
-    }
+          return p.toPlayerList();
+        });
 
-    this.save({}, { useMasterKey: true, context: { playerList: true } });
+        this.set('moderatorList', moderatorList);
+        this.set('playerList', playerListMap);
+
+        this.save({}, { useMasterKey: true });
+      })
+      .catch((err) => console.log(err));
+
+    this.save({}, { useMasterKey: true });
 
     return true;
   }
@@ -144,20 +152,6 @@ class Environment extends Parse.Object {
     this.save({}, { useMasterKey: true, context: { roomList: true } });
 
     return true;
-  }
-
-  getOnlinePlayers() {
-    const playerQ = this.get('playerList');
-
-    Parse.Object.fetchAll(playerQ, { useMasterKey: true })
-      .then((playerList) => {
-        const map = playerList.map((p) => p.toPlayerList());
-
-        this.set('playerListParsed', map);
-
-        this.save({}, { useMasterKey: true });
-      })
-      .catch((err) => console.log(err));
   }
 
   getActiveGames(callback) {

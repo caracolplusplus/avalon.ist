@@ -8,7 +8,16 @@ Parse.User.allowCustomUserClass(true);
 const isUserOnline = (u) => {
   const instanceCount = u.get('instanceCount');
 
-  u.set('isOnline', instanceCount > 0);
+  const online = instanceCount > 0;
+
+  u.set('isOnline', online);
+
+  if (online) {
+    u.pin();
+  } else {
+    u.unPin();
+  }
+
   u.save({}, { useMasterKey: true, context: { presence: true } });
 };
 

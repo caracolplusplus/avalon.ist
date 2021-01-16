@@ -6,7 +6,7 @@ const {
   beforeSignup,
   beforeLogin,
   beforeUserSave,
-  beforeEnvSave,
+  afterEnvSave,
   beforeGameSave,
   beforeGameDelete,
 } = Events;
@@ -20,7 +20,7 @@ Parse.Cloud.beforeSave(Parse.User, beforeUserSave);
 Parse.Cloud.beforeSave('Game', beforeGameSave);
 
 // Parse.Cloud.afterSave(Parse.User, afterUserSave);
-Parse.Cloud.afterSave('Environment', beforeEnvSave);
+Parse.Cloud.afterSave('Environment', afterEnvSave);
 // Parse.Cloud.afterSave('Game', afterGameSave);
 // Parse.Cloud.afterSave('Chat', afterChatSave);
 

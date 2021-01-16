@@ -7,6 +7,7 @@ import { Redirect, Link } from 'react-router-dom';
 import { rootType } from '../redux/reducers';
 import { connect } from 'react-redux';
 import React from 'react';
+import Parse from '../parse/parse';
 import Flag from 'react-world-flags';
 import {
   ResponsiveContainer,
@@ -128,21 +129,32 @@ class Profile extends React.PureComponent<
   };
 
   componentDidMount = () => {
-    const { username } = this.props.match.params;
+    this.getProfile();
   };
-
-  componentWillUnmount = () => {};
 
   componentDidUpdate = (prevProps: RouteComponentProps<ProfileProps>) => {
     const { username } = this.props.match.params;
     const { username: prevUsername } = prevProps.match.params;
 
     if (username !== prevUsername) {
-      console.log('hai');
+      this.getProfile();
     }
   };
 
-  onProfileRequest = (profile: ProfileState) => {
+  getProfile = () => {
+    const { username } = this.props.match.params;
+
+    Parse.Cloud.run('getProfile', { username }).then((profile) => {
+      if (!profile) {
+        this.onProfileNotFound();
+        return;
+      }
+
+      this.saveProfile(profile);
+    });
+  };
+
+  saveProfile = (profile: ProfileState) => {
     const {
       style: { avatarStyle },
     } = this.props.match.params;
@@ -158,7 +170,7 @@ class Profile extends React.PureComponent<
     this.setState({ ...profile, avatars: avatarUrls });
   };
 
-  onProfileNotFound = (profile: any) => this.setState({ redirect: true });
+  onProfileNotFound = () => this.setState({ redirect: true });
 
   onHover = () => this.setState({ showSpy: true });
 
@@ -168,6 +180,12 @@ class Profile extends React.PureComponent<
 
   onEdit = (data: any) => {
     this.onFormToggle();
+
+    Parse.Cloud.run('editProfile', data)
+      .then((profile) => {
+        this.saveProfile(profile);
+      })
+      .catch((err) => console.log(err));
   };
 
   initialHeight = Math.max(window.innerHeight, 630);

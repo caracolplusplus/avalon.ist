@@ -4,5 +4,5 @@ const Environment = require('../../constructors/environment');
 module.exports = async (request) => {
   const environment = Environment.getGlobal();
 
-  return environment.get('playerListParsed');
+  return environment.get('playerList');
 };

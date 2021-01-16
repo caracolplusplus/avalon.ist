@@ -126,7 +126,7 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
 
     this.envSub.on('open', this.playerListRequest);
     this.envSub.on('update', (env: any) => {
-      this.playerListResponse(env.get('playerListParsed'));
+      this.playerListResponse(env.get('playerList'));
     });
   };
 

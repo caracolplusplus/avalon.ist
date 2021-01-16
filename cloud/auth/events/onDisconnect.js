@@ -2,11 +2,11 @@ module.exports = async (request) => {
   const { event } = request;
 
   if (event === 'ws_disconnect') {
-    const { installationId } = request;
+    const { sessionToken } = request;
 
     // eslint-disable-next-line no-undef
     const userQ = new Parse.Query('_Session');
-    userQ.equalTo('installationId', installationId);
+    userQ.equalTo('sessionToken', sessionToken);
 
     userQ
       .first({ useMasterKey: true })
@@ -17,7 +17,7 @@ module.exports = async (request) => {
             .then((u) => {
               console.log(u.get('username'), 'left presence');
 
-              u.leavePresence({ id: installationId });
+              u.leavePresence();
             });
         }
       })

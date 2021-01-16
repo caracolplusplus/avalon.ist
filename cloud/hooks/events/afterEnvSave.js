@@ -5,12 +5,6 @@ module.exports = async (request) => {
   Environment.setGlobal(env);
 
   if (context) {
-    const { playerList /* roomList, kick, ips */ } = context;
-
-    if (playerList) {
-      env.getOnlinePlayers();
-    }
-
     /* if (roomList) {
       const cb = (map) => io.emit('roomListResponse', map);
 

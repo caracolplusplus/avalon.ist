@@ -1,16 +1,11 @@
-function editProfile(io, socket) {
-  const { user } = socket;
+module.exports = async (request) => {
+  const { params, user } = request;
 
-  socket.on('editProfile', (data) => {
-    user
-      .fetch({ useMasterKey: true })
-      .then((u) => {
-        u.setProfile(data);
+  if (!user) throw new Error('No user linked with this request.');
 
-        socket.emit('saveProfile', user.toProfilePage());
-      })
-      .catch((err) => console.log(err));
-  });
-}
+  const u = await user.fetch({ useMasterKey: true });
 
-module.exports = editProfile;
+  u.setProfile(params);
+
+  return u.toProfilePage();
+};

@@ -1,19 +1,14 @@
-function getProfile(io, socket) {
-  socket.on('getProfile', (username) => {
-    // eslint-disable-next-line no-undef
-    const userQ = new Parse.Query('_User');
-    userQ.equalTo('username', username);
+/* global Parse */
 
-    userQ.first({ useMasterKey: true }).then((u) => {
-      if (u) {
-        u.fetch({ useMasterKey: true })
-          .then((_u) => socket.emit('saveProfile', _u.toProfilePage()))
-          .catch((err) => console.log(err));
-      } else {
-        socket.emit('profileNotFound');
-      }
-    });
-  });
-}
+module.exports = async (request) => {
+  const { username } = request.params;
 
-module.exports = getProfile;
+  console.log(username);
+
+  const userQ = new Parse.Query('_User');
+  userQ.equalTo('username', username);
+
+  const u = await userQ.first({ useMasterKey: true });
+
+  return u.toProfilePage();
+};

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 // Internal
 
+import Parse from '../../parse/parse';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
 // Styles
@@ -48,12 +49,34 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
       articles: [],
     };
   }
+  envSub: any = null;
 
-  componentDidMount() {}
+  componentDidMount = () => {
+    this.setSubscription();
+  };
 
-  componentWillUnmount() {}
+  componentWillUnmount = () => {
+    this.envSub.unsubscribe();
+  };
 
-  onResponse = (articles: any[]) => {
+  setSubscription = async () => {
+    const envQ = new Parse.Query('Environment');
+
+    this.envSub = await envQ.subscribe();
+
+    this.envSub.on('open', this.latestAnnouncementsRequest);
+    this.envSub.on('update', (env: any) => {
+      this.latestAnnouncementsResponse(env.get('announcementLogs').slice(-5));
+    });
+  };
+
+  latestAnnouncementsRequest = () => {
+    Parse.Cloud.run('latestAnnouncementsRequest').then((result) =>
+      this.latestAnnouncementsResponse(result)
+    );
+  };
+
+  latestAnnouncementsResponse = (articles: any[]) => {
     articles = articles.reverse();
     this.setState({ articles });
   };

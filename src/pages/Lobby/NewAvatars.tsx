@@ -6,6 +6,7 @@ import React from 'react';
 
 // Styles
 
+import Parse from '../../parse/parse';
 import '../../styles/Lobby/NewAvatars.scss';
 
 // Declaration
@@ -30,16 +31,34 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
     };
   }
 
-  componentDidMount() {
-    // socket.on('avatarsResponse', this.onResponse);
-    // socket.emit('avatarsRequest');
-  }
+  envSub: any = null;
 
-  componentWillUnmount() {
-    // socket.off('avatarsResponse', this.onResponse);
-  }
+  componentDidMount = () => {
+    this.setSubscription();
+  };
 
-  onResponse = (avatarList: any) => {
+  componentWillUnmount = () => {
+    this.envSub.unsubscribe();
+  };
+
+  setSubscription = async () => {
+    const envQ = new Parse.Query('Environment');
+
+    this.envSub = await envQ.subscribe();
+
+    this.envSub.on('open', this.latestAvatarsRequest);
+    this.envSub.on('update', (env: any) => {
+      this.latestAvatarsResponse(env.get('avatarLogs').slice(-3));
+    });
+  };
+
+  latestAvatarsRequest = () => {
+    Parse.Cloud.run('latestAvatarsRequest').then((result) =>
+      this.latestAvatarsResponse(result)
+    );
+  };
+
+  latestAvatarsResponse = (avatarList: any) => {
     const urlList: string[] = avatarList.map((a: any) => a.avatar).reverse();
     this.setState({ urlList });
   };

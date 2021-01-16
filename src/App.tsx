@@ -85,6 +85,8 @@ class App extends React.PureComponent<appProps, appState> {
   };
 
   getAuthenticated = async () => {
+    console.log('hello');
+
     const { dispatch } = this.props;
 
     const envQ = new Parse.Query('Environment');
