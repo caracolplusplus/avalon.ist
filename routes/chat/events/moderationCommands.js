@@ -1,15 +1,10 @@
 const Environment = require('../../constructors/environment');
+const Moderation = require('../../constructors/moderation');
 
 function moderationCommands(io, socket) {
   const { user } = socket;
   const username = user.get('username');
   const allowed = user.get('isMod') || user.get('isAdmin');
-
-  const getChat = () => {
-    const environment = Environment.getGlobal();
-
-    return environment.get('chat');
-  };
 
   const getResponse = (isGeneral) => {
     return isGeneral ? 'generalCommandResponse' : 'gameCommandResponse';
@@ -29,16 +24,17 @@ function moderationCommands(io, socket) {
         return;
       }
 
-      const chat = getChat();
+      Moderation.suspendPlayer({
+        username,
+        target,
+        hours,
+        comment,
+      })
+        .then((result) => {
+          socket.emit(getResponse(isGeneral), result);
 
-      chat
-        .suspendPlayer({
-          username,
-          target,
-          hours,
-          comment,
+          console.log(result);
         })
-        .then((result) => socket.emit(getResponse(isGeneral), result))
         .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
@@ -56,15 +52,16 @@ function moderationCommands(io, socket) {
         return;
       }
 
-      const chat = getChat();
+      Moderation.revokeSuspension({
+        username,
+        target,
+        comment,
+      })
+        .then((result) => {
+          socket.emit(getResponse(isGeneral), result);
 
-      chat
-        .revokeSuspension({
-          username,
-          target,
-          comment,
+          console.log(result);
         })
-        .then((result) => socket.emit(getResponse(isGeneral), result))
         .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
@@ -82,15 +79,16 @@ function moderationCommands(io, socket) {
         return;
       }
 
-      const chat = getChat();
+      Moderation.verifyPlayer({
+        username,
+        target,
+        comment,
+      })
+        .then((result) => {
+          socket.emit(getResponse(isGeneral), result);
 
-      chat
-        .verifyPlayer({
-          username,
-          target,
-          comment,
+          console.log(result);
         })
-        .then((result) => socket.emit(getResponse(isGeneral), result))
         .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
@@ -108,15 +106,16 @@ function moderationCommands(io, socket) {
         return;
       }
 
-      const chat = getChat();
+      Moderation.banPlayer({
+        username,
+        target,
+        comment,
+      })
+        .then((result) => {
+          socket.emit(getResponse(isGeneral), result);
 
-      chat
-        .banPlayer({
-          username,
-          target,
-          comment,
+          console.log(result);
         })
-        .then((result) => socket.emit(getResponse(isGeneral), result))
         .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
@@ -134,15 +133,16 @@ function moderationCommands(io, socket) {
         return;
       }
 
-      const chat = getChat();
+      Moderation.revokeBan({
+        username,
+        target,
+        comment,
+      })
+        .then((result) => {
+          socket.emit(getResponse(isGeneral), result);
 
-      chat
-        .revokeBan({
-          username,
-          target,
-          comment,
+          console.log(result);
         })
-        .then((result) => socket.emit(getResponse(isGeneral), result))
         .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
@@ -160,15 +160,16 @@ function moderationCommands(io, socket) {
         return;
       }
 
-      const chat = getChat();
+      Moderation.banPlayerIP({
+        username,
+        target,
+        comment,
+      })
+        .then((result) => {
+          socket.emit(getResponse(isGeneral), result);
 
-      chat
-        .banPlayerIP({
-          username,
-          target,
-          comment,
+          console.log(result);
         })
-        .then((result) => socket.emit(getResponse(isGeneral), result))
         .catch((err) => console.log(err));
     } else {
       socket.emit(getResponse(isGeneral), unauthorized);
@@ -186,9 +187,7 @@ function moderationCommands(io, socket) {
         return;
       }
 
-      const chat = getChat();
-
-      const content = chat.revokeIPBan({
+      const content = Moderation.revokeIPBan({
         username,
         ips: [target],
         comment,

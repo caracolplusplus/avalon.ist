@@ -34,10 +34,10 @@ class Game extends Parse.Object {
 
     // Players
     game.set('playerList', []);
-    game.set('avatarList', {});
     game.set('playerMax', 6);
-    game.set('spectatorList', {});
+    game.set('instanceList', []);
     game.set('spectatorListNew', []);
+    game.set('avatarListNew', []);
     game.set('kickedPlayers', []);
 
     // Ready
@@ -60,7 +60,7 @@ class Game extends Parse.Object {
 
     // Knowledge
     game.set('publicKnowledge', new Array(10).fill('Resistance?'));
-    game.set('privateKnowledge', {});
+    game.set('privateKnowledgeNew', []);
 
     // State
     game.set('active', true);
@@ -99,6 +99,8 @@ class Game extends Parse.Object {
     game.set('missionVotes', [[], [], [], [], []]);
     game.set('missionLeader', [[], [], [], [], []]);
 
+    game.set('chat', Chat.spawn({ code: 'Game' }));
+
     // Card Holders
     game.set('ladyHolders', []);
 
@@ -106,10 +108,10 @@ class Game extends Parse.Object {
   }
 
   buildChat() {
-    // Chat
-    this.set('chat', Chat.spawn({ code: this.id }));
+    const chat = this.get('chat');
 
-    return true;
+    chat.set('game', this);
+    chat.save({}, { useMasterKey: true });
   }
 
   shuffleArray(array) {
@@ -254,16 +256,28 @@ class Game extends Parse.Object {
   }
 
   addClient(data, callback) {
-    const { username, avatars } = data;
-    const avatarList = this.get('avatarList');
+    const { username, id, avatars } = data;
 
-    const parsedName = username.replace(/\./gi, '/');
-    avatarList[parsedName] = avatars;
-
-    this.set('avatarList', avatarList);
-    this.addUnique('spectatorListNew', username);
+    this.addUnique('avatarListNew', {
+      username,
+      avatars,
+    });
+    this.addUnique('instanceList', {
+      username,
+      id,
+    });
 
     this.save({}, { useMasterKey: true })
+      .then((g) => {
+        const spectatorList = g.get('instanceList').map((i) => i.username);
+        // eslint-disable-next-line no-undef
+        const listToSet = new Set(spectatorList);
+
+        g.set('spectatorListNew', [...listToSet]);
+        g.save({}, { useMasterKey: true });
+
+        return g;
+      })
       .then(callback || defaultCallback)
       .catch((err) => console.log(err));
 
@@ -271,32 +285,49 @@ class Game extends Parse.Object {
   }
 
   removeClient(data) {
-    const { username } = data;
+    const { username, id } = data;
 
-    const started = this.get('started');
-    const ended = this.get('ended');
-
-    this.remove('spectatorListNew', username);
-
-    if (!started) {
-      this.togglePlayer({ username, add: false });
-    }
+    this.remove('instanceList', { username, id });
 
     this.save({}, { useMasterKey: true })
       .then((g) => {
+        const ended = g.get('ended');
+        const started = g.get('started');
+        const spectatorList = g.get('instanceList').map((i) => i.username);
+        // eslint-disable-next-line no-undef
+        const listToSet = new Set(spectatorList);
+
+        g.set('spectatorListNew', [...listToSet]);
+
         // If no more clients, then delete the room.
         if (g.get('spectatorListNew').length === 0) {
-          g.set('active', false);
+          console.log('no clients');
+
+          g.unPin();
 
           if (!ended) {
+            console.log('not ended');
+
             const chat = g.get('chat');
             chat
               .destroy({ useMasterKey: true })
               .then(() => g.destroy({ useMasterKey: true }))
               .catch((err) => console.log(err));
           } else {
+            console.log('ended');
+
+            g.set('active', false);
             g.save({}, { useMasterKey: true });
           }
+          // If there are still clients, check to delete this seat if no instances from this user found
+        } else if (!started && !listToSet.has(username)) {
+          console.log('remove from player list');
+
+          g.togglePlayer({ username, add: false });
+        } else {
+          console.log('dont remove at all');
+
+          g.save({}, { useMasterKey: true });
         }
       })
       .catch((err) => console.log(err));
@@ -519,7 +550,6 @@ class Game extends Parse.Object {
     const { players, length, roles } = data;
 
     const publicKnowledge = this.get('publicKnowledge').slice(0, length);
-    const privateKnowledge = {};
 
     const merlin = roles.indexOf('Merlin');
     const morgana = roles.indexOf('Morgana');
@@ -559,10 +589,8 @@ class Game extends Parse.Object {
 
       knowledge[index] = role;
 
-      privateKnowledge[username.replace(/\./gi, '/')] = knowledge;
+      this.add('privateKnowledgeNew', { username, knowledge });
     });
-
-    this.set('privateKnowledge', privateKnowledge);
 
     return true;
   }
@@ -868,25 +896,27 @@ class Game extends Parse.Object {
 
     ladyHolders.push(index);
 
-    const parsedName = username.replace(/\./gi, '/');
-
-    const privateKnowledge = this.get('privateKnowledge');
+    const privateKnowledge = this.get('privateKnowledgeNew');
     const chat = this.get('chat');
 
     chat
       .fetch({ useMasterKey: true })
       .then((c) => {
+        const percivalToMerlin = privateKnowledge[index].knowledge[target] === 'Merlin?';
+
         if (['Mordred', 'Spy', 'Morgana', 'Oberon', 'Assassin'].includes(roles[target])) {
-          privateKnowledge[parsedName][target] =
-            privateKnowledge[parsedName][target] === 'Merlin?' ? 'Morgana' : 'Spy';
+          privateKnowledge[index].knowledge[target] = percivalToMerlin
+            ? 'Morgana'
+            : 'Spy';
           c.afterCard({ username, target: players[target], spy: true });
         } else {
-          privateKnowledge[parsedName][target] =
-            privateKnowledge[parsedName][target] === 'Merlin?' ? 'Merlin' : 'Resistance';
+          privateKnowledge[index].knowledge[target] = percivalToMerlin
+            ? 'Merlin'
+            : 'Resistance';
           c.afterCard({ username, target: players[target], spy: false });
         }
 
-        this.set('privateKnowledge', privateKnowledge);
+        this.set('privateKnowledgeNew', privateKnowledge);
         this.set('lady', target);
         this.set('ladyHolders', ladyHolders);
         this.newRound();
@@ -1090,9 +1120,8 @@ class Game extends Parse.Object {
       'playerList',
       'hasClaimed',
       'askedToBeReady',
-      'avatarList',
+      'avatarListNew',
       'playerMax',
-      'spectatorList',
       'spectatorListNew',
       'kickedPlayers',
       'roleList',
@@ -1100,7 +1129,7 @@ class Game extends Parse.Object {
       'hasAssassin',
       'hasLady',
       'publicKnowledge',
-      'privateKnowledge',
+      'privateKnowledgeNew',
       'started',
       'ended',
       'frozen',

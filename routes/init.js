@@ -3,6 +3,7 @@
 
 function defineRoutes(io) {
   require('./constructors/user');
+  require('./constructors/game');
   require('./constructors/environment').initialize();
 
   const sockets = [];

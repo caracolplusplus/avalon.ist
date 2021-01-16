@@ -8,9 +8,7 @@ function leavePresence(io, socket) {
     user
       .fetch({ useMasterKey: true })
       .then((u) => {
-        if (u.get('lastInstance') === id) {
-          u.leavePresence();
-        }
+        u.leavePresence({ id });
       })
       .catch((err) => console.log(err));
 

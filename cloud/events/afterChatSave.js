@@ -7,13 +7,13 @@ const afterChatSave = async (request) => {
   if (context && context.messages) {
     const { io } = require('../../routes/init');
 
-    const code = chat.get('code');
-    const isGeneral = code === 'Global';
-  
-    io.to(isGeneral ? generalChat : gameChat + code).emit(
-      isGeneral ? 'generalChatResponse' : 'gameChatResponse',
-      context.messages
-    );
+    const game = chat.get('game');
+
+    if (game) {
+      io.to(gameChat + game.id).emit('gameChatResponse', context.messages);
+    } else {
+      io.to(generalChat).emit('generalChatResponse', context.messages);
+    }
   }
 
   return true;

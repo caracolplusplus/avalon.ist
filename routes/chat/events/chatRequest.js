@@ -19,17 +19,12 @@ function chatRequest(io, socket) {
 
     if (!game) return;
 
-    game
-      .fetch({ useMasterKey: true })
-      .then((g) => {
-        const chat = g.get('chat');
+    const chat = game.get('chat');
 
-        chat
-          .fetch({ useMasterKey: true })
-          .then((c) => {
-            socket.emit('gameChatResponse', c.get('messages'));
-          })
-          .catch((err) => console.log(err));
+    chat
+      .fetch({ useMasterKey: true })
+      .then((c) => {
+        socket.emit('gameChatResponse', c.get('messages'));
       })
       .catch((err) => console.log(err));
   });

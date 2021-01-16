@@ -35,6 +35,7 @@ function messageTo(io, socket) {
     // eslint-disable-next-line no-undef
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', target);
+    userQ.fromLocalDatastore();
 
     userQ
       .first({

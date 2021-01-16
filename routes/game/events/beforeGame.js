@@ -27,18 +27,20 @@ function beforeGame(io, socket) {
         const game = Game.spawn({ code });
         game.set('listed', listed);
 
+        // Set initial game settings
+        game.editSettings({ roleSettings, playerMax });
+
         game
           .save({}, { useMasterKey: true })
           .then((g) => {
-            // Set initial game settings
-            g.editSettings({ roleSettings, playerMax });
-            // Create game chat
-            g.buildChat(g);
+            // Pins it to local datastore
+            g.pin();
+            // Build chat
+            g.buildChat();
+            // Redirect to room with game id
+            socket.emit('createGameSuccess', g.id);
             // Toggle seat for this player
-            g.togglePlayer({ username, add: true }, () => {
-              // Redirect to room with game id
-              socket.emit('createGameSuccess', game.id);
-            });
+            g.togglePlayer({ username, add: true });
           })
           .catch((err) => {
             console.log(err);
@@ -97,7 +99,7 @@ function beforeGame(io, socket) {
     if (!game) return;
 
     // Fetch from database
-    game.fetch({ useMasterKey: true }).then((g) => {
+    game.fetchFromLocalDatastore({ useMasterKey: true }).then((g) => {
       // Edit settings
       g.editSettings({ roleSettings, playerMax });
       // Save settings
@@ -115,7 +117,7 @@ function beforeGame(io, socket) {
 
     // Fetch from database
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => {
         // Sit or stand up
         g.togglePlayer({ username, add: true });
@@ -133,7 +135,7 @@ function beforeGame(io, socket) {
 
     // Fetch from database
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => {
         // Toggle the claim symbol for this player
         g.toggleClaim(username);
@@ -148,7 +150,7 @@ function beforeGame(io, socket) {
     if (!game) return;
 
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => {
         g.addToKick(data);
       })
@@ -163,7 +165,7 @@ function beforeGame(io, socket) {
 
     // Fetch from database
     game
-      .fetch({ useMasterKey: true })
+      .fetchFromLocalDatastore({ useMasterKey: true })
       .then((g) => {
         // If player is not host, ignore this request
         const host = g.get('host');

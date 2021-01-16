@@ -53,10 +53,13 @@ Parse.Cloud.job('deleteGeneralChatAndEmptyGames', (request) => {
     gameQ
       .find({ useMasterKey: true })
       .then((gList) => {
-        gList.forEach((g) => {
+        gList = gList.map((g) => {
           g.get('chat').destroy({ useMasterKey: true });
-          g.destroy({ useMasterKey: true });
+
+          return g;
         });
+
+        Parse.Object.destroyAll(gList, { useMasterKey: true });
       })
       .catch((err) => console.log(err));
 
@@ -75,65 +78,49 @@ Parse.Cloud.job('deleteGeneralChatAndEmptyGames', (request) => {
   return cleanUp();
 });
 
-// This function repairs the links in the user's game history after update 7 of January of 2021
-// Should only be run once
-Parse.Cloud.job('repairGameHistory', (request) => {
-  // Finds all the users
-  function userLinkRepair() {
+Parse.Cloud.job('cleanAllPresence', (request) => {
+  function cleanUp() {
     const userQ = new Parse.Query('_User');
-
     userQ.limit(10000);
 
-    // Queries Parse Database
     userQ
       .find({ useMasterKey: true })
-      .then((userList) => {
-        // For each user
-        userList.forEach((u) => {
-          // Get username for each user
-          const username = u.get('username');
-          // Get game history for each user
-          let gameHistory = u.get('gameHistory');
-          // Slice game history to last 10
-          gameHistory = gameHistory.slice(-10);
+      .then((gList) => {
+        gList = gList.map((g) => {
+          g.set('instanceList', []);
 
-          // Creates a new game query
-          const gameQ = new Parse.Query('Game');
-          // For each game with code contained in game history
-          gameQ.containedIn('code', gameHistory);
-          // Find all
-          gameQ
-            .find({ useMasterKey: true })
-            .then((gameList) => {
-              // Map each game for updated game history
-              gameHistory = gameList.map((g) => {
-                const playerIndex = g.get('playerList').indexOf(username);
-
-                return {
-                  code: g.get('code'),
-                  id: g.id,
-                  role: g.get('roleList')[playerIndex],
-                  size: g.get('playerList').length,
-                  date: g.get('createdAt'),
-                  winner: g.get('winner'),
-                };
-              });
-              // Save new game history to user
-              u.set('gameHistory', gameHistory);
-              u.save(null, { useMasterKey: true });
-            })
-            .catch((err) => {
-              console.log(err);
-            });
+          return g;
         });
+
+        Parse.Object.saveAll(gList, { useMasterKey: true });
       })
-      .catch((err) => {
-        console.log(err);
-      });
+      .catch((err) => console.log(err));
+
+    const gameQ = new Parse.Query('Game');
+    gameQ.limit(10000);
+
+    gameQ
+      .find({ useMasterKey: true })
+      .then((gList) => {
+        gList = gList.map((g) => {
+          g.set('instanceList', []);
+
+          return g;
+        });
+
+        Parse.Object.saveAll(gList, { useMasterKey: true });
+      })
+      .catch((err) => console.log(err));
   }
 
+  return cleanUp();
+});
+
+// This function repairs the links in the user's game history after update 16 of January of 2021
+// Should only be run once
+Parse.Cloud.job('avatarAndKnowledgeRepair', (request) => {
   // Repairs Game Chat code for each game
-  function gameChatRepair() {
+  function avatarAndKnowledgeRepair() {
     const gameQ = new Parse.Query('Game');
 
     gameQ.limit(10000);
@@ -141,29 +128,42 @@ Parse.Cloud.job('repairGameHistory', (request) => {
     // Queries Parse Database
     gameQ
       .find({ useMasterKey: true })
-      .then((gameList) => {
+      .then((gList) => {
         // For each game
-        gameList.forEach((g) => {
-          // Get chat
-          const chat = g.get('chat');
-          // Fetch chat
-          chat
-            .fetch({ useMasterKey: true })
-            .then((c) => {
-              // Set chat's code to game id
-              c.set('code', g.id);
-              // Save chat to database
-              c.save({}, { useMasterKey: true });
-            })
-            .catch((err) => console.log(err));
+        gList = gList.map((g) => {
+          const avatarListOld = g.get('avatarList');
+          const privateKnowledgeOld = g.get('privateKnowledge');
+
+          g.set('privateKnowledgeNew', []);
+          g.set('avatarListNew', []);
+
+          for (const username in avatarListOld) {
+            const avatars = avatarListOld[username];
+
+            g.add('avatarListNew', {
+              username: username.replace(/\//gi, '.'),
+              avatars,
+            });
+          }
+
+          for (const username in privateKnowledgeOld) {
+            const knowledge = privateKnowledgeOld[username];
+
+            g.add('privateKnowledgeNew', {
+              username: username.replace(/\//gi, '.'),
+              knowledge,
+            });
+          }
+
+          return g;
         });
-        // Call user link repair
-        userLinkRepair();
+
+        Parse.Object.saveAll(gList, { useMasterKey: true });
       })
       .catch((err) => {
         console.log(err);
       });
   }
 
-  return gameChatRepair(request);
+  return avatarAndKnowledgeRepair(request);
 });

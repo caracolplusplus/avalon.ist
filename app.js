@@ -72,6 +72,19 @@ d.run(function () {
   const port = process.env.PORT || 1337;
   const server = require('http').createServer(app);
 
+<<<<<<< HEAD
+=======
+  // Initialize SocketIO
+  const socketIO = require('socket.io');
+  const socketRoutes = require('./routes/init');
+
+  const io = socketIO(server);
+  socketRoutes.initialize(io);
+
+  // eslint-disable-next-line no-undef
+  Parse.enableLocalDatastore();
+
+>>>>>>> e10a9416a0c89f0df5788808de2af2e1bfc981ce
   // Listen
   server.listen(port, () => {
     console.log(`Avalon.ist running on port ${port}.`);

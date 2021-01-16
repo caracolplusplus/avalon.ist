@@ -51,6 +51,8 @@ class Environment extends Parse.Object {
           g = Environment.spawn();
         }
 
+        Parse.Cloud.startJob('cleanAllPresence');
+
         g.setDiscordHook();
 
         g.updateTrees();
@@ -109,7 +111,7 @@ class Environment extends Parse.Object {
     console.log('This a test message!');
   }
 
-  async checkOnlinePlayers(data) {
+  checkOnlinePlayers(data) {
     const { user } = data;
 
     const username = user.get('username');
@@ -128,17 +130,15 @@ class Environment extends Parse.Object {
     return true;
   }
 
-  async checkActiveGames(data) {
+  checkActiveGames(data) {
     const { game, beforeSave } = data;
 
     if (!game.id) return;
 
-    const relation = this.get('roomListNew') || this.relation('roomListNew');
-
     if (game.get('active') && game.get('listed') && beforeSave) {
-      relation.add(game);
+      this.addUnique('roomList', game);
     } else {
-      relation.remove(game);
+      this.remove('roomList', game);
     }
 
     this.save({}, { useMasterKey: true, context: { roomList: true } });
@@ -159,10 +159,9 @@ class Environment extends Parse.Object {
   }
 
   getActiveGames(callback) {
-    const gameQ = this.get('roomListNew').query();
+    const gameQ = this.get('roomList');
 
-    gameQ
-      .find({ useMasterKey: true })
+    Parse.Object.fetchAll(gameQ, { useMasterKey: true })
       .then((roomList) => {
         const map = roomList.map((r) => r.toRoomList());
 
