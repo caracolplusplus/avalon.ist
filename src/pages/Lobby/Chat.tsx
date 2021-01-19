@@ -70,6 +70,8 @@ interface ChatState {
   modList: string[];
   contribList: string[];
   form: FormType;
+  numberOfMessages: number;
+  showAllMessages: boolean;
 }
 
 const mapState = (state: rootType) => {
@@ -101,6 +103,8 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     modList: [],
     contribList: [],
     form: FormType.None,
+    numberOfMessages: 3,
+    showAllMessages: false,
   };
 
   refScrollbars = createRef<AvalonScrollbars>();
@@ -129,6 +133,18 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       this.startChat();
     }
   };
+
+  toggleShowAllMessages = () => {
+    this.setState({
+      showAllMessages: !this.state.showAllMessages
+    })
+  }
+
+  setNumberOfMessages = (num: number) => {
+    this.setState({
+      numberOfMessages: num
+    })
+  }
 
   handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -161,7 +177,62 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     socket.on(events[0], this.parseMessages);
     socket.on(events[3], this.commandResponseMessage);
 
-    this.setState({ messages: [] });
+    this.setState({ messages: [
+      {
+        from: 'f',
+        content: '0content',
+        hour: '1',
+        id: 1,
+        timestamp: 1,
+        type: '1',
+        public: true,
+      },
+      {
+        from: 'f',
+        content: '1content',
+        hour: '1',
+        id: 1,
+        timestamp: 1,
+        type: '1',
+        public: true,
+      },
+      {
+        from: 'f',
+        content: '2content',
+        hour: '1',
+        id: 1,
+        timestamp: 1,
+        type: '1',
+        public: true,
+      },
+      {
+        from: 'f',
+        content: '3content',
+        hour: '1',
+        id: 1,
+        timestamp: 1,
+        type: '1',
+        public: true,
+      },
+      {
+        from: 'f',
+        content: '4content',
+        hour: '1',
+        id: 1,
+        timestamp: 1,
+        type: '1',
+        public: true,
+      },
+      {
+        from: 'f',
+        content: '5content',
+        hour: '1',
+        id: 1,
+        timestamp: 1,
+        type: '1',
+        public: true,
+      },
+    ] });
 
     socket.emit(events[1]);
 
@@ -517,21 +588,27 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   render() {
-    const { messages, form } = this.state;
+    const { messages, form, numberOfMessages, showAllMessages } = this.state;
+    const slicedMessages = showAllMessages ? messages : messages.slice(0, numberOfMessages);
 
     return (
       <div id="Chat" className="row">
         {this.state.messages.length &&
         (this.props.code === undefined || this.props.code !== '-1') ? (
           <AvalonScrollbars ref={this.refScrollbars} key={'real'}>
-            {messages.map(this.messageMapper)}
+            {slicedMessages.map(this.messageMapper)}
           </AvalonScrollbars>
         ) : (
           <AvalonScrollbars ref={this.refScrollbars} key={'fake'} />
         )}
         {this.props.stage === 'REPLAY' ? null : (
           <form className="message-input" onSubmit={this.handleSubmit}>
-            <ChatInput ref={this.refInput} autoComplete={this.state.playerList} />
+            <ChatInput
+              ref={this.refInput}
+              autoComplete={this.state.playerList}
+              showAllMessages={showAllMessages}
+              toggleShowAllMessages={this.toggleShowAllMessages}
+            />
           </form>
         )}
         {form === FormType.Fast ? <TooFast onExit={this.closeForm} /> : null}

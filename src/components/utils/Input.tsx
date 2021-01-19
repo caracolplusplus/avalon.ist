@@ -41,6 +41,8 @@ export const Input = (props: InputProps) => {
 
 interface ChatInputProps {
   autoComplete: string[];
+  toggleShowAllMessages: () => void;
+  showAllMessages: boolean;
 }
 
 interface ChatInputState {
@@ -122,6 +124,11 @@ export class ChatInput extends React.PureComponent<ChatInputProps, ChatInputStat
           placeholder="Enter your message here."
           value={this.state.content}
         ></input>
+        <button
+          onClick={() => this.props.toggleShowAllMessages()}
+        >
+          {this.props.showAllMessages ? 'Hide messages' : 'Show all messages'}
+        </button>
         <button type="submit">
           <FontAwesomeIcon icon={['fas', 'paper-plane']} />
         </button>
