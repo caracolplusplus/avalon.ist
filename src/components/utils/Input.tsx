@@ -10,9 +10,11 @@ import {
   faUser,
   faEnvelope,
   faPaperPlane,
+  faEye,
+  faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons';
 
-library.add(faHome, faLock, faUser, faEnvelope, faPaperPlane);
+library.add(faHome, faLock, faUser, faEnvelope, faPaperPlane, faEye, faEyeSlash);
 
 // Declaration
 
@@ -127,7 +129,7 @@ export class ChatInput extends React.PureComponent<ChatInputProps, ChatInputStat
         <button
           onClick={() => this.props.toggleShowAllMessages()}
         >
-          {this.props.showAllMessages ? 'Hide messages' : 'Show all messages'}
+          <FontAwesomeIcon icon={this.props.showAllMessages ? faEye : faEyeSlash} />
         </button>
         <button type="submit">
           <FontAwesomeIcon icon={['fas', 'paper-plane']} />
