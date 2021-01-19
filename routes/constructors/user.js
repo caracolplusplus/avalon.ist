@@ -42,6 +42,7 @@ class User extends Parse.User {
     this.set('avatarStyle', true);
     this.set('themeLight', false);
     this.set('coloredNames', true);
+    this.set('numberOfMessages', 20);
 
     this.set('lockedOut', onLockdown);
 
@@ -237,6 +238,7 @@ class User extends Parse.User {
       avatarStyle,
       themeLight,
       coloredNames,
+      numberOfMessages,
     } = data;
 
     this.set('playArea', playArea);
@@ -246,6 +248,7 @@ class User extends Parse.User {
     this.set('avatarStyle', avatarStyle);
     this.set('themeLight', themeLight);
     this.set('coloredNames', coloredNames);
+    this.set('numberOfMessages', numberOfMessages);
 
     this.save({}, { useMasterKey: true });
 
@@ -352,6 +355,7 @@ class User extends Parse.User {
       'avatarStyle',
       'themeLight',
       'coloredNames',
+      'numberOfMessages',
     ];
 
     for (const x in parameters) {

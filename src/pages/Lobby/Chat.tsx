@@ -70,6 +70,7 @@ interface ChatState {
   modList: string[];
   contribList: string[];
   form: FormType;
+  showAllMessages: boolean;
 }
 
 const mapState = (state: rootType) => {
@@ -101,6 +102,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     modList: [],
     contribList: [],
     form: FormType.None,
+    showAllMessages: false,
   };
 
   refScrollbars = createRef<AvalonScrollbars>();
@@ -129,6 +131,12 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       this.startChat();
     }
   };
+
+  toggleShowAllMessages = () => {
+    this.setState({
+      showAllMessages: !this.state.showAllMessages
+    })
+  }
 
   handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -517,21 +525,28 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   render() {
-    const { messages, form } = this.state;
+    const { messages, form, showAllMessages } = this.state;
+    const { numberOfMessages } = this.props.style;
+    const slicedMessages = showAllMessages ? messages : messages.slice(Math.max(0, messages.length - numberOfMessages));
 
     return (
       <div id="Chat" className="row">
         {this.state.messages.length &&
         (this.props.code === undefined || this.props.code !== '-1') ? (
           <AvalonScrollbars ref={this.refScrollbars} key={'real'}>
-            {messages.map(this.messageMapper)}
+            {slicedMessages.map(this.messageMapper)}
           </AvalonScrollbars>
         ) : (
           <AvalonScrollbars ref={this.refScrollbars} key={'fake'} />
         )}
         {this.props.stage === 'REPLAY' ? null : (
           <form className="message-input" onSubmit={this.handleSubmit}>
-            <ChatInput ref={this.refInput} autoComplete={this.state.playerList} />
+            <ChatInput
+              ref={this.refInput}
+              autoComplete={this.state.playerList}
+              showAllMessages={showAllMessages}
+              toggleShowAllMessages={this.toggleShowAllMessages}
+            />
           </form>
         )}
         {form === FormType.Fast ? <TooFast onExit={this.closeForm} /> : null}
