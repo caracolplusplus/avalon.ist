@@ -100,6 +100,7 @@ function style(
 		avatarStyle: true,
 		themeLight: false,
 		coloredNames: true,
+		numberOfMessages: 5,
 	},
 	action: ActionTypes
 ): any {

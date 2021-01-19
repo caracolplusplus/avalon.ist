@@ -91,6 +91,7 @@ class Navbar extends React.PureComponent<{ username: string; style?: any; dispat
   navbarLinks = ['/lobby', '/article/start-here', '/article/community', '/article/statistics', '/article/development'];
 
   render() {
+    console.log(2, this.props);
     return (
       <div>
         <div id="Navbar-Full" className="section">

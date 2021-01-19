@@ -70,7 +70,6 @@ interface ChatState {
   modList: string[];
   contribList: string[];
   form: FormType;
-  numberOfMessages: number;
   showAllMessages: boolean;
 }
 
@@ -103,7 +102,6 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     modList: [],
     contribList: [],
     form: FormType.None,
-    numberOfMessages: 3,
     showAllMessages: false,
   };
 
@@ -137,12 +135,6 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   toggleShowAllMessages = () => {
     this.setState({
       showAllMessages: !this.state.showAllMessages
-    })
-  }
-
-  setNumberOfMessages = (num: number) => {
-    this.setState({
-      numberOfMessages: num
     })
   }
 
@@ -588,8 +580,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   render() {
-    const { messages, form, numberOfMessages, showAllMessages } = this.state;
-    const slicedMessages = showAllMessages ? messages : messages.slice(0, numberOfMessages);
+    const { messages, form, showAllMessages } = this.state;
+    const { numberOfMessages } = this.props.style;
+    const slicedMessages = showAllMessages ? messages : messages.slice(Math.max(0, messages.length - numberOfMessages));
 
     return (
       <div id="Chat" className="row">
