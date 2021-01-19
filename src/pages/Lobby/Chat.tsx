@@ -169,62 +169,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     socket.on(events[0], this.parseMessages);
     socket.on(events[3], this.commandResponseMessage);
 
-    this.setState({ messages: [
-      {
-        from: 'f',
-        content: '0content',
-        hour: '1',
-        id: 1,
-        timestamp: 1,
-        type: '1',
-        public: true,
-      },
-      {
-        from: 'f',
-        content: '1content',
-        hour: '1',
-        id: 1,
-        timestamp: 1,
-        type: '1',
-        public: true,
-      },
-      {
-        from: 'f',
-        content: '2content',
-        hour: '1',
-        id: 1,
-        timestamp: 1,
-        type: '1',
-        public: true,
-      },
-      {
-        from: 'f',
-        content: '3content',
-        hour: '1',
-        id: 1,
-        timestamp: 1,
-        type: '1',
-        public: true,
-      },
-      {
-        from: 'f',
-        content: '4content',
-        hour: '1',
-        id: 1,
-        timestamp: 1,
-        type: '1',
-        public: true,
-      },
-      {
-        from: 'f',
-        content: '5content',
-        hour: '1',
-        id: 1,
-        timestamp: 1,
-        type: '1',
-        public: true,
-      },
-    ] });
+    this.setState({ messages: [] });
 
     socket.emit(events[1]);
 
