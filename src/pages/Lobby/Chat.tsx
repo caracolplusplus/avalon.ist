@@ -90,7 +90,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     loaded: false,
     form: FormType.None,
   };
-
+  mounted: boolean = true;
   messageSub: any = null;
   refScrollbars = createRef<AvalonScrollbars>();
   refInput = createRef<ChatInput>();
@@ -100,7 +100,8 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   componentWillUnmount = () => {
-    this.endChat();
+    this.mounted = false;
+    if (this.messageSub) this.messageSub.unsubscribe();
   };
 
   componentDidUpdate = (prevProps: ChatProps) => {
@@ -108,7 +109,6 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     const { code: _code } = prevProps;
 
     if (code !== _code) {
-      this.endChat();
       this.startChat();
     }
   };
@@ -153,7 +153,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.messageSub.on('open', () => {
       Parse.Cloud.run('chatRequest', { code })
         .then(this.parseMessages)
-        .then(() => this.setState({ loaded: true }))
+        .then(this.loadChat)
         .catch((err) => console.log(err));
     });
 
@@ -166,9 +166,16 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.setState({ messages: [] });
   };
 
-  endChat = () => {
-    this.messageSub.unsubscribe();
+  loadChat = () => {
+    if (!this.mounted) {
+      this.messageSub.unsubscribe();
+      return;
+    }
+
+    this.setState({ loaded: true });
   };
+
+  endChat = () => {};
 
   scrollChat = () => {
     const chatContainer = this.refScrollbars.current!;
@@ -455,6 +462,11 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   parseMessages = _.throttle((messages: ChatSnapshot[]) => {
+    if (!this.mounted) {
+      this.messageSub.unsubscribe();
+      return;
+    }
+
     const { username } = this.props;
     const messageIds = this.state.messages.map((m) => m.id);
 

@@ -109,6 +109,7 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
     allPlayers: [],
     loaded: false,
   };
+  mounted: boolean = true;
   listSub: any = null;
 
   componentDidMount = () => {
@@ -116,7 +117,8 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
   };
 
   componentWillUnmount = () => {
-    this.listSub.unsubscribe();
+    this.mounted = false;
+    if (this.listSub) this.listSub.unsubscribe();
   };
 
   setSubscription = async () => {
@@ -129,12 +131,15 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
   };
 
   playerListRequest = () => {
-    Parse.Cloud.run('playerListRequest').then((result) =>
-      this.playerListResponse(result)
-    );
+    Parse.Cloud.run('playerListRequest').then(this.playerListResponse);
   };
 
   playerListResponse = (players: PlayerProps[]) => {
+    if (!this.mounted) {
+      this.listSub.unsubscribe();
+      return;
+    }
+
     function compareRatings(a: PlayerProps, b: PlayerProps) {
       return b.rating - a.rating;
     }

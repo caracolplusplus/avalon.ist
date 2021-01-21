@@ -1,14 +1,11 @@
-function saveTheme(io, socket) {
-  const { user } = socket;
+module.exports = async (request) => {
+  const { user, params } = request;
+  const { style } = params;
 
-  socket.on('saveTheme', (style) => {
-    user
-      .fetch({ useMasterKey: true })
-      .then((u) => {
-        u.setTheme(style);
-      })
-      .catch((err) => console.log(err));
-  });
-}
-
-module.exports = saveTheme;
+  user
+    .fetchFromLocalDatastore({ useMasterKey: true })
+    .then((u) => {
+      u.setTheme(style);
+    })
+    .catch((err) => console.log(err));
+};

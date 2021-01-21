@@ -21,7 +21,7 @@ interface AnnouncementsState {
 interface AnnouncementProps {
   date: number;
   text: string;
-  id: string;
+  url: string;
 }
 
 // Declaration
@@ -37,30 +37,29 @@ const Announcement = (props: AnnouncementProps) => {
       <span className="date">
         {year}/{month}/{day}
       </span>
-      <Link to={'/article/' + props.id}>{props.text}</Link>
+      <Link to={'/article/' + props.url}>{props.text}</Link>
     </p>
   );
 };
 
 class Announcements extends React.PureComponent<{}, AnnouncementsState> {
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      articles: [],
-    };
-  }
+  state = {
+    articles: [],
+  };
+  mounted: boolean = true;
   announcementSub: any = null;
 
-  componentDidMount = () => {
+  componentDidMount = async () => {
     this.setSubscription();
   };
 
   componentWillUnmount = () => {
-    this.announcementSub.unsubscribe();
+    this.mounted = false;
+    if (this.announcementSub) this.announcementSub.unsubscribe();
   };
 
   setSubscription = async () => {
-    const announcementQ = new Parse.Query('Announcements');
+    const announcementQ = new Parse.Query('Announcement');
 
     this.announcementSub = await announcementQ.subscribe();
 
@@ -70,13 +69,15 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
   };
 
   latestAnnouncementsRequest = () => {
-    Parse.Cloud.run('latestAnnouncementsRequest').then((result) =>
-      this.latestAnnouncementsResponse(result)
-    );
+    Parse.Cloud.run('latestAnnouncementsRequest').then(this.latestAnnouncementsResponse);
   };
 
   latestAnnouncementsResponse = (articles: any[]) => {
-    articles = articles.reverse();
+    if (!this.mounted) {
+      this.announcementSub.unsubscribe();
+      return;
+    }
+
     this.setState({ articles });
   };
 
@@ -87,12 +88,12 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
           <p>LATEST ANNOUNCEMENTS</p>
         </h3>
         <AvalonScrollbars>
-          {this.state.articles.map((a, i) => (
+          {this.state.articles.map((a: any) => (
             <Announcement
               date={a.timestamp}
               text={a.title}
-              id={a.id}
-              key={a.id + a.timestamp}
+              url={a.url}
+              key={a.objectId}
             />
           ))}
         </AvalonScrollbars>

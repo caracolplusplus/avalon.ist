@@ -28,8 +28,6 @@ module.exports = (request) => {
     });
 
     const announcementMap = announcements.map((a) => {
-      console.log(a);
-
       const ann = new Announcement();
 
       ann.set('url', a.id);
@@ -37,8 +35,6 @@ module.exports = (request) => {
       ann.set('author', a.author);
       ann.set('timestamp', a.timestamp);
       ann.set('content', a.content);
-
-      console.log(ann.toJSON());
 
       return ann;
     });

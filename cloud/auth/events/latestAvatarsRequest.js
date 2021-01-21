@@ -1,7 +1,10 @@
-const Environment = require('../../constructors/environment');
-
 module.exports = async (request) => {
-  const environment = Environment.getGlobal();
+  // eslint-disable-next-line no-undef
+  const avaQ = new Parse.Query('Avatar');
+  avaQ.descending('timestamp');
+  avaQ.limit(3);
 
-  return environment.get('avatarLogs').slice(-3);
+  const avaList = await avaQ.find({ useMasterKey: true });
+
+  return avaList.map((a) => a.toJSON());
 };

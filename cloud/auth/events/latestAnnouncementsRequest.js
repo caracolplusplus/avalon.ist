@@ -1,7 +1,10 @@
-const Environment = require('../../constructors/environment');
-
 module.exports = async (request) => {
-  const environment = Environment.getGlobal();
+  // eslint-disable-next-line no-undef
+  const annQ = new Parse.Query('Announcement');
+  annQ.descending('timestamp');
+  annQ.limit(5);
 
-  return environment.get('announcementLogs').slice(-5);
+  const annList = await annQ.find({ useMasterKey: true });
+
+  return annList.map((a) => a.toJSON());
 };

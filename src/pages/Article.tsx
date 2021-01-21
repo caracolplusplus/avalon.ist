@@ -8,6 +8,7 @@ import { RouteComponentProps } from 'react-router';
 // eslint-disable-next-line no-unused-vars
 import { rootType } from '../redux/reducers';
 import ReactMarkdown from 'react-markdown';
+import Parse from '../parse/parse';
 
 // Internal
 
@@ -20,12 +21,19 @@ import NewAvatars from './Lobby/NewAvatars';
 
 import '../styles/Lobby.scss';
 
+interface Announcement {
+  title: string;
+  author: string;
+  timestamp: number;
+  content: string;
+}
+
 interface ArticleProps {
-  id: string;
+  url: string;
 }
 
 interface ArticleState {
-  article: any;
+  article: Announcement;
   redirect: boolean;
 }
 
@@ -43,25 +51,44 @@ const mapState = (state: rootType) => {
 class Article extends React.PureComponent<PageProps, ArticleState> {
   initialHeight = Math.max(window.innerHeight, 630);
 
-  constructor(props: PageProps) {
-    super(props);
-    this.state = {
-      article: null,
-      redirect: false,
-    };
+  state = {
+    article: {
+      title: '',
+      content: '',
+      author: '',
+      timestamp: 0,
+    },
+    redirect: false,
+  };
+  mounted: boolean = true;
+
+  componentDidMount() {
+    const { url } = this.props.match.params;
+
+    Parse.Cloud.run('articleRequest', { url }).then(this.onResponse);
   }
 
-  componentDidMount() {}
-
-  componentWillUnmount() {}
+  componentWillUnmount = () => {
+    this.mounted = false;
+  };
 
   componentDidUpdate(prevProps: PageProps) {
-    if (this.props.match.params.id !== prevProps.match.params.id) {
-      console.log('hai');
+    const { url } = this.props.match.params;
+    const { url: prevUrl } = prevProps.match.params;
+
+    if (url !== prevUrl) {
+      Parse.Cloud.run('articleRequest', { url }).then(this.onResponse);
     }
   }
 
-  onResponse = (article: any) => {
+  onResponse = (article: Announcement) => {
+    if (!this.mounted) return;
+
+    if (!article) {
+      this.onRedirect();
+      return;
+    }
+
     this.setState({ article });
   };
 

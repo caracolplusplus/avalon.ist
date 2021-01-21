@@ -97,6 +97,7 @@
     "start-client": "react-scripts start",
     "start-server": "nodemon --inspect app.js",
     "start-server-node": "node --max-old-space-size=750 app.js",
+    "database": "parse-dashboard --dev --appId AVALONIST --masterKey avalonist_key --serverURL \"http://localhost:1337/parse\" --appName Avalon.ist",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

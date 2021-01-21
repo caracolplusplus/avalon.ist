@@ -12,6 +12,7 @@ const index = {};
   'latestAvatarsRequest',
   'articleRequest',
   'roomListRequest',
+  'themeRequest',
 ].forEach((e) => {
   index[e] = require(`./${e}`);
 });

@@ -95,8 +95,8 @@ class App extends React.PureComponent<appProps, appState> {
 
     const { dispatch } = this.props;
 
-    const currentUser = Parse.User.current()!;
-    const username = currentUser.getUsername()!;
+    const currentUser = Parse.User.current();
+    const username = currentUser ? currentUser.getUsername()! : '';
 
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', username);
@@ -124,6 +124,8 @@ class App extends React.PureComponent<appProps, appState> {
           }
         })
         .catch((err) => {
+          console.log(err);
+
           Parse.User.logOut().then(() => {
             window.location.reload(true);
           });
@@ -142,15 +144,11 @@ class App extends React.PureComponent<appProps, appState> {
 
       Parse.Cloud.run('themeRequest').then(this.updateTheme);
     });
-
-    this.userSub.on('close', () => {
-      Parse.Cloud.run('leavePresence');
-    });
   };
 
   setNotifications = async () => {
-    const currentUser = Parse.User.current()!;
-    const username = currentUser.getUsername()!;
+    const currentUser = Parse.User.current();
+    const username = currentUser ? currentUser.getUsername()! : '';
 
     const messageQ = new Parse.Query('Messages');
     messageQ.equalTo('to', username);
@@ -178,6 +176,8 @@ class App extends React.PureComponent<appProps, appState> {
 
   updateTheme = (style: any) => {
     const { dispatch } = this.props;
+
+    if (!style) return;
 
     dispatch(updateStyle(style));
   };
@@ -213,7 +213,7 @@ class App extends React.PureComponent<appProps, appState> {
             <LoggedInOnly exact path="/lobby" {...routeProps} component={Lobby} />
             <LoggedInOnly path="/profile/:username" {...routeProps} component={Profile} />
             <LoggedInOnly path="/game/:gameId" {...routeProps} component={Game} />
-            <Route path="/article/:id" component={Article} />
+            <Route path="/article/:url" component={Article} />
             <Route component={NoMatch} />
           </Switch>
         </Router>

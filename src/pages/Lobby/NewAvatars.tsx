@@ -1,6 +1,7 @@
 // External
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 // Internal
 
@@ -12,25 +13,29 @@ import '../../styles/Lobby/NewAvatars.scss';
 // Declaration
 
 interface AvatarProps {
-  url: string;
+  user: string;
+  avatar: string;
 }
 
 interface NewAvatarsState {
-  urlList: string[];
+  avatarList: any[];
 }
 
 const Avatar = (props: AvatarProps) => {
-  return <div className="avatar" style={{ backgroundImage: 'url(' + props.url + ')' }} />;
+  return (
+    <Link
+      to={`/profile/${props.user}`}
+      className="avatar"
+      style={{ backgroundImage: `url(${props.avatar})` }}
+    />
+  );
 };
 
 class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      urlList: [],
-    };
-  }
-
+  state = {
+    avatarList: [],
+  };
+  mounted: boolean = true;
   avatarsSub: any = null;
 
   componentDidMount = () => {
@@ -38,11 +43,12 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
   };
 
   componentWillUnmount = () => {
-    this.avatarsSub.unsubscribe();
+    this.mounted = false;
+    if (this.avatarsSub) this.avatarsSub.unsubscribe();
   };
 
   setSubscription = async () => {
-    const avatarsQ = new Parse.Query('Avatars');
+    const avatarsQ = new Parse.Query('Avatar');
 
     this.avatarsSub = await avatarsQ.subscribe();
 
@@ -57,8 +63,12 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
   };
 
   latestAvatarsResponse = (avatarList: any) => {
-    const urlList: string[] = avatarList.map((a: any) => a.avatar).reverse();
-    this.setState({ urlList });
+    if (!this.mounted) {
+      this.avatarsSub.unsubscribe();
+      return;
+    }
+
+    this.setState({ avatarList });
   };
 
   render() {
@@ -68,8 +78,8 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
           <p>LATEST AVATARS</p>
         </h3>
         <div className="ave-container">
-          {this.state.urlList.map((a, i) => (
-            <Avatar url={a} key={'newAvatar' + i} />
+          {this.state.avatarList.map((a: any, i) => (
+            <Avatar avatar={a.avatar} user={a.user} key={a.objectId} />
           ))}
         </div>
       </div>

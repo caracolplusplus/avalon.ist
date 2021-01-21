@@ -1,20 +1,13 @@
-const Environment = require('../../constructors/environment');
+module.exports = async (request) => {
+  const { url } = request.params;
 
-function articleRequest(io, socket) {
-  socket.on('articleRequest', (id) => {
-    const environment = Environment.getGlobal();
+  // eslint-disable-next-line no-undef
+  const annQ = new Parse.Query('Announcement');
+  annQ.equalTo('url', url);
 
-    const articles = environment.get('announcementLogs');
+  const ann = await annQ.first({ useMasterKey: true });
 
-    for (let i = articles.length - 1; i >= 0; i--) {
-      if (articles[i].id === id) {
-        socket.emit('articleResponse', articles[i]);
-        return;
-      }
-    }
+  if (!ann) return false;
 
-    socket.emit('articleNotFound');
-  });
-}
-
-module.exports = articleRequest;
+  return ann.toJSON();
+};

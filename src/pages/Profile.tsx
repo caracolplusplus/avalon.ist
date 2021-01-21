@@ -127,9 +127,14 @@ class Profile extends React.PureComponent<
     showSpy: false,
     showForm: false,
   };
+  mounted: boolean = true;
 
   componentDidMount = () => {
     this.getProfile();
+  };
+
+  componentWillUnmount = () => {
+    this.mounted = false;
   };
 
   componentDidUpdate = (prevProps: RouteComponentProps<ProfileProps>) => {
@@ -155,6 +160,8 @@ class Profile extends React.PureComponent<
   };
 
   saveProfile = (profile: ProfileState) => {
+    if (!this.mounted) return;
+
     const {
       style: { avatarStyle },
     } = this.props.match.params;
@@ -182,9 +189,7 @@ class Profile extends React.PureComponent<
     this.onFormToggle();
 
     Parse.Cloud.run('editProfile', data)
-      .then((profile) => {
-        this.saveProfile(profile);
-      })
+      .then(this.saveProfile)
       .catch((err) => console.log(err));
   };
 
