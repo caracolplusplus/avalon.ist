@@ -64,22 +64,28 @@ const initialState: appState = {
 
 class App extends React.PureComponent<appProps, appState> {
   state = initialState;
-  envSub: any = null;
+  userSub: any = null;
 
   componentDidMount = () => {
-    const { getAuthenticated, listenForStyles, updateDimensions } = this;
+    const { getAuthenticated, updateDimensions, setNotifications } = this;
 
     window.addEventListener('resize', updateDimensions);
 
-    listenForStyles();
+    if (!('Notification' in window)) {
+      console.log('This browser does not support desktop notifications');
+    } else {
+      // eslint-disable-next-line no-undef
+      Notification.requestPermission();
+    }
 
     getAuthenticated();
+    setNotifications();
   };
 
   componentWillUnmount = () => {
     const { updateDimensions } = this;
 
-    this.envSub.unsubscribe();
+    this.userSub.unsubscribe();
 
     window.removeEventListener('resize', updateDimensions);
   };
@@ -89,79 +95,91 @@ class App extends React.PureComponent<appProps, appState> {
 
     const { dispatch } = this.props;
 
-    const envQ = new Parse.Query('Environment');
+    const currentUser = Parse.User.current()!;
+    const username = currentUser.getUsername()!;
 
-    this.envSub = await envQ.subscribe();
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('username', username);
 
-    this.envSub.on('open', () => {
+    this.userSub = await userQ.subscribe();
+
+    this.userSub.on('open', () => {
       console.log(this.state);
 
-      Parse.Cloud.run('getAuthenticated').then((state: appState) => {
-        const { authenticated } = state;
+      Parse.Cloud.run('themeRequest').then(this.updateTheme);
 
-        if (authenticated) {
-          const currentUser = Parse.User.current()!;
+      Parse.Cloud.run('getAuthenticated')
+        .then((state: appState) => {
+          const { authenticated } = state;
 
-          const username = currentUser.getUsername()!;
+          if (authenticated) {
+            dispatch(setUsername(username));
+            dispatch(setOnline(true));
 
-          dispatch(setUsername(username));
-          dispatch(setOnline(true));
+            this.setState(state);
+          } else {
+            dispatch(setOnline(false));
 
-          this.setState(state);
-
-          this.envSub.on('close', () => {
-            Parse.Cloud.run('leavePresence');
+            this.setState(state);
+          }
+        })
+        .catch((err) => {
+          Parse.User.logOut().then(() => {
+            window.location.reload(true);
           });
-        } else {
-          dispatch(setOnline(false));
+        });
+    });
 
-          this.setState(state);
-        }
+    this.userSub.on('update', (user: any) => {
+      const isBanned = user.get('isBanned');
+      const suspensionTime = user.get('suspensionTime');
+
+      if (isBanned || suspensionTime > Date.now()) {
+        Parse.User.logOut().then(() => {
+          window.location.reload(true);
+        });
+      }
+
+      Parse.Cloud.run('themeRequest').then(this.updateTheme);
+    });
+
+    this.userSub.on('close', () => {
+      Parse.Cloud.run('leavePresence');
+    });
+  };
+
+  setNotifications = async () => {
+    const currentUser = Parse.User.current()!;
+    const username = currentUser.getUsername()!;
+
+    const messageQ = new Parse.Query('Messages');
+    messageQ.equalTo('to', username);
+    messageQ.equalTo('public', false);
+
+    const messageSub = await messageQ.subscribe();
+
+    messageSub.on('create', (message: any) => {
+      const global = message.get('global');
+      const code = message.get('code');
+      const room = global ? 'General Chat' : `Room ${code}`;
+      const from = message.get('from');
+      const content = message.get('content');
+
+      Soundboard.notification.play();
+
+      // eslint-disable-next-line no-undef
+      new Notification(`New message from ${from} in ${room}.`, {
+        body: `${from} says: ${content}`,
+        icon: 'https://i.ibb.co/JqQM735/login-logo.png',
+        dir: 'ltr',
       });
     });
   };
 
-  setNotifications = () => {
-    const printNotification = (data: any) => {
-      // This is broken
-      if (Soundboard[data.audio]) Soundboard[data.audio].play();
+  updateTheme = (style: any) => {
+    const { dispatch } = this.props;
 
-      // eslint-disable-next-line no-undef
-      new Notification(data.title, {
-        body: data.body,
-        icon: 'https://i.ibb.co/kGHXzYr/favicon-32x32.png',
-        dir: 'ltr',
-      });
-    };
-
-    if (!('Notification' in window)) {
-      console.log('This browser does not support desktop notifications');
-    } else {
-      // eslint-disable-next-line no-undef
-      Notification.requestPermission();
-    }
-  };
-
-  listenForKicks = () => {
-    const reloadPage = async () => {
-      await Parse.User.logOut();
-
-      window.location.reload(true);
-    };
-  };
-
-  listenForStyles = () => {
-    const updateTheme = (style: any) => {
-      const { dispatch } = this.props;
-
-      dispatch(updateStyle(style));
-    };
-  };
-
-  listenForLogs = () => {
-    const printLogs = (data: any) => {
-      console.log(data);
-    };
+    dispatch(updateStyle(style));
   };
 
   updateDimensions = () => {

@@ -109,25 +109,23 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
     allPlayers: [],
     loaded: false,
   };
-  envSub: any = null;
+  listSub: any = null;
 
   componentDidMount = () => {
     this.setSubscription();
   };
 
   componentWillUnmount = () => {
-    this.envSub.unsubscribe();
+    this.listSub.unsubscribe();
   };
 
   setSubscription = async () => {
-    const envQ = new Parse.Query('Environment');
+    const listQ = new Parse.Query('Lists');
 
-    this.envSub = await envQ.subscribe();
+    this.listSub = await listQ.subscribe();
 
-    this.envSub.on('open', this.playerListRequest);
-    this.envSub.on('update', (env: any) => {
-      this.playerListResponse(env.get('playerList'));
-    });
+    this.listSub.on('open', this.playerListRequest);
+    this.listSub.on('update', this.playerListRequest);
   };
 
   playerListRequest = () => {

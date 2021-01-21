@@ -1,6 +1,30 @@
-const Environment = require('../../constructors/environment');
+/* global Parse */
 
-function messageTo(io, socket) {
+const { environment } = require('../../constructors');
+
+module.exports = async (request) => {
+  const { code, messages } = request.params;
+  let chat = null;
+
+  if (code) {
+    const gameQ = new Parse.Query('Game');
+    gameQ.fromLocalDatastore();
+
+    const game = await gameQ.get(code, { useMasterKey: true });
+
+    chat = game.get('chat');
+  } else {
+    const env = environment.getGlobal();
+
+    chat = env.get('chat');
+  }
+
+  chat.saveMessages(messages);
+
+  return 'Message sent';
+};
+
+/* function messageTo(io, socket) {
   const getResponse = (isGeneral) => {
     return isGeneral ? 'generalCommandResponse' : 'gameCommandResponse';
   };
@@ -96,4 +120,4 @@ function messageTo(io, socket) {
   });
 }
 
-module.exports = messageTo;
+module.exports = messageTo; */

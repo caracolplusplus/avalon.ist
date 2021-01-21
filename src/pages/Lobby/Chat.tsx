@@ -2,6 +2,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import React, { FormEvent, createRef } from 'react';
+import Parse from '../../parse/parse';
 // eslint-disable-next-line no-unused-vars
 import { rootType } from '../../redux/reducers';
 import { setMessageDelay } from '../../redux/actions';
@@ -68,6 +69,7 @@ interface ChatState {
   adminList: string[];
   modList: string[];
   contribList: string[];
+  loaded: boolean;
   form: FormType;
 }
 
@@ -75,20 +77,6 @@ const mapState = (state: rootType) => {
   const { chatHighlights, username, messageDelay, style } = state;
   return { chatHighlights, username, messageDelay, style };
 };
-
-const generalEvents: string[] = [
-  'generalChatResponse',
-  'generalChatRequest',
-  'messageToGeneral',
-  'generalCommandResponse',
-];
-
-const gameEvents: string[] = [
-  'gameChatResponse',
-  'gameChatRequest',
-  'messageToGame',
-  'gameCommandResponse',
-];
 
 const msgBuilder = new MessageBuilder();
 
@@ -99,9 +87,11 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     adminList: [],
     modList: [],
     contribList: [],
+    loaded: false,
     form: FormType.None,
   };
 
+  messageSub: any = null;
   refScrollbars = createRef<AvalonScrollbars>();
   refInput = createRef<ChatInput>();
 
@@ -147,25 +137,37 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.setState({ playerList, adminList, modList, contribList });
   };
 
-  startChat = () => {
+  startChat = async () => {
     const { code } = this.props;
-    const events = code ? gameEvents : generalEvents;
 
-    // socket.on(events[0], this.parseMessages);
-    // socket.on(events[3], this.commandResponseMessage);
+    const messageQ = new Parse.Query('Messages');
+
+    if (code) {
+      messageQ.equalTo('code', code);
+    } else {
+      messageQ.equalTo('global', true);
+    }
+
+    this.messageSub = await messageQ.subscribe();
+
+    this.messageSub.on('open', () => {
+      Parse.Cloud.run('chatRequest', { code })
+        .then(this.parseMessages)
+        .then(() => this.setState({ loaded: true }))
+        .catch((err) => console.log(err));
+    });
+
+    this.messageSub.on('create', (message: any) => {
+      if (this.state.loaded) {
+        this.parseMessages([message.toJSON()]);
+      }
+    });
 
     this.setState({ messages: [] });
-
-    // socket.emit(events[1]);
-
-    this.endChat = () => {
-      // socket.off(events[0], this.parseMessages);
-      // socket.off(events[3], this.commandResponseMessage);
-    };
   };
 
   endChat = () => {
-    // This function is defined when chat is started
+    this.messageSub.unsubscribe();
   };
 
   scrollChat = () => {
@@ -270,18 +272,15 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   writeMessage = (content: string) => {
-    return true;
-
-    /* const { dispatch, username, code } = this.props;
-    const events = code ? gameEvents : generalEvents;
-    msgBuilder.setEmission(events[2]);
+    const { dispatch, username, code } = this.props;
+    msgBuilder.setEmission('cmon bro');
 
     const quote = /^[0-9]{2}:[0-9]{2} (.*)$/g;
 
     let output: ChatSnapshot[] = [];
 
     if (content.startsWith('/')) {
-      const split = content.split(' ');
+      /* const split = content.split(' ');
 
       const commandDefault = {
         isGeneral: !code,
@@ -405,18 +404,19 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         default:
           output = msgBuilder.defaultMessage(username);
           break;
-      }
+      } */
     } else if (quote.test(content)) {
       output = msgBuilder.findQuote({ username, content, messages: this.state.messages });
     } else {
       output = msgBuilder.sendMessage({
         username,
-        content: content.substr(0, 250).trim(),
+        code,
+        content: content.trim(),
       });
     }
 
     dispatch(setMessageDelay());
-    this.parseMessages(output); */
+    this.parseMessages(output);
   };
 
   commandResponseMessage = (content: string) => {
@@ -455,7 +455,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   parseMessages = _.throttle((messages: ChatSnapshot[]) => {
-    const { username, code } = this.props;
+    const { username } = this.props;
     const messageIds = this.state.messages.map((m) => m.id);
 
     const newMessages = messages
@@ -468,10 +468,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
     const messagesToState = [...this.state.messages, ...newMessages];
 
-    this.setState(
-      { messages: code ? messagesToState : messagesToState.slice(-50) },
-      this.scrollChat
-    );
+    this.setState({ messages: messagesToState }, this.scrollChat);
   }, 50);
 
   messageMapper = (snap: ChatSnapshotRead) => {

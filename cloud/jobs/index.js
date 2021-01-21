@@ -5,6 +5,7 @@ const {
   deleteGeneralChatAndEmptyGames,
   cleanAllPresence,
   avatarAndKnowledgeRepair,
+  logsToObjects,
 } = Events;
 
 // This function should be run periodically
@@ -18,3 +19,6 @@ Parse.Cloud.job('cleanAllPresence', cleanAllPresence);
 // This function repairs the links in the user's game history after update 16 of January of 2021
 // Should only be run once
 Parse.Cloud.job('avatarAndKnowledgeRepair', avatarAndKnowledgeRepair);
+
+// This function turns all logs from environment to parse objects
+Parse.Cloud.job('logsToObjects', logsToObjects);

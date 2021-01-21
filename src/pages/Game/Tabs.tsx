@@ -78,7 +78,7 @@ class Tabs extends React.PureComponent<TabContainerProps, TabContainerState> {
         key="General Chat"
       />,
       <Chat
-        code={code}
+        code={game.gameId}
         stage={game.active ? 'NONE' : 'REPLAY'}
         username=""
         players={players}

@@ -57,12 +57,6 @@ class Environment extends Parse.Object {
 
         g.updateTrees();
 
-        g.addModerationLog({
-          action: 'ENVIRONMENT STARTED',
-          from: 'Avalon.ist',
-          to: 'Avalon.ist',
-        });
-
         Environment.setGlobal(g);
       })
       .catch((err) => {

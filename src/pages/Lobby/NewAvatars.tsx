@@ -31,25 +31,23 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
     };
   }
 
-  envSub: any = null;
+  avatarsSub: any = null;
 
   componentDidMount = () => {
     this.setSubscription();
   };
 
   componentWillUnmount = () => {
-    this.envSub.unsubscribe();
+    this.avatarsSub.unsubscribe();
   };
 
   setSubscription = async () => {
-    const envQ = new Parse.Query('Environment');
+    const avatarsQ = new Parse.Query('Avatars');
 
-    this.envSub = await envQ.subscribe();
+    this.avatarsSub = await avatarsQ.subscribe();
 
-    this.envSub.on('open', this.latestAvatarsRequest);
-    this.envSub.on('update', (env: any) => {
-      this.latestAvatarsResponse(env.get('avatarLogs').slice(-3));
-    });
+    this.avatarsSub.on('open', this.latestAvatarsRequest);
+    this.avatarsSub.on('create', this.latestAvatarsRequest);
   };
 
   latestAvatarsRequest = () => {

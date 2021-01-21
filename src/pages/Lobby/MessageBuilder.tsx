@@ -1,4 +1,5 @@
 /* global Set */
+import Parse from '../../parse/parse';
 
 interface helpPage {
   [x: number]: string[];
@@ -160,7 +161,7 @@ class MessageBuilder implements MessageBuilderType {
   sendMessage = (data: any) => {
     const { zalgoTest, addMessage } = this;
     const { COMMAND, CLIENT } = messageTypes;
-    const { username, content } = data;
+    const { username, content, code } = data;
 
     const hasZalgo = zalgoTest(content);
 
@@ -182,10 +183,9 @@ class MessageBuilder implements MessageBuilderType {
 
     const output = [message];
 
-    if (!hasZalgo)
-      // socket.emit(this.emission, output);
+    if (!hasZalgo) Parse.Cloud.run('messageTo', { code, messages: output });
 
-      return output;
+    return output;
   };
 
   sendDirectMessage = (data: any) => {

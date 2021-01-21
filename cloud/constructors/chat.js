@@ -44,7 +44,6 @@ class Chat extends Parse.Object {
     chat.set('code', code);
     chat.set('game', game);
     chat.set('messages', []);
-    chat.set('messageCap', 1000);
 
     return chat;
   }

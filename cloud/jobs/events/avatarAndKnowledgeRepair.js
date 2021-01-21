@@ -16,8 +16,24 @@ module.exports = (request) => {
           const avatarListOld = g.get('avatarList');
           const privateKnowledgeOld = g.get('privateKnowledge');
 
+          console.log(g.id);
+
+          g.set('votesPending', []);
           g.set('privateKnowledgeNew', []);
           g.set('avatarListNew', []);
+
+          const chat = g.get('chat');
+
+          if (chat)
+            chat
+              .fetch({ useMasterKey: true })
+              .then((c) => {
+                c.set('game', g);
+                c.set('code', 'Game');
+
+                c.save({}, { useMasterKey: true });
+              })
+              .catch((err) => console.log(g.id));
 
           for (const username in avatarListOld) {
             const avatars = avatarListOld[username];

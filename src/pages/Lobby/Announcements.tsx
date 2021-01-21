@@ -49,25 +49,24 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
       articles: [],
     };
   }
-  envSub: any = null;
+  announcementSub: any = null;
 
   componentDidMount = () => {
     this.setSubscription();
   };
 
   componentWillUnmount = () => {
-    this.envSub.unsubscribe();
+    this.announcementSub.unsubscribe();
   };
 
   setSubscription = async () => {
-    const envQ = new Parse.Query('Environment');
+    const announcementQ = new Parse.Query('Announcements');
 
-    this.envSub = await envQ.subscribe();
+    this.announcementSub = await announcementQ.subscribe();
 
-    this.envSub.on('open', this.latestAnnouncementsRequest);
-    this.envSub.on('update', (env: any) => {
-      this.latestAnnouncementsResponse(env.get('announcementLogs').slice(-5));
-    });
+    this.announcementSub.on('open', this.latestAnnouncementsRequest);
+    this.announcementSub.on('update', this.latestAnnouncementsRequest);
+    this.announcementSub.on('create', this.latestAnnouncementsRequest);
   };
 
   latestAnnouncementsRequest = () => {

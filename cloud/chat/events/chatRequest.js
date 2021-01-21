@@ -1,33 +1,25 @@
-const Environment = require('../../constructors/environment');
+/* global Parse */
 
-function chatRequest(io, socket) {
-  socket.on('generalChatRequest', () => {
-    const environment = Environment.getGlobal();
+const { environment } = require('../../constructors');
 
-    const chat = environment.get('chat');
+module.exports = async (request) => {
+  const { code } = request.params;
+  let chat = null;
 
-    chat
-      .fetch({ useMasterKey: true })
-      .then((c) => {
-        socket.emit('generalChatResponse', c.get('messages'));
-      })
-      .catch((err) => console.log(err));
-  });
+  if (code) {
+    const gameQ = new Parse.Query('Game');
+    gameQ.fromLocalDatastore();
 
-  socket.on('gameChatRequest', () => {
-    const { game } = socket;
+    const game = await gameQ.get(code, { useMasterKey: true });
 
-    if (!game) return;
+    chat = game.get('chat');
+  } else {
+    const env = environment.getGlobal();
 
-    const chat = game.get('chat');
+    chat = env.get('chat');
+  }
 
-    chat
-      .fetch({ useMasterKey: true })
-      .then((c) => {
-        socket.emit('gameChatResponse', c.get('messages'));
-      })
-      .catch((err) => console.log(err));
-  });
-}
+  await chat.fetch({ useMasterKey: true });
 
-module.exports = chatRequest;
+  return chat.get('messages');
+};
