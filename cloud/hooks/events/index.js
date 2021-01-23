@@ -8,7 +8,6 @@ const index = {};
   'beforeGameSave',
   'beforeGameDelete',
   'afterUserSave',
-  'afterEnvSave',
   'afterGameSave',
   'afterChatSave',
 ].forEach((e) => {

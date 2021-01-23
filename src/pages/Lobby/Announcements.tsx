@@ -69,7 +69,9 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
   };
 
   latestAnnouncementsRequest = () => {
-    Parse.Cloud.run('latestAnnouncementsRequest').then(this.latestAnnouncementsResponse);
+    Parse.Cloud.run('generalCommands', { call: 'latestAnnouncementsRequest' }).then(
+      this.latestAnnouncementsResponse
+    );
   };
 
   latestAnnouncementsResponse = (articles: any[]) => {

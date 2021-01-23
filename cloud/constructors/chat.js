@@ -6,7 +6,7 @@ const messageTypes = {
   NEGATIVE: 'negative',
 };
 
-const gameName = 'Avalon.ist Game';
+const gameName = '-SERVER MESSAGE-';
 
 const addMessage = (data) => {
   // This function must be updated in client as well
@@ -14,17 +14,16 @@ const addMessage = (data) => {
   const { SERVER } = messageTypes;
 
   const timestamp = Date.now();
-  const id = timestamp;
+  const objectId = timestamp.toString();
 
   const message = {
-    _public: true,
-    type: SERVER,
-    from: gameName,
-    to: [],
-    content: 'Hello World!',
+    public: data.public || true,
+    type: data.type || SERVER,
+    from: data.from || gameName,
+    to: data.to || [],
+    content: data.content || 'Hello World!',
     timestamp,
-    ...data,
-    id,
+    objectId,
   };
 
   return message;
@@ -48,32 +47,54 @@ class Chat extends Parse.Object {
     return chat;
   }
 
-  saveMessages(newMessages) {
-    this.fetch({ useMasterKey: true })
-      .then((c) => {
-        let messages = 0;
+  async saveMessages(newMessages) {
+    const listsQ = new Parse.Query('Lists');
 
-        const env = Environment.getGlobal();
-        const modList = env.get('moderatorList');
+    const lists = await listsQ.first({ useMasterKey: true });
+    const c = await this.fetch({ useMasterKey: true });
 
-        newMessages = newMessages.filter((m) => {
-          const { type, to, from } = m;
+    const Message = Parse.Object.extend('Message');
 
-          if (type !== 'direct' || modList.includes(from) || modList.includes(to[0])) {
-            this.addUnique('messages', m);
-            messages++;
+    const code = c.get('code');
+    const game = c.get('game');
+    const id = game ? game.id : '';
+    const moderatorList = lists.get('moderatorList');
 
-            return true;
-          }
+    newMessages = newMessages
+      .map((m, i) => {
+        const { public: _public, type, to, from, content, timestamp } = m;
 
-          return false;
-        });
+        if (
+          type !== 'direct' ||
+          moderatorList.includes(from) ||
+          moderatorList.includes(to[0])
+        ) {
+          const newM = new Message();
 
-        if (!messages) return false;
+          newM.set('global', code === 'Global');
+          newM.set('code', id);
+          newM.set('public', _public);
+          newM.set('type', type);
+          newM.set('from', from);
+          newM.set('to', to);
+          newM.set('content', content);
+          newM.set('timestamp', timestamp);
+          newM.set('realtime', Date.now() + i);
 
-        this.save({}, { useMasterKey: true, context: { messages: newMessages } });
+          return newM;
+        }
+
+        return null;
       })
-      .catch((err) => console.log(err));
+      .filter((m) => m !== null);
+
+    console.log(newMessages);
+
+    const savedMessages = await Parse.Object.saveAll(newMessages, { useMasterKey: true });
+
+    c.relation('messagesNew').add(savedMessages);
+
+    c.save({}, { useMasterKey: true });
   }
 
   moderationAction(data) {
@@ -289,8 +310,8 @@ class Chat extends Parse.Object {
         content: `${username} has used Lady of the Lake on ${target}.`,
       }),
       addMessage({
+        public: false,
         type: spy ? NEGATIVE : POSITIVE,
-        _public: false,
         content: `${target} is ${result}`,
         to: [username],
       }),

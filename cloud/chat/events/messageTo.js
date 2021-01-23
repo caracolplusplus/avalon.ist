@@ -1,6 +1,6 @@
 /* global Parse */
 
-const { environment } = require('../../constructors');
+const Environment = require('../../constructors/environment');
 
 module.exports = async (request) => {
   const { code, messages } = request.params;
@@ -14,7 +14,7 @@ module.exports = async (request) => {
 
     chat = game.get('chat');
   } else {
-    const env = environment.getGlobal();
+    const env = await Environment.getGlobal();
 
     chat = env.get('chat');
   }

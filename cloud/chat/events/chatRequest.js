@@ -1,25 +1,36 @@
 /* global Parse */
-
-const { environment } = require('../../constructors');
-
 module.exports = async (request) => {
+  const { user } = request;
   const { code } = request.params;
-  let chat = null;
+
+  if (!user) return;
+
+  const username = user.get('username');
+
+  const publicMessages = new Parse.Query('Message');
+  publicMessages.equalTo('public', true);
+
+  const myMessages = new Parse.Query('Message');
+  myMessages.equalTo('from', username);
+
+  const messagesDirectedToMe = new Parse.Query('Message');
+  messagesDirectedToMe.equalTo('to', username);
+
+  const messageQ = Parse.Query.or(publicMessages, myMessages, messagesDirectedToMe);
 
   if (code) {
-    const gameQ = new Parse.Query('Game');
-    gameQ.fromLocalDatastore();
-
-    const game = await gameQ.get(code, { useMasterKey: true });
-
-    chat = game.get('chat');
+    messageQ.equalTo('code', code);
+    messageQ.limit(1000);
   } else {
-    const env = environment.getGlobal();
-
-    chat = env.get('chat');
+    messageQ.equalTo('global', true);
+    messageQ.limit(30);
   }
 
-  await chat.fetch({ useMasterKey: true });
+  messageQ.descending('realtime');
 
-  return chat.get('messages');
+  const messages = await messageQ.find({ useMasterKey: true });
+
+  if (!messages.length) return [];
+
+  return messages.reverse().map((m) => m.toJSON());
 };

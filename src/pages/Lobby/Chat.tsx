@@ -14,7 +14,6 @@ import TooFast from './ChatTooFast';
 import Soundboard from '../../sounds/audio';
 import AnnouncementForm from './ChatAnnouncementForm';
 import AvatarForm from './ChatAvatarForm';
-import * as _ from 'lodash';
 
 import '../../styles/Lobby/Chat.scss';
 
@@ -32,13 +31,13 @@ enum FormType {
 }
 
 interface ChatSnapshot {
-  _public: boolean;
+  public: boolean;
   content: string;
   from: string;
   to: string[];
   type: string;
   timestamp: number;
-  id: number;
+  objectId: string;
 }
 
 interface ChatSnapshotRead {
@@ -46,8 +45,7 @@ interface ChatSnapshotRead {
   hour: string;
   from: string | null;
   content: string;
-
-  id: number;
+  id: string;
   type: string;
   public: boolean;
 }
@@ -91,17 +89,21 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     form: FormType.None,
   };
   mounted: boolean = true;
+  listSub: any = null;
   messageSub: any = null;
+  sentMessages: ChatSnapshot[] = [];
   refScrollbars = createRef<AvalonScrollbars>();
   refInput = createRef<ChatInput>();
 
   componentDidMount = () => {
     this.startChat();
+    this.playerListSubscription();
   };
 
   componentWillUnmount = () => {
     this.mounted = false;
     if (this.messageSub) this.messageSub.unsubscribe();
+    if (this.listSub) this.listSub.unsubscribe();
   };
 
   componentDidUpdate = (prevProps: ChatProps) => {
@@ -119,7 +121,29 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.sendMessage();
   };
 
+  playerListSubscription = async () => {
+    const listQ = new Parse.Query('Lists');
+
+    this.listSub = await listQ.subscribe();
+
+    this.listSub.on('open', this.playerListRequest);
+    this.listSub.on('update', (lists: any) => {
+      this.playerListResponse(lists.get('playerList'));
+    });
+  };
+
+  playerListRequest = () => {
+    Parse.Cloud.run('generalCommands', { call: 'playerListRequest' }).then(
+      this.playerListResponse
+    );
+  };
+
   playerListResponse = (players: any) => {
+    if (!this.mounted) {
+      this.listSub.unsubscribe();
+      return;
+    }
+
     const adminList: string[] = [];
     const modList: string[] = [];
     const contribList: string[] = [];
@@ -138,9 +162,18 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   startChat = async () => {
-    const { code } = this.props;
+    const { code, username } = this.props;
 
-    const messageQ = new Parse.Query('Messages');
+    const publicMessages = new Parse.Query('Message');
+    publicMessages.equalTo('public', true);
+
+    const myMessages = new Parse.Query('Message');
+    myMessages.equalTo('from', username);
+
+    const messagesDirectedToMe = new Parse.Query('Message');
+    messagesDirectedToMe.equalTo('to', username);
+
+    const messageQ = Parse.Query.or(publicMessages, myMessages, messagesDirectedToMe);
 
     if (code) {
       messageQ.equalTo('code', code);
@@ -151,7 +184,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.messageSub = await messageQ.subscribe();
 
     this.messageSub.on('open', () => {
-      Parse.Cloud.run('chatRequest', { code })
+      this.setState({ messages: [] });
+
+      Parse.Cloud.run('chatCommands', { call: 'chatRequest', code })
         .then(this.parseMessages)
         .then(this.loadChat)
         .catch((err) => console.log(err));
@@ -159,7 +194,20 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
     this.messageSub.on('create', (message: any) => {
       if (this.state.loaded) {
-        this.parseMessages([message.toJSON()]);
+        const mNew = message.toJSON();
+        const sentMessageIndex = this.sentMessages.findIndex(
+          (m) =>
+            mNew.from === m.from &&
+            mNew.content === m.content &&
+            mNew.timestamp === m.timestamp
+        );
+
+        if (sentMessageIndex >= 0) {
+          this.sentMessages.splice(sentMessageIndex, 1);
+          return;
+        }
+
+        this.parseMessages([mNew]);
       }
     });
 
@@ -174,8 +222,6 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
     this.setState({ loaded: true });
   };
-
-  endChat = () => {};
 
   scrollChat = () => {
     const chatContainer = this.refScrollbars.current!;
@@ -239,7 +285,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   readMessage = (snap: ChatSnapshot): ChatSnapshotRead => {
-    const { _public, content, type, from, to, timestamp, id } = snap;
+    const { public: _public, content, type, from, to, timestamp, objectId: id } = snap;
 
     const f = this.getFrom(type, from, to, _public);
 
@@ -280,29 +326,30 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
   writeMessage = (content: string) => {
     const { dispatch, username, code } = this.props;
-    msgBuilder.setEmission('cmon bro');
+    msgBuilder.username = username;
 
     const quote = /^[0-9]{2}:[0-9]{2} (.*)$/g;
 
     let output: ChatSnapshot[] = [];
 
     if (content.startsWith('/')) {
-      /* const split = content.split(' ');
+      const split = content.split(' ');
 
-      const commandDefault = {
+      /* const commandDefault = {
         isGeneral: !code,
         username,
         target: split[1],
         comment: split[2] ? content.slice(content.indexOf(split[2])) : 'No comment.',
-      };
+      }; */
 
       switch (split[0]) {
         case '/help':
           output = msgBuilder.getCommandHelp({ page: split[1], username });
           break;
         case '/dm':
-          output = msgBuilder.sendDirectMessage({ username, content, split });
+          output = msgBuilder.sendDirectMessage({ username, code, content, split });
           break;
+        /*
         case '/slap':
           socket.emit('sendNotification', {
             isGeneral: !code,
@@ -410,10 +457,15 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
           break;
         default:
           output = msgBuilder.defaultMessage(username);
-          break;
-      } */
+          break; */
+      }
     } else if (quote.test(content)) {
-      output = msgBuilder.findQuote({ username, content, messages: this.state.messages });
+      output = msgBuilder.findQuote({
+        username,
+        content,
+        code,
+        messages: this.state.messages,
+      });
     } else {
       output = msgBuilder.sendMessage({
         username,
@@ -423,6 +475,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     }
 
     dispatch(setMessageDelay());
+    this.sentMessages.push(...output);
     this.parseMessages(output);
   };
 
@@ -461,27 +514,18 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     refInput.setState({ content: '' });
   };
 
-  parseMessages = _.throttle((messages: ChatSnapshot[]) => {
+  parseMessages = (messages: ChatSnapshot[]) => {
     if (!this.mounted) {
       this.messageSub.unsubscribe();
       return;
     }
 
-    const { username } = this.props;
-    const messageIds = this.state.messages.map((m) => m.id);
-
-    const newMessages = messages
-      .filter(
-        (m) =>
-          !messageIds.includes(m.id) &&
-          (m._public || m.from === username || m.to.includes(username))
-      )
-      .map(this.readMessage);
+    const newMessages = messages.map(this.readMessage);
 
     const messagesToState = [...this.state.messages, ...newMessages];
 
     this.setState({ messages: messagesToState }, this.scrollChat);
-  }, 50);
+  };
 
   messageMapper = (snap: ChatSnapshotRead) => {
     const { adminList, modList, contribList } = this.state;
@@ -501,11 +545,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     }
 
     return (
-      <div
-        className={classname}
-        key={snap.id.toString() + snap.content.split(' ')[0]}
-        style={{ backgroundColor: highlight }}
-      >
+      <div className={classname} key={snap.id} style={{ backgroundColor: highlight }}>
         <span className={`hour ${color}`}>{snap.hour}</span>
         <p className="text">
           {snap.from ? (

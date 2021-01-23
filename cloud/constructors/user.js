@@ -114,10 +114,10 @@ class User extends Parse.User {
     return true;
   }
 
-  checkForBans(data) {
+  async checkForBans(data) {
     this.setACL(new Parse.ACL(this), { useMasterKey: true });
 
-    const environment = Environment.getGlobal();
+    const environment = await Environment.getGlobal();
 
     const { address } = data;
     const addressList = this.get('addressList') || [];

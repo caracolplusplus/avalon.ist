@@ -57,7 +57,7 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
   };
 
   latestAvatarsRequest = () => {
-    Parse.Cloud.run('latestAvatarsRequest').then((result) =>
+    Parse.Cloud.run('generalCommands', { call: 'latestAvatarsRequest' }).then((result) =>
       this.latestAvatarsResponse(result)
     );
   };

@@ -4,7 +4,7 @@ module.exports = async (request) => {
   const game = request.object;
   const { context } = request;
 
-  if (!game) console.log('hai');
+  if (!game) return;
 
   const { io } = require('../../routes/init');
 

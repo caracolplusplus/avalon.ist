@@ -59,7 +59,6 @@ interface StatusBarState {
 // Declaration
 
 const msgBuilder = new MessageBuilder();
-msgBuilder.setEmission('messageToGame');
 
 class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   state = {

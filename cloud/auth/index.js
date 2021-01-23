@@ -7,16 +7,27 @@ const {
   latestAnnouncementsRequest,
   getProfile,
   editProfile,
+  saveTheme,
   themeRequest,
   articleRequest,
 } = require('./events');
 
+Parse.Cloud.define('generalCommands', async (request) => {
+  const { call } = request.params;
+
+  const callList = {
+    leavePresence,
+    playerListRequest,
+    latestAvatarsRequest,
+    latestAnnouncementsRequest,
+    getProfile,
+    editProfile,
+    themeRequest,
+    saveTheme,
+    articleRequest,
+  };
+
+  return await callList[call](request);
+});
+
 Parse.Cloud.onLiveQueryEvent(onDisconnect);
-Parse.Cloud.define('leavePresence', leavePresence);
-Parse.Cloud.define('playerListRequest', playerListRequest);
-Parse.Cloud.define('latestAvatarsRequest', latestAvatarsRequest);
-Parse.Cloud.define('latestAnnouncementsRequest', latestAnnouncementsRequest);
-Parse.Cloud.define('getProfile', getProfile);
-Parse.Cloud.define('editProfile', editProfile);
-Parse.Cloud.define('themeRequest', themeRequest);
-Parse.Cloud.define('articleRequest', articleRequest);

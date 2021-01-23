@@ -149,14 +149,16 @@ class Profile extends React.PureComponent<
   getProfile = () => {
     const { username } = this.props.match.params;
 
-    Parse.Cloud.run('getProfile', { username }).then((profile) => {
-      if (!profile) {
-        this.onProfileNotFound();
-        return;
-      }
+    Parse.Cloud.run('generalCommands', { call: 'getProfile', username }).then(
+      (profile) => {
+        if (!profile) {
+          this.onProfileNotFound();
+          return;
+        }
 
-      this.saveProfile(profile);
-    });
+        this.saveProfile(profile);
+      }
+    );
   };
 
   saveProfile = (profile: ProfileState) => {
@@ -188,7 +190,7 @@ class Profile extends React.PureComponent<
   onEdit = (data: any) => {
     this.onFormToggle();
 
-    Parse.Cloud.run('editProfile', data)
+    Parse.Cloud.run('generalCommands', { call: 'editProfile', ...data })
       .then(this.saveProfile)
       .catch((err) => console.log(err));
   };

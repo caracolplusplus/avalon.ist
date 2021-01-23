@@ -21,7 +21,15 @@ d.run(function () {
     serverURL: process.env.SERVER_URL || 'http://localhost:1337/parse',
     logLevel: 'warn',
     liveQuery: {
-      classNames: ['_User', 'Games', 'Chat', 'Environment', 'Avatars', 'Announcement'], // List of classes to support for query subscriptions
+      classNames: [
+        '_User',
+        'Games',
+        'Chat',
+        'Avatars',
+        'Announcement',
+        'Message',
+        'Lists',
+      ], // List of classes to support for query subscriptions
     },
     /* passwordPolicy: {
       validatorPattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{6,})/,

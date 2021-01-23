@@ -1,9 +1,11 @@
 // External
 
+// eslint-disable-next-line no-unused-vars
 import React, { FormEvent, ChangeEvent } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { updateStyle } from '../../redux/actions';
+import Parse from '../../parse/parse';
 
 // Internal
 
@@ -70,7 +72,7 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
   handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    // socket.emit('saveTheme', this.state);
+    Parse.Cloud.run('generalCommands', { call: 'saveTheme', style: this.state });
     this.props.dispatch(updateStyle(this.state));
     this.props.onExit();
   };

@@ -43,6 +43,7 @@ const helpPages: helpPage = {
     '/unbanip {ip} - Lifts a permanent ban on the given IP address.',
     '/logs - Retrieves moderation logs and prints them in browser console.',
     '/maintenance - Toggles the maintenance feature of the site. It will disconnect everyone if its currently on maintenance.',
+    '/lockdown - Toggles the lockdown feature of the site. It will prevent anyone from creating verified accounts. The new accounts made in this period require verification from the moderators.',
     '/passwordreset {email} - Sends a mail to the specified email, allowing for a password reset.',
   ],
   4: [
@@ -61,35 +62,33 @@ const helpPages: helpPage = {
   ],
 };
 
-const serverName = 'Avalon.ist Client';
-
 interface MessageBuilderType {
-  emission: string;
+  username: string;
 }
 
-class MessageBuilder implements MessageBuilderType {
-  emission = 'none';
+let messagesSent: number = 0;
 
-  setEmission(msg: string) {
-    this.emission = msg;
-  }
+class MessageBuilder implements MessageBuilderType {
+  username = '';
 
   addMessage = (data: any) => {
     // This function must be updated in server as well
+
     const { SERVER } = messageTypes;
 
     const timestamp = Date.now();
-    const id = timestamp;
+    const objectId = messagesSent.toString();
+
+    messagesSent++;
 
     const message = {
-      _public: true,
-      type: SERVER,
-      from: serverName,
-      to: [],
-      content: 'Hello World!',
-      timestamp,
-      ...data,
-      id,
+      public: typeof data.public === 'boolean' ? data.public : true,
+      type: data.type || SERVER,
+      from: data.from || this.username,
+      to: data.to || [],
+      content: data.content || 'Hello World!',
+      timestamp: data.timestamp || timestamp,
+      objectId,
     };
 
     return message;
@@ -107,7 +106,7 @@ class MessageBuilder implements MessageBuilderType {
     return [
       this.addMessage({
         type: COMMAND,
-        _public: false,
+        public: false,
         content: 'Invalid Command. Type /help {page} for a list of commands.',
         to: [username],
       }),
@@ -121,7 +120,7 @@ class MessageBuilder implements MessageBuilderType {
     return [
       this.addMessage({
         type: COMMAND,
-        _public: false,
+        public: false,
         content,
         to: [username],
       }),
@@ -151,7 +150,7 @@ class MessageBuilder implements MessageBuilderType {
     return [
       this.addMessage({
         type: COMMAND,
-        _public: false,
+        public: false,
         content: 'Waiting for server response...',
         to: [username],
       }),
@@ -169,7 +168,7 @@ class MessageBuilder implements MessageBuilderType {
       hasZalgo
         ? {
             type: COMMAND,
-            _public: false,
+            public: false,
             content:
               'You are trying to post a message with invalid characters. Please, refrain from doing it.',
             to: [username],
@@ -183,7 +182,8 @@ class MessageBuilder implements MessageBuilderType {
 
     const output = [message];
 
-    if (!hasZalgo) Parse.Cloud.run('messageTo', { code, messages: output });
+    if (!hasZalgo)
+      Parse.Cloud.run('chatCommands', { call: 'messageTo', code, messages: output });
 
     return output;
   };
@@ -191,13 +191,13 @@ class MessageBuilder implements MessageBuilderType {
   sendDirectMessage = (data: any) => {
     const { zalgoTest, addMessage } = this;
     const { COMMAND, DIRECT } = messageTypes;
-    const { username, content, split } = data;
+    const { username, content, split, code } = data;
 
     if (!split[1])
       return [
         addMessage({
           type: COMMAND,
-          _public: false,
+          public: false,
           content: 'The message you are trying to send has no target.',
           to: [username],
         }),
@@ -207,7 +207,7 @@ class MessageBuilder implements MessageBuilderType {
       return [
         addMessage({
           type: COMMAND,
-          _public: false,
+          public: false,
           content: 'You are trying to send an empty DM. Please refrain from doing it.',
           to: [username],
         }),
@@ -222,14 +222,14 @@ class MessageBuilder implements MessageBuilderType {
       hasZalgo
         ? {
             type: COMMAND,
-            _public: false,
+            public: false,
             content:
               'You are trying to post a message with invalid characters. Please, refrain from doing it.',
             to: [username],
           }
         : {
             type: DIRECT,
-            _public: false,
+            public: false,
             from: username,
             to: [split[1]],
             content: _content,
@@ -239,9 +239,9 @@ class MessageBuilder implements MessageBuilderType {
     const output = [message];
 
     if (!hasZalgo)
-      // socket.emit(this.emission, output);
+      Parse.Cloud.run('chatCommands', { call: 'messageTo', code, messages: output });
 
-      return output;
+    return output;
   };
 
   rollDie(data: any) {
@@ -273,7 +273,7 @@ class MessageBuilder implements MessageBuilderType {
     const output: any[] = [];
     const { addMessage } = this;
     const { CLIENT, QUOTE, COMMAND } = messageTypes;
-    const { username, content, messages } = data;
+    const { username, content, messages, code } = data;
 
     let quotesExist = false;
 
@@ -314,13 +314,13 @@ class MessageBuilder implements MessageBuilderType {
       output.push(
         addMessage({
           type: COMMAND,
-          _public: false,
+          public: false,
           content: `Quote received doesn't exist`,
           to: [username],
         })
       );
     } else {
-      // socket.emit(this.emission, output);
+      Parse.Cloud.run('chatCommands', { call: 'messageTo', code, messages: output });
     }
 
     return output;
@@ -365,7 +365,7 @@ class MessageBuilder implements MessageBuilderType {
 
           this.addMessage({
             type: COMMAND,
-            _public: false,
+            public: false,
             content: `${target} has been suspended for ${h} hour${h === 1 ? '' : 's'}.`,
             to: [username],
           });
@@ -400,7 +400,7 @@ class MessageBuilder implements MessageBuilderType {
 
           this.addMessage({
             type: COMMAND,
-            _public: false,
+            public: false,
             content: `${target} has been unsuspended.`,
             to: [username],
           });
@@ -434,7 +434,7 @@ class MessageBuilder implements MessageBuilderType {
 
           this.addMessage({
             type: COMMAND,
-            _public: false,
+            public: false,
             content: `${target} has been banned.`,
             to: [username],
           });
@@ -468,7 +468,7 @@ class MessageBuilder implements MessageBuilderType {
 
           this.addMessage({
             type: COMMAND,
-            _public: false,
+            public: false,
             content: `${target} has been unbanned.`,
             to: [username],
           });
@@ -503,7 +503,7 @@ class MessageBuilder implements MessageBuilderType {
 
           this.addMessage({
             type: COMMAND,
-            _public: false,
+            public: false,
             content: `${target} has been banned and all their IP adresses are blacklisted.`,
             to: [username],
           });
@@ -534,7 +534,7 @@ class MessageBuilder implements MessageBuilderType {
 
     this.addMessage({
       type: COMMAND,
-      _public: false,
+      public: false,
       content: `Addresses ${ips.join(', ')} has been whitelisted.`,
       to: [username],
     });
@@ -562,7 +562,7 @@ class MessageBuilder implements MessageBuilderType {
 
     this.addMessage({
       type: COMMAND,
-      _public: false,
+      public: false,
       content: `Moderation Logs Received. Open Browser Console.`,
       to: [username],
     });
@@ -579,7 +579,7 @@ class MessageBuilder implements MessageBuilderType {
 
     this.addMessage({
       type: COMMAND,
-      _public: false,
+      public: false,
       content: `Maintenance mode was toggled.`,
       to: [username],
     });

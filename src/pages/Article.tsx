@@ -65,7 +65,9 @@ class Article extends React.PureComponent<PageProps, ArticleState> {
   componentDidMount() {
     const { url } = this.props.match.params;
 
-    Parse.Cloud.run('articleRequest', { url }).then(this.onResponse);
+    Parse.Cloud.run('generalCommands', { call: 'articleRequest', url }).then(
+      this.onResponse
+    );
   }
 
   componentWillUnmount = () => {
@@ -77,7 +79,9 @@ class Article extends React.PureComponent<PageProps, ArticleState> {
     const { url: prevUrl } = prevProps.match.params;
 
     if (url !== prevUrl) {
-      Parse.Cloud.run('articleRequest', { url }).then(this.onResponse);
+      Parse.Cloud.run('generalCommands', { call: 'articleRequest', url }).then(
+        this.onResponse
+      );
     }
   }
 

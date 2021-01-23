@@ -1,8 +1,9 @@
-const Environment = require('../../constructors/environment');
-
+/* global Parse */
 // Send player list to client
 module.exports = async (request) => {
-  const environment = Environment.getGlobal();
+  const listsQ = new Parse.Query('Lists');
 
-  return environment.get('playerList');
+  const lists = await listsQ.first({ useMasterKey: true });
+
+  return lists.get('playerList');
 };

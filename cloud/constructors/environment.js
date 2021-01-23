@@ -1,10 +1,8 @@
-/* global Parse, Set */
+/* global Parse*/
 
 const ipTree = require('../security/trees/ip-tree');
 const emailTree = require('../security/trees/email-tree');
 const discordReports = require('../security/discordReports');
-
-let globalEnvironment = null;
 
 class Environment extends Parse.Object {
   constructor() {
@@ -24,11 +22,6 @@ class Environment extends Parse.Object {
 
     env.set('ipBlacklist', require('../security/databases/untrusted-ips'));
     env.set('emailWhitelist', require('../security/databases/trusted-emails'));
-
-    env.set('avatarLogs', []);
-    env.set('announcementLogs', []);
-    env.set('moderationLogs', []);
-    env.set('errorLogs', []);
 
     env.set('playerList', []);
     env.set('roomList', []);
@@ -51,25 +44,29 @@ class Environment extends Parse.Object {
           g = Environment.spawn();
         }
 
-        Parse.Cloud.startJob('cleanAllPresence');
+        Environment.setGlobal(g).then(() => {
+          g.setDiscordHook();
 
-        g.setDiscordHook();
+          g.updateTrees();
 
-        g.updateTrees();
-
-        Environment.setGlobal(g);
+          Parse.Cloud.startJob('cleanAllPresence');
+        });
       })
       .catch((err) => {
         console.log(err);
       });
   }
 
-  static setGlobal(g) {
-    globalEnvironment = g;
+  static async setGlobal(g) {
+    g.save({}, { useMasterKey: true });
+    await g.pin();
   }
 
-  static getGlobal() {
-    return globalEnvironment;
+  static async getGlobal() {
+    const envQ = new Parse.Query('Environment');
+    envQ.fromLocalDatastore();
+
+    return await envQ.first({ useMasterKey: true });
   }
 
   setDiscordHook() {
@@ -101,63 +98,49 @@ class Environment extends Parse.Object {
     return true;
   }
 
-  testFunction() {
-    console.log('This a test message!');
-  }
-
-  checkOnlinePlayers(data) {
+  static async checkOnlinePlayers(data) {
     const userQ = new Parse.Query('_User');
-    userQ.equalTo('isOnline', true);
+    userQ.greaterThan('instanceCount', 0);
     userQ.limit(500);
 
-    userQ
-      .find({ useMasterKey: true })
-      .then((playerList) => {
-        const moderatorList = [];
-        const playerListMap = playerList.map((p) => {
-          if (p.get('isMod') || p.get('isAdmin')) moderatorList.push(p.get('username'));
+    const listsQ = new Parse.Query('Lists');
 
-          return p.toPlayerList();
-        });
+    const lists = await listsQ.first({ useMasterKey: true });
+    const playerList = await userQ.find({ useMasterKey: true });
 
-        this.set('moderatorList', moderatorList);
-        this.set('playerList', playerListMap);
+    const moderatorList = [];
+    const playerListMap = playerList.map((p) => {
+      if (p.get('isMod') || p.get('isAdmin')) moderatorList.push(p.get('username'));
 
-        this.save({}, { useMasterKey: true });
-      })
-      .catch((err) => console.log(err));
+      return p.toPlayerList();
+    });
 
-    this.save({}, { useMasterKey: true });
+    lists.set('playerList', playerListMap);
+    lists.set('moderatorList', moderatorList);
+
+    lists.save({}, { useMasterKey: true });
 
     return true;
   }
 
-  checkActiveGames(data) {
-    const { game, beforeSave } = data;
+  static async checkActiveGames(data) {
+    const gameQ = new Parse.Query('Game');
+    gameQ.equalTo('active', true);
+    gameQ.equalTo('listed', true);
+    gameQ.limit(50);
 
-    if (!game.id) return;
+    const listsQ = new Parse.Query('Lists');
 
-    if (game.get('active') && game.get('listed') && beforeSave) {
-      this.addUnique('roomList', game);
-    } else {
-      this.remove('roomList', game);
-    }
+    const lists = await listsQ.first({ useMasterKey: true });
+    const roomList = await gameQ.find({ useMasterKey: true });
 
-    this.save({}, { useMasterKey: true, context: { roomList: true } });
+    const roomListMap = roomList.map((r) => r.toRoomList());
+
+    lists.set('roomList', roomListMap);
+
+    lists.save({}, { useMasterKey: true });
 
     return true;
-  }
-
-  getActiveGames(callback) {
-    const gameQ = this.get('roomList');
-
-    Parse.Object.fetchAll(gameQ, { useMasterKey: true })
-      .then((roomList) => {
-        const map = roomList.map((r) => r.toRoomList());
-
-        callback(map);
-      })
-      .catch((err) => console.log(err));
   }
 
   updateTrees() {
@@ -173,19 +156,13 @@ class Environment extends Parse.Object {
   toggleIps(data) {
     const { ips, add } = data;
 
-    const ipBlacklist = this.get('ipBlacklist');
-
-    const set = new Set(ipBlacklist);
-
     ips.forEach((e) => {
       if (add) {
-        set.add(e);
+        this.addUnique('ipBlacklist', e);
       } else {
-        set.delete(e);
+        this.remove('ipBlacklist', e);
       }
     });
-
-    this.set('ipBlacklist', [...set]);
 
     this.save({}, { useMasterKey: true, context: { kick: add, ips } });
 
@@ -195,19 +172,13 @@ class Environment extends Parse.Object {
   toggleEmails(data) {
     const { emails, add } = data;
 
-    const emailWhitelist = this.get('emailWhitelist');
-
-    const set = new Set(emailWhitelist);
-
     emails.forEach((e) => {
       if (add) {
-        set.add(e);
+        this.addUnique('emailWhitelist', e);
       } else {
-        set.delete(e);
+        this.remove('emailWhitelist', e);
       }
     });
-
-    this.set('emailWhitelist', [...set]);
 
     this.save({}, { useMasterKey: true });
 
@@ -225,7 +196,7 @@ class Environment extends Parse.Object {
   }
 
   toggleLockdown() {
-    const onLockdown = this.get('onLockdown') || false;
+    const onLockdown = this.get('onLockdown');
 
     this.set('onLockdown', !onLockdown);
 
@@ -234,73 +205,69 @@ class Environment extends Parse.Object {
     return !onLockdown;
   }
 
-  addAvatarLog(data) {
-    const avatarLogs = this.get('avatarLogs');
+  static addAvatarLog(data) {
+    const Avatar = Parse.Object.extend('Avatar');
 
-    avatarLogs.push({
-      user: data.user,
-      avatar: data.res,
-      timestamp: Date.now(),
-    });
+    const e = new Avatar();
 
-    this.set('avatarLogs', avatarLogs);
+    e.set('user', data.user);
+    e.set('avatar', data.res);
+    e.set('timestamp', data.now);
 
-    this.save({}, { useMasterKey: true });
+    e.save({}, { useMasterKey: true });
 
     return true;
   }
 
-  addAnnouncement(data) {
-    this.addUnique('announcementLogs', {
-      id: 'untitled',
-      title: 'Untitled Article',
-      author: 'Anonymous',
-      timestamp: Date.now(),
-      content: 'There is nothing in this article',
-      ...data,
-    });
+  static async addAnnouncement(data) {
+    const annQ = new Parse.Query('Announcement');
+    annQ.equalTo('url', data.id);
 
-    this.save({}, { useMasterKey: true });
+    const Announcement = Parse.Object.extend('Announcement');
 
-    return true;
-  }
+    const e = (await annQ.first({ useMasterKey: true })) || new Announcement();
 
-  addModerationLog(data) {
-    const moderationLogs = this.get('moderationLogs');
+    e.set('url', data.id);
+    e.set('title', data.title);
+    e.set('author', data.author);
+    e.set('content', data.content);
+    e.set('timestamp', Date.now());
 
-    moderationLogs.push({
-      action: 'NO ACTION',
-      from: 'Anonymous',
-      to: 'Anonymous',
-      comment: 'No comment',
-      info: {},
-      duration: NaN,
-      timestamp: Date.now(),
-      ...data,
-    });
-
-    this.set('moderationLogs', moderationLogs);
-
-    this.save({}, { useMasterKey: true });
+    e.save({}, { useMasterKey: true });
 
     return true;
   }
 
-  addErrorLog(data) {
-    const errorLogs = this.get('errorLogs') || [];
+  static addModerationLog(data) {
+    const Logs = Parse.Object.extend('Logs');
 
-    errorLogs.push({
-      message: 'No message',
-      stack: 'No stack',
-      timestamp: Date.now(),
-      ...data,
-    });
+    const e = new Logs();
+
+    e.set('action', data.action);
+    e.set('from', data.from);
+    e.set('to', data.to);
+    e.set('comment', data.comment);
+    e.set('info', data.info || {});
+    e.set('duration', data.duration || 0);
+    e.set('timestamp', Date.now());
+
+    e.save({}, { useMasterKey: true });
+
+    return true;
+  }
+
+  static addErrorLog(data) {
+    const Logs = Parse.Object.extend('Logs');
+
+    const e = new Logs();
+
+    e.set('message', data.message);
+    e.set('stack', data.stack);
+    e.set('timestamp', Date.now());
+
+    e.save({}, { useMasterKey: true });
 
     discordReports.newError(data);
-
-    this.set('errorLogs', errorLogs);
-
-    this.save({}, { useMasterKey: true });
 
     return true;
   }

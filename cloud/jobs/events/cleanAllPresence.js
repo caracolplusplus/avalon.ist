@@ -1,9 +1,17 @@
 /* global Parse */
 
 module.exports = (request) => {
-  function cleanUp() {
+  async function cleanUp() {
+    const Lists = Parse.Object.extend('Lists');
+
     const userQ = new Parse.Query('_User');
     userQ.limit(10000);
+
+    const listsQ = new Parse.Query('Lists');
+
+    const lists = (await listsQ.first({ useMasterKey: true })) || new Lists();
+
+    await lists.save({}, { useMasterKey: true });
 
     userQ
       .find({ useMasterKey: true })

@@ -18,7 +18,7 @@ module.exports = async (request) => {
     address = address.split(',')[0];
   }
 
-  const environment = Environment.getGlobal();
+  const environment = await Environment.getGlobal();
 
   /* Test if environment allows it */
   environment.validateSignupData({ address });

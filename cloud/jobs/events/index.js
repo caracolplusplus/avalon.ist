@@ -5,6 +5,8 @@ const index = {};
   'cleanAllPresence',
   'deleteGeneralChatAndEmptyGames',
   'logsToObjects',
+  'setSchemas',
+  'chatMessagesToObjects',
 ].forEach((e) => {
   index[e] = require(`./${e}`);
 });

@@ -5,7 +5,9 @@ const {
   deleteGeneralChatAndEmptyGames,
   cleanAllPresence,
   avatarAndKnowledgeRepair,
+  setSchemas,
   logsToObjects,
+  chatMessagesToObjects,
 } = Events;
 
 // This function should be run periodically
@@ -22,3 +24,8 @@ Parse.Cloud.job('avatarAndKnowledgeRepair', avatarAndKnowledgeRepair);
 
 // This function turns all logs from environment to parse objects
 Parse.Cloud.job('logsToObjects', logsToObjects);
+
+Parse.Cloud.job('setSchemas', setSchemas);
+
+// This function turns all messages from chat to parse objects
+Parse.Cloud.job('chatMessagesToObjects', chatMessagesToObjects);

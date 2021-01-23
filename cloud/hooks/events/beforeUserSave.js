@@ -1,7 +1,7 @@
 const Environment = require('../../constructors/environment');
 
 module.exports = async (request) => {
-  const environment = Environment.getGlobal();
+  const environment = await Environment.getGlobal();
   const user = request.object;
   const { context } = request;
 
@@ -16,7 +16,7 @@ module.exports = async (request) => {
       const instanceCount = user.get('instanceCount');
       user.set('instanceCount', parseInt(Math.max(0, instanceCount)));
 
-      environment.checkOnlinePlayers({ user });
+      Environment.checkOnlinePlayers({ user });
     }
   }
 

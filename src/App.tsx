@@ -91,22 +91,17 @@ class App extends React.PureComponent<appProps, appState> {
   };
 
   getAuthenticated = async () => {
-    console.log('hello');
-
     const { dispatch } = this.props;
 
     const currentUser = Parse.User.current();
     const username = currentUser ? currentUser.getUsername()! : '';
 
     const userQ = new Parse.Query('_User');
-    userQ.equalTo('username', username);
 
     this.userSub = await userQ.subscribe();
 
     this.userSub.on('open', () => {
-      console.log(this.state);
-
-      Parse.Cloud.run('themeRequest').then(this.updateTheme);
+      Parse.Cloud.run('generalCommands', { call: 'themeRequest' }).then(this.updateTheme);
 
       Parse.Cloud.run('getAuthenticated')
         .then((state: appState) => {
@@ -142,7 +137,7 @@ class App extends React.PureComponent<appProps, appState> {
         });
       }
 
-      Parse.Cloud.run('themeRequest').then(this.updateTheme);
+      Parse.Cloud.run('generalCommands', { call: 'themeRequest' }).then(this.updateTheme);
     });
   };
 
@@ -150,7 +145,7 @@ class App extends React.PureComponent<appProps, appState> {
     const currentUser = Parse.User.current();
     const username = currentUser ? currentUser.getUsername()! : '';
 
-    const messageQ = new Parse.Query('Messages');
+    const messageQ = new Parse.Query('Message');
     messageQ.equalTo('to', username);
     messageQ.equalTo('public', false);
 

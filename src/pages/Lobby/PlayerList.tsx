@@ -127,11 +127,15 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
     this.listSub = await listQ.subscribe();
 
     this.listSub.on('open', this.playerListRequest);
-    this.listSub.on('update', this.playerListRequest);
+    this.listSub.on('update', (lists: any) => {
+      this.playerListResponse(lists.get('playerList'));
+    });
   };
 
   playerListRequest = () => {
-    Parse.Cloud.run('playerListRequest').then(this.playerListResponse);
+    Parse.Cloud.run('generalCommands', { call: 'playerListRequest' }).then(
+      this.playerListResponse
+    );
   };
 
   playerListResponse = (players: PlayerProps[]) => {
