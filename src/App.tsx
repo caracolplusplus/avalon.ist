@@ -67,7 +67,7 @@ class App extends React.PureComponent<appProps, appState> {
   userSub: any = null;
 
   componentDidMount = () => {
-    const { getAuthenticated, updateDimensions, setNotifications } = this;
+    const { getAuthenticated, updateDimensions, setNotifications, listenToTaunts } = this;
 
     window.addEventListener('resize', updateDimensions);
 
@@ -80,6 +80,7 @@ class App extends React.PureComponent<appProps, appState> {
 
     getAuthenticated();
     setNotifications();
+    listenToTaunts();
   };
 
   componentWillUnmount = () => {
@@ -163,6 +164,43 @@ class App extends React.PureComponent<appProps, appState> {
       // eslint-disable-next-line no-undef
       new Notification(`New message from ${from} in ${room}.`, {
         body: `${from} says: ${content}`,
+        icon: 'https://i.ibb.co/JqQM735/login-logo.png',
+        dir: 'ltr',
+      });
+    });
+  };
+
+  listenToTaunts = async () => {
+    const currentUser = Parse.User.current();
+    const username = currentUser ? currentUser.getUsername()! : '';
+
+    const tauntQ = new Parse.Query('Taunt');
+    tauntQ.equalTo('to', username);
+
+    const tauntSub = await tauntQ.subscribe();
+
+    tauntSub.on('create', (taunt: any) => {
+      const global = taunt.get('global');
+      const code = taunt.get('code');
+      const room = global ? 'General Chat' : `Room ${code}`;
+      const from = taunt.get('from');
+      const audio: string = taunt.get('audio');
+
+      const tauntSelect: {
+        [x: string]: any;
+      } = {
+        slapped: 'slapped',
+        notification: 'buzzed',
+        licked: 'licked',
+      };
+
+      const tauntName = tauntSelect[audio];
+
+      if (Soundboard[audio]) Soundboard[audio].play();
+
+      // eslint-disable-next-line no-undef
+      new Notification(`You have been ${tauntName} by ${from}.`, {
+        body: `${from} is on ${room}.`,
         icon: 'https://i.ibb.co/JqQM735/login-logo.png',
         dir: 'ltr',
       });

@@ -29,6 +29,7 @@ d.run(function () {
         'Announcement',
         'Message',
         'Lists',
+        'Taunt',
       ], // List of classes to support for query subscriptions
     },
     /* passwordPolicy: {

@@ -324,7 +324,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.setState({ form: FormType.None });
   };
 
-  writeMessage = (content: string) => {
+  writeMessage = async (content: string) => {
     const { dispatch, username, code } = this.props;
     msgBuilder.username = username;
 
@@ -349,31 +349,43 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         case '/dm':
           output = msgBuilder.sendDirectMessage({ username, code, content, split });
           break;
-        /*
         case '/slap':
-          socket.emit('sendNotification', {
-            isGeneral: !code,
-            target: split[1] ? split[1] : '',
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'sendTaunt',
+            code,
+            to: split[1],
             audio: 'slapped',
-            message: `You have been slapped by ${username}`,
-          });
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/buzz':
-          socket.emit('sendNotification', {
-            isGeneral: !code,
-            target: split[1] ? split[1] : '',
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'sendTaunt',
+            code,
+            to: split[1],
             audio: 'notification',
-            message: `You have been buzzed by ${username}`,
-          });
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/lick':
-          socket.emit('sendNotification', {
-            isGeneral: !code,
-            target: split[1] ? split[1] : '',
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'sendTaunt',
+            code,
+            to: split[1],
             audio: 'licked',
-            message: `You have been licked by ${username}`,
-          });
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
+        /*
         case '/ss':
           socket.emit('suspendPlayer', {
             isGeneral: !code,

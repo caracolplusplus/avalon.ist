@@ -47,6 +47,33 @@ class Chat extends Parse.Object {
     return chat;
   }
 
+  async saveTaunt(data) {
+    const Taunt = Parse.Object.extend('Taunt');
+
+    const newT = new Taunt();
+
+    const c = await this.fetch({ useMasterKey: true });
+
+    const code = c.get('code');
+    const game = c.get('game');
+    const id = game ? game.id : '';
+
+    const ACL = new Parse.ACL();
+    ACL.setPublicReadAccess(true);
+    ACL.setPublicWriteAccess(false);
+
+    newT.setACL(ACL);
+    newT.set('global', code === 'Global');
+    newT.set('code', id);
+    newT.set('to', data.to);
+    newT.set('from', data.from);
+    newT.set('audio', data.audio);
+
+    newT.save({}, { useMasterKey: true });
+
+    return true;
+  }
+
   async saveMessages(newMessages) {
     const listsQ = new Parse.Query('Lists');
 
@@ -71,6 +98,11 @@ class Chat extends Parse.Object {
         ) {
           const newM = new Message();
 
+          const ACL = new Parse.ACL();
+          ACL.setPublicReadAccess(true);
+          ACL.setPublicWriteAccess(false);
+
+          newM.setACL(ACL);
           newM.set('global', code === 'Global');
           newM.set('code', id);
           newM.set('public', _public);
@@ -128,13 +160,21 @@ class Chat extends Parse.Object {
   }
 
   newTaunt(data) {
-    const { title, target } = data;
+    const { from, to, audio } = data;
+
+    const content = {
+      notification: `${to} has been buzzed by ${from}.`,
+      slapped: `${to} has been slapped by ${from}.`,
+      licked: `${to} has been licked by ${from}`,
+    }[audio];
 
     this.saveMessages([
       addMessage({
-        content: title.replace('You', target).replace('have', 'has'),
+        content,
       }),
     ]);
+
+    this.saveTaunt(data);
 
     return true;
   }

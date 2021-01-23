@@ -113,9 +113,11 @@ class MessageBuilder implements MessageBuilderType {
     ];
   };
 
-  commandResponseMessage = (data: any) => {
+  commandResponseMessage = (content: any) => {
+    if (!content) return [];
+
     const { COMMAND } = messageTypes;
-    const { username, content } = data;
+    const { username } = this;
 
     return [
       this.addMessage({
