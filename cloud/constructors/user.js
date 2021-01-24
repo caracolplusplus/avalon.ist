@@ -66,7 +66,6 @@ class User extends Parse.User {
 
     this.set('isOnline', false);
     this.set('instanceCount', 0);
-    this.set('socketsOnline', {});
 
     this.set('isBanned', false);
     this.set('suspensionDate', 0);
@@ -247,6 +246,7 @@ class User extends Parse.User {
       avatarStyle,
       themeLight,
       coloredNames,
+      numberOfMessages,
     } = data;
 
     this.set('playArea', playArea);
@@ -256,6 +256,7 @@ class User extends Parse.User {
     this.set('avatarStyle', avatarStyle);
     this.set('themeLight', themeLight);
     this.set('coloredNames', coloredNames);
+    this.set('numberOfMessages', numberOfMessages);
 
     this.save({}, { useMasterKey: true });
 
@@ -362,6 +363,7 @@ class User extends Parse.User {
       'avatarStyle',
       'themeLight',
       'coloredNames',
+      'numberOfMessages',
     ];
 
     for (const x in parameters) {

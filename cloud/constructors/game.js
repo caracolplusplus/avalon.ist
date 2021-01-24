@@ -23,7 +23,6 @@ class Game extends Parse.Object {
     const game = new Game();
 
     // Meta
-    game.set('unique', true);
     game.set('code', code);
     game.set('host', 'Anonymous');
     game.set('mode', 'Unrated');
@@ -33,7 +32,6 @@ class Game extends Parse.Object {
     // Players
     game.set('playerList', []);
     game.set('playerMax', 6);
-    game.set('instanceList', []);
     game.set('spectatorListNew', []);
     game.set('avatarListNew', []);
     game.set('kickedPlayers', []);

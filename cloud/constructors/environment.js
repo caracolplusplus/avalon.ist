@@ -23,9 +23,6 @@ class Environment extends Parse.Object {
     env.set('ipBlacklist', require('../security/databases/untrusted-ips'));
     env.set('emailWhitelist', require('../security/databases/trusted-emails'));
 
-    env.set('playerList', []);
-    env.set('roomList', []);
-
     env.set('chat', chat);
 
     return env;
@@ -165,6 +162,12 @@ class Environment extends Parse.Object {
 
     const e = new Avatar();
 
+    const ACL = new Parse.ACL();
+    ACL.setPublicReadAccess(true);
+    ACL.setPublicWriteAccess(false);
+
+    e.setACL(ACL);
+
     e.set('user', data.target);
     e.set('avatar', data.res);
     e.set('timestamp', Date.now());
@@ -181,6 +184,12 @@ class Environment extends Parse.Object {
     const Announcement = Parse.Object.extend('Announcement');
 
     const e = (await annQ.first({ useMasterKey: true })) || new Announcement();
+
+    const ACL = new Parse.ACL();
+    ACL.setPublicReadAccess(true);
+    ACL.setPublicWriteAccess(false);
+
+    e.setACL(ACL);
 
     e.set('url', data.id);
     e.set('title', data.title);

@@ -19,6 +19,12 @@ module.exports = (request) => {
       const mList = c.get('messages').map((m, i) => {
         const newM = new Message();
 
+        const ACL = new Parse.ACL();
+        ACL.setPublicReadAccess(true);
+        ACL.setPublicWriteAccess(false);
+
+        newM.setACL(ACL);
+
         newM.set('global', code === 'Global');
         newM.set('code', id);
         newM.set('public', m._public);

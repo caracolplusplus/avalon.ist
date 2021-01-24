@@ -120,9 +120,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
   toggleShowAllMessages = () => {
     this.setState({
-      showAllMessages: !this.state.showAllMessages
-    })
-  }
+      showAllMessages: !this.state.showAllMessages,
+    });
+  };
 
   handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -697,9 +697,14 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   render() {
+    const isReplay = this.props.stage === 'REPLAY';
     const { messages, form, showAllMessages } = this.state;
+
     const { numberOfMessages } = this.props.style;
-    const slicedMessages = showAllMessages ? messages : messages.slice(Math.max(0, messages.length - numberOfMessages));
+    const slicedMessages =
+      isReplay || showAllMessages
+        ? messages
+        : messages.slice(Math.max(0, messages.length - numberOfMessages));
 
     return (
       <div id="Chat" className="row">
@@ -711,7 +716,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         ) : (
           <AvalonScrollbars ref={this.refScrollbars} key={'fake'} />
         )}
-        {this.props.stage === 'REPLAY' ? null : (
+        {isReplay ? null : (
           <form className="message-input" onSubmit={this.handleSubmit}>
             <ChatInput
               ref={this.refInput}

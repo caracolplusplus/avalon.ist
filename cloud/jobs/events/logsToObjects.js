@@ -20,6 +20,12 @@ module.exports = (request) => {
     const avatarsMap = avatars.map((a) => {
       const ava = new Avatar();
 
+      const ACL = new Parse.ACL();
+      ACL.setPublicReadAccess(true);
+      ACL.setPublicWriteAccess(false);
+
+      ava.setACL(ACL);
+
       ava.set('user', a.user);
       ava.set('timestamp', a.timestamp);
       ava.set('avatar', a.avatar);
@@ -29,6 +35,12 @@ module.exports = (request) => {
 
     const announcementMap = announcements.map((a) => {
       const ann = new Announcement();
+
+      const ACL = new Parse.ACL();
+      ACL.setPublicReadAccess(true);
+      ACL.setPublicWriteAccess(false);
+
+      ann.setACL(ACL);
 
       ann.set('url', a.id);
       ann.set('title', a.title);

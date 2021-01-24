@@ -73,10 +73,12 @@ export class ChatInput extends React.PureComponent<ChatInputProps, ChatInputStat
 
   tabComplete = (event: KeyboardEvent<HTMLInputElement>) => {
     // Only tab complete if we have stuff to complete on and we are at the end of the input.
-    if (event.key === 'Tab' &&
-        event.currentTarget &&
-        this.props.autoComplete.length > 0 &&
-        event.currentTarget.selectionStart === this.state.content.length) {
+    if (
+      event.key === 'Tab' &&
+      event.currentTarget &&
+      this.props.autoComplete.length > 0 &&
+      event.currentTarget.selectionStart === this.state.content.length
+    ) {
       event.preventDefault();
       // Get the word being completed.
       const t = event.currentTarget;
@@ -89,10 +91,12 @@ export class ChatInput extends React.PureComponent<ChatInputProps, ChatInputStat
       if (word.length === 0) {
         word = t.value.substring(start).toLowerCase();
       }
-      const matches = this.props.autoComplete.filter( player => player.toLowerCase().startsWith(word) );
+      const matches = this.props.autoComplete.filter((player) =>
+        player.toLowerCase().startsWith(word)
+      );
       // No matches...bail.
       if (matches.length === 0) {
-        this.setState({ tabbing: true })
+        this.setState({ tabbing: true });
         return;
       }
       // Find the index of the last item, if there is no past item, it will return -1.
@@ -115,20 +119,18 @@ export class ChatInput extends React.PureComponent<ChatInputProps, ChatInputStat
         tabbing: false,
       });
     }
-  }
+  };
 
   render() {
     return (
       <div className="chat-input">
         <input
           onChange={this.changeInput}
-          onKeyDown={this.props.autoComplete ? this.tabComplete : _ => {}}
+          onKeyDown={this.props.autoComplete ? this.tabComplete : (_) => {}}
           placeholder="Enter your message here."
           value={this.state.content}
         ></input>
-        <button
-          onClick={() => this.props.toggleShowAllMessages()}
-        >
+        <button type="button" onClick={this.props.toggleShowAllMessages}>
           <FontAwesomeIcon icon={this.props.showAllMessages ? faEye : faEyeSlash} />
         </button>
         <button type="submit">
