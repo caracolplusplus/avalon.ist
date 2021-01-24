@@ -12,7 +12,7 @@ const createGame = async (request) => {
   const { roleSettings, playerMax, listed } = request.params;
 
   // Gets environment global variables
-  const environment = Environment.getGlobal();
+  const environment = await Environment.getGlobal();
 
   // Gets the game count of session variable
   environment.increment('games');
@@ -30,7 +30,7 @@ const createGame = async (request) => {
 
   await game.save({}, { useMasterKey: true });
 
-  game.pin();
+  await game.pin();
   // Build chat
   game.buildChat();
   // Toggle seat for this player

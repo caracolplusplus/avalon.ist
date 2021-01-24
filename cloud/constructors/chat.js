@@ -17,7 +17,7 @@ const addMessage = (data) => {
   const objectId = timestamp.toString();
 
   const message = {
-    public: data.public || true,
+    public: typeof data.public === 'boolean' ? data.public : true,
     type: data.type || SERVER,
     from: data.from || gameName,
     to: data.to || [],
@@ -37,8 +37,6 @@ class Chat extends Parse.Object {
 
   static spawn({ code, game }) {
     const chat = new Chat();
-
-    console.log(game);
 
     chat.set('code', code);
     chat.set('game', game);
@@ -129,7 +127,6 @@ class Chat extends Parse.Object {
 
   moderationAction(data) {
     const { content, username, target, comment, action } = data;
-    const environment = Environment.getGlobal();
 
     this.saveMessages([
       addMessage({
@@ -137,7 +134,7 @@ class Chat extends Parse.Object {
       }),
     ]);
 
-    environment.addModerationLog({
+    Environment.addModerationLog({
       action,
       from: username,
       to: target,

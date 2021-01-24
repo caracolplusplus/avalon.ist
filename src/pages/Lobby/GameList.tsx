@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Parse from '../../parse/parse';
 
 // Internal
 
@@ -102,17 +103,41 @@ class GameList extends React.PureComponent<{}, GameListState> {
     games: [],
     showCreate: false,
   };
+  mounted: boolean = true;
+  listSub: any = null;
 
   componentDidMount = () => {
-    // socket.on('roomListResponse', this.parseRoomList);
-    // socket.emit('roomListRequest');
+    this.setSubscription();
   };
 
   componentWillUnmount = () => {
-    // socket.off('roomListResponse', this.parseRoomList);
+    this.mounted = false;
+    if (this.listSub) this.listSub.unsubscribe();
+  };
+
+  setSubscription = async () => {
+    const listQ = new Parse.Query('Lists');
+
+    this.listSub = await listQ.subscribe();
+
+    this.listSub.on('open', this.playerListRequest);
+    this.listSub.on('update', (lists: any) => {
+      this.parseRoomList(lists.get('roomList'));
+    });
+  };
+
+  playerListRequest = () => {
+    Parse.Cloud.run('generalCommands', { call: 'roomListRequest' }).then(
+      this.parseRoomList
+    );
   };
 
   parseRoomList = (games: GameLinkProps[]) => {
+    if (!this.mounted) {
+      this.listSub.unsubscribe();
+      return;
+    }
+
     this.setState({ games });
   };
 
@@ -146,6 +171,7 @@ class GameList extends React.PureComponent<{}, GameListState> {
             title="CREATE A NEW GAME"
             onExit={this.exitCreateForm}
             createsGame={true}
+            gameId={'none'}
           />
         ) : null}
       </div>

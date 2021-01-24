@@ -111,6 +111,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     const { code: _code } = prevProps;
 
     if (code !== _code) {
+      if (this.messageSub) this.messageSub.unsubscribe();
       this.startChat();
     }
   };
@@ -215,11 +216,6 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   loadChat = () => {
-    if (!this.mounted) {
-      this.messageSub.unsubscribe();
-      return;
-    }
-
     this.setState({ loaded: true });
   };
 
@@ -499,27 +495,62 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
               return [];
             });
           break;
-        /* case '/pause':
-          socket.emit('pauseGame', commandDefault);
+        case '/pause':
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'pauseGame',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/unpause':
-          socket.emit('unpauseGame', commandDefault);
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'unpauseGame',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/end':
-          socket.emit('endGame', {
-            isGeneral: !code,
-            username,
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'endGame',
             target: split[1],
             outcome: split[2],
-            comment: split[3] ? content.slice(content.indexOf(split[3])) : 'No comment.',
-          });
+            comment: split[3],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/close':
-          socket.emit('closeGame', commandDefault);
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'closeGame',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/learnroles':
-          socket.emit('learnRoles', commandDefault);
-          break; */
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'learnRoles',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
+          break;
         case '/passwordreset':
           output = await Parse.Cloud.run('chatCommands', {
             call: 'requestPasswordReset',
@@ -544,7 +575,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
           return;
         case '/discordset':
           output = await Parse.Cloud.run('chatCommands', {
-            call: 'discordset',
+            call: 'discordSet',
             url: split[1],
           })
             .then(msgBuilder.commandResponseMessage)

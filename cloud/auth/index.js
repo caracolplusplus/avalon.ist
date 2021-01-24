@@ -1,8 +1,10 @@
 /* global Parse */
 const {
+  joinPresence,
   leavePresence,
   onDisconnect,
   playerListRequest,
+  roomListRequest,
   latestAvatarsRequest,
   latestAnnouncementsRequest,
   getProfile,
@@ -17,8 +19,10 @@ Parse.Cloud.define('generalCommands', async (request) => {
   const { call } = request.params;
 
   const callList = {
+    joinPresence,
     leavePresence,
     playerListRequest,
+    roomListRequest,
     latestAvatarsRequest,
     latestAnnouncementsRequest,
     getProfile,

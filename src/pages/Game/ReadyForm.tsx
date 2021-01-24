@@ -3,6 +3,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faExclamation, faCheck } from '@fortawesome/free-solid-svg-icons';
+import Parse from '../../parse/parse';
 
 // Internal
 
@@ -16,6 +17,7 @@ import '../../styles/Utils/SettingsMenu.scss';
 
 interface TooFastProps {
   onExit: (...args: any[]) => void;
+  gameId: string;
   isPlaying: boolean;
 }
 
@@ -58,8 +60,16 @@ class TooFast extends React.PureComponent<TooFastProps> {
   };
 
   sendReadyStateToServer = (ready: boolean) => {
+    const { gameId: id } = this.props;
+
     clearInterval(this.timer);
     this.props.onExit();
+
+    Parse.Cloud.run('gameCommands', {
+      call: 'readyState',
+      id,
+      ready,
+    });
   };
 
   sendFalse = this.sendReadyStateToServer.bind(this, false);

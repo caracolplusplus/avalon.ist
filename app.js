@@ -22,7 +22,7 @@ d.run(function () {
     liveQuery: {
       classNames: [
         '_User',
-        'Games',
+        'Game',
         'Chat',
         'Avatar',
         'Announcement',

@@ -5,6 +5,7 @@ import React, { FormEvent } from 'react';
 import { Redirect } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import Parse from '../../parse/parse';
 
 // Internal
 
@@ -22,6 +23,7 @@ interface GameFormProps {
   title: string;
   onExit: (...args: any[]) => void;
   createsGame: boolean;
+  gameId: string;
   initialRoleSettings?: {
     merlin: boolean;
     percival: boolean;
@@ -233,14 +235,6 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
       }),
   ];
 
-  componentDidMount() {
-    // socket.on('createGameSuccess', this.createGameSuccess);
-  }
-
-  componentWillUnmount() {
-    // socket.off('createGameSuccess', this.createGameSuccess);
-  }
-
   handleListed = () => {
     this.setState({
       listed: !this.state.listed,
@@ -264,18 +258,30 @@ class GameForm extends React.PureComponent<GameFormProps, GameFormState> {
   }
 
   sendCreateRequest() {
-    /* socket.emit('createGame', {
-      roleSettings: this.state.roleSettings,
-      playerMax: this.state.playerMax,
-      listed: this.state.listed,
-    }); */
+    const { roleSettings, playerMax, listed } = this.state;
+
+    Parse.Cloud.run('gameCommands', {
+      call: 'createGame',
+      roleSettings,
+      playerMax,
+      listed,
+    })
+      .then(this.createGameSuccess)
+      .catch((err) => {
+        window.alert(err.message);
+        this.setState({ processing: false });
+      });
   }
 
   sendModifyRequest() {
-    /* socket.emit('editGame', {
-      roleSettings: this.state.roleSettings,
-      playerMax: this.state.playerMax,
-    }); */
+    const { roleSettings, playerMax } = this.state;
+
+    Parse.Cloud.run('gameCommands', {
+      call: 'editGame',
+      id: this.props.gameId,
+      roleSettings,
+      playerMax,
+    });
 
     this.props.onExit();
   }

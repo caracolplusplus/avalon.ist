@@ -925,14 +925,17 @@ class Game extends Parse.Object {
     }
 
     this.set('assassination', shot);
-    this.gameEnd(killed === 'Merlin' ? 0 : 1);
-
-    this.save({}, { useMasterKey: true });
 
     const chat = this.get('chat');
     chat
       .fetch({ useMasterKey: true })
-      .then((c) => c.afterShot({ target: players[shot] }))
+      .then((c) => {
+        c.afterShot({ target: players[shot] });
+
+        this.gameEnd(killed === 'Merlin' ? 0 : 1);
+
+        this.save({}, { useMasterKey: true });
+      })
       .catch((err) => console.log(err));
 
     return true;
@@ -949,14 +952,10 @@ class Game extends Parse.Object {
 
     const listed = this.get('listed');
 
-    const environment = Environment.getGlobal();
-    const generalChat = environment.get('chat');
-
     const code = this.get('code');
     const chat = this.get('chat');
     const players = this.get('playerList');
     const roles = this.get('roleList');
-    chat.fetch({ useMasterKey: true });
 
     this.set('ended', true);
     this.set('cause', ending);
@@ -967,11 +966,15 @@ class Game extends Parse.Object {
 
     this.set('winner', winner);
 
-    if (listed)
-      generalChat
-        .fetch({ useMasterKey: true })
-        .then((c) => c.roomFinished({ code, winner }))
-        .catch((err) => console.log(err));
+    Environment.getGlobal().then((e) => {
+      const generalChat = e.get('chat');
+
+      if (listed)
+        generalChat
+          .fetch({ useMasterKey: true })
+          .then((c) => c.roomFinished({ code, winner }))
+          .catch((err) => console.log(err));
+    });
 
     chat
       .fetch({ useMasterKey: true })

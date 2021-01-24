@@ -6,6 +6,7 @@ import { Redirect } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { Dispatch } from 'redux';
 import { connect } from 'react-redux';
+import Parse from '../../parse/parse';
 
 // Internal
 
@@ -197,7 +198,12 @@ export class Table extends React.PureComponent<
   }
 
   toggleClaim = () => {
-    // socket.emit('toggleClaim');
+    const { gameId } = this.props.game;
+
+    Parse.Cloud.run('gameCommands', {
+      call: 'toggleClaim',
+      id: gameId,
+    });
   };
 
   isAvatarHighlighted(seat: number): boolean {

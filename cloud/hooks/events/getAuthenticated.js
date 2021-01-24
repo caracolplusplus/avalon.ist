@@ -18,8 +18,6 @@ module.exports = async (request) => {
   }
 
   if (user) {
-    console.log(user.get('username'), 'authenticated presence');
-
     await user.checkForBans({ address, skip: false });
 
     user.joinPresence({ id: request.installationId });

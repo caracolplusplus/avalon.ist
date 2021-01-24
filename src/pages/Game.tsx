@@ -7,6 +7,7 @@ import { RouteComponentProps } from 'react-router';
 import { connect } from 'react-redux';
 // eslint-disable-next-line no-unused-vars
 import { rootType } from '../redux/reducers';
+import Parse from '../parse/parse';
 
 // Internal
 
@@ -91,7 +92,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
     missionTeams: [[], [], [], [], []],
     missionLeader: [],
     // Game Id
-    gameId: '-1',
+    gameId: this.props.match.params.gameId,
     // Room Number
     code: '-1',
     // Game Settings
@@ -106,7 +107,9 @@ class Game extends React.PureComponent<PageProps, GameState> {
       lady: false,
     },
   };
-
+  opened: boolean = false;
+  mounted: boolean = true;
+  gameSub: any = null;
   initialHeight = Math.max(window.innerHeight, 540);
   tableRef = createRef<Table>();
   tabsRef = [createRef<Tabs>(), createRef<Tabs>(), createRef<Tabs>()];
@@ -114,15 +117,18 @@ class Game extends React.PureComponent<PageProps, GameState> {
   componentDidMount = () => {
     const { style, username } = this.props;
 
-    this.triggerRequest();
+    this.gameRequest();
 
     this.setState({ style, username });
   };
 
   componentWillUnmount = () => {
-    const { active, code } = this.state;
+    const { gameId: id } = this.props.match.params;
+    const { active } = this.state;
 
-    // if (active || code !== '-1') socket.emit('gameLeave');
+    this.mounted = false;
+    if (this.gameSub) this.gameSub.unsubscribe();
+    if (active) Parse.Cloud.run('gameCommands', { call: 'gameLeave', id });
   };
 
   componentDidUpdate = (prevProps: PageProps) => {
@@ -134,8 +140,47 @@ class Game extends React.PureComponent<PageProps, GameState> {
     }
   };
 
-  triggerRequest = () => {
-    const { gameId } = this.props.match.params;
+  gameRequest = async () => {
+    const { gameId: id } = this.props.match.params;
+
+    const gameQ = new Parse.Query('Game');
+    gameQ.equalTo('objectId', id);
+
+    this.gameSub = await gameQ.subscribe();
+
+    this.gameSub.on('open', () => {
+      Parse.Cloud.run('gameCommands', { call: 'gameRequest', id })
+        .then((game) => {
+          if (!this.mounted) {
+            this.gameSub.unsubscribe();
+            return;
+          }
+
+          if (!game) this.gameNotFound();
+
+          this.opened = true;
+
+          this.parseGame(game.toJSON());
+        })
+        .catch((err) => {
+          this.gameNotFound();
+        });
+    });
+
+    this.gameSub.on('update', (game: any) => {
+      if (!game.get('active') && !game.get('ended')) {
+        this.gameNotFound();
+      }
+
+      if (!this.mounted) {
+        this.gameSub.unsubscribe();
+        return;
+      }
+
+      if (!this.opened) return false;
+
+      this.parseGame(game.toJSON());
+    });
   };
 
   gameNotFound = () => {
@@ -162,8 +207,6 @@ class Game extends React.PureComponent<PageProps, GameState> {
 
   parseGame = (data: any) => {
     // This function parses the game from the server to the client
-    // This is done after the socket.io event "gameResponse"
-
     // Gets the username from props, which is on redux
     const { username } = this.props;
 
@@ -177,9 +220,18 @@ class Game extends React.PureComponent<PageProps, GameState> {
     } = data;
 
     // Gets the avatars from the avatar list
-    const avatars: any[] = playerList.map(
-      (p: any) => avatarListNew.find((a: any) => a.username === p).avatars
-    );
+    let avatars: any[] = [];
+
+    try {
+      avatars = playerList.map(
+        (p: any) => avatarListNew.find((a: any) => a.username === p).avatars
+      );
+    } catch (err) {
+      console.log(err);
+      console.log(avatarListNew);
+
+      return false;
+    }
 
     // Gets the default vote for a not fail
     // Its -1 only on mission 1.1, this is to hide the vote display on first mission
@@ -207,7 +259,6 @@ class Game extends React.PureComponent<PageProps, GameState> {
 
     // Sets state with the rest of values from the game
     this.setState({
-      gameId: data.gameId,
       code: data.code,
       players: avatars.length ? playerList : [],
       kicked: data.kickedPlayers.includes(username),

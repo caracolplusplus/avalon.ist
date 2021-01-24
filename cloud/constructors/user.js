@@ -174,7 +174,7 @@ class User extends Parse.User {
   }
 
   leavePresence(data) {
-    this.decrement('instanceCount', 1);
+    this.set('instanceCount', 0);
 
     this.save({}, { useMasterKey: true }).then(isUserOnline);
 

@@ -4,8 +4,9 @@ module.exports = async (request) => {
 
   if (!user) return;
 
-  console.log(user.get('username'), 'left presence');
-  user.leavePresence({ id: request.installationId });
+  const u = await user.fetch({ useMasterKey: true });
+
+  u.leavePresence();
 
   return true;
 };

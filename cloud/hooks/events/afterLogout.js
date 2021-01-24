@@ -2,7 +2,9 @@ module.exports = async (request) => {
   const { object: session } = request;
   const user = session.get('user');
 
-  user.set('instanceCount', 0);
-  user.set('isOnline', false);
-  user.save(null, { useMasterKey: true });
+  const u = await user.fetch({ useMasterKey: true });
+
+  u.leavePresence();
+
+  user.save(null, { useMasterKey: true, context: { presence: true } });
 };

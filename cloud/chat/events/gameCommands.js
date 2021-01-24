@@ -1,257 +1,272 @@
 /* global Parse */
 
-function gameCommands(io, socket) {
-  const { user } = socket;
+const notfound = 'No game with such code has been found.';
+const success = 'Successfully performed action.';
+const warning = 'You must fill all the required variables for this command to work.';
+const unauthorized = 'You are not authorized to use this command.';
+
+const pauseGame = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
   const username = user.get('username');
-  const allowed = user.get('isMod') || user.get('isAdmin');
 
-  const getResponse = (isGeneral) => {
-    return isGeneral ? 'generalCommandResponse' : 'gameCommandResponse';
-  };
+  if (isAllowed) {
+    const { target, comment } = request.params;
 
-  const notfound = 'No game with such code has been found.';
-  const success = 'Successfully performed action.';
-  const warning = 'You must fill all the required variables for this command to work.';
-  const unauthorized = 'You are not authorized to use this command.';
-
-  socket.on('pauseGame', (data) => {
-    const { isGeneral } = data;
-
-    if (allowed) {
-      const { target, comment } = data;
-
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
-
-      const gameQ = new Parse.Query('Game');
-
-      gameQ
-        .get(target, { useMasterKey: true })
-        .then((g) => {
-          const chat = g.get('chat');
-          const code = g.get('code');
-
-          g.set('frozen', true);
-          g.save({}, { useMasterKey: true });
-
-          chat
-            .fetch({ useMasterKey: true })
-            .then((c) => {
-              c.moderationAction({
-                action: 'PAUSE GAME',
-                content: `Game #${code} has been paused.`,
-                username,
-                target,
-                comment,
-              });
-
-              socket.emit(getResponse(isGeneral), success);
-            })
-            .catch((err) => console.log(err));
-        })
-        .catch((err) => {
-          socket.emit(getResponse(isGeneral), notfound);
-          console.log(err);
-        });
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('unpauseGame', (data) => {
-    const { isGeneral } = data;
+    const gameQ = new Parse.Query('Game');
+    gameQ.fromLocalDatastore();
 
-    if (allowed) {
-      const { target, comment } = data;
+    return await gameQ
+      .get(target, { useMasterKey: true })
+      .then((g) => {
+        const chat = g.get('chat');
+        const code = g.get('code');
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+        g.set('frozen', true);
+        g.save({}, { useMasterKey: true });
 
-      const gameQ = new Parse.Query('Game');
+        chat
+          .fetch({ useMasterKey: true })
+          .then((c) => {
+            c.moderationAction({
+              action: 'PAUSE GAME',
+              content: `Game #${code} has been paused.`,
+              username,
+              target,
+              comment,
+            });
+          })
+          .catch((err) => console.log(err));
 
-      gameQ
-        .get(target, { useMasterKey: true })
-        .then((g) => {
-          const chat = g.get('chat');
-          const code = g.get('code');
+        return success;
+      })
+      .catch((err) => {
+        console.log(err);
+        return notfound;
+      });
+  } else {
+    return unauthorized;
+  }
+};
 
-          g.set('frozen', false);
-          g.save({}, { useMasterKey: true });
+const unpauseGame = async (request) => {
+  const { user } = request;
 
-          chat
-            .fetch({ useMasterKey: true })
-            .then((c) => {
-              c.moderationAction({
-                action: 'UNPAUSE GAME',
-                content: `Game #${code} has been resumed.`,
-                username,
-                target,
-                comment,
-              });
+  if (!user) return false;
 
-              socket.emit(getResponse(isGeneral), success);
-            })
-            .catch((err) => console.log(err));
-        })
-        .catch((err) => {
-          socket.emit(getResponse(isGeneral), notfound);
-          console.log(err);
-        });
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
+
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('endGame', (data) => {
-    const { isGeneral } = data;
+    const gameQ = new Parse.Query('Game');
+    gameQ.fromLocalDatastore();
 
-    if (allowed) {
-      const { target, outcome, comment } = data;
+    return await gameQ
+      .get(target, { useMasterKey: true })
+      .then((g) => {
+        const chat = g.get('chat');
+        const code = g.get('code');
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+        g.set('frozen', false);
+        g.save({}, { useMasterKey: true });
 
-      const gameQ = new Parse.Query('Game');
+        chat
+          .fetch({ useMasterKey: true })
+          .then((c) => {
+            c.moderationAction({
+              action: 'UNPAUSE GAME',
+              content: `Game #${code} has been resumed.`,
+              username,
+              target,
+              comment,
+            });
+          })
+          .catch((err) => console.log(err));
 
-      gameQ
-        .get(target, { useMasterKey: true })
-        .then((g) => {
-          const chat = g.get('chat');
-          const code = g.get('code');
+        return success;
+      })
+      .catch((err) => {
+        console.log(err);
+        return notfound;
+      });
+  } else {
+    return unauthorized;
+  }
+};
 
-          if (outcome) {
-            g.gameEnd(outcome === '1' ? 4 : 2);
-          } else {
-            g.set('ended', true);
-          }
+const endGame = async (request) => {
+  const { user } = request;
 
-          g.save({}, { useMasterKey: true });
+  if (!user) return false;
 
-          chat
-            .fetch({ useMasterKey: true })
-            .then((c) => {
-              c.moderationAction({
-                action: 'END GAME',
-                content: `Game #${code} has been ${outcome ? 'terminated' : 'voided'}.`,
-                username,
-                target,
-                comment,
-              });
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-              socket.emit(getResponse(isGeneral), success);
-            })
-            .catch((err) => console.log(err));
-        })
-        .catch((err) => {
-          socket.emit(getResponse(isGeneral), notfound);
-          console.log(err);
-        });
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (isAllowed) {
+    const { target, comment, outcome } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('closeGame', (data) => {
-    const { isGeneral } = data;
+    const gameQ = new Parse.Query('Game');
+    gameQ.fromLocalDatastore();
 
-    if (allowed) {
-      const { target, comment } = data;
+    return await gameQ
+      .get(target, { useMasterKey: true })
+      .then((g) => {
+        const chat = g.get('chat');
+        const code = g.get('code');
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+        if (outcome) {
+          g.gameEnd(outcome === '1' ? 4 : 2);
+        } else {
+          g.set('ended', true);
+        }
 
-      const gameQ = new Parse.Query('Game');
+        g.save({}, { useMasterKey: true });
 
-      gameQ
-        .get(target, { useMasterKey: true })
-        .then((g) => {
-          const chat = g.get('chat');
-          const code = g.get('code');
+        chat
+          .fetch({ useMasterKey: true })
+          .then((c) => {
+            c.moderationAction({
+              action: 'END GAME',
+              content: `Game #${code} has been ${outcome ? 'terminated' : 'voided'}.`,
+              username,
+              target,
+              comment,
+            });
+          })
+          .catch((err) => console.log(err));
 
-          g.set('active', false);
-          g.save({}, { useMasterKey: true });
+        return success;
+      })
+      .catch((err) => {
+        console.log(err);
+        return notfound;
+      });
+  } else {
+    return unauthorized;
+  }
+};
 
-          chat
-            .fetch({ useMasterKey: true })
-            .then((c) => {
-              c.moderationAction({
-                action: 'CLOSE GAME',
-                content: `Game #${code} has been closed.`,
-                username,
-                target,
-                comment,
-              });
+const closeGame = async (request) => {
+  const { user } = request;
 
-              socket.emit(getResponse(isGeneral), success);
-            })
-            .catch((err) => console.log(err));
-        })
-        .catch((err) => {
-          socket.emit(getResponse(isGeneral), notfound);
-          console.log(err);
-        });
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (!user) return false;
+
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
+
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('learnRoles', (data) => {
-    const { isGeneral } = data;
+    const gameQ = new Parse.Query('Game');
+    gameQ.fromLocalDatastore();
 
-    if (allowed) {
-      const { target, comment } = data;
+    return await gameQ
+      .get(target, { useMasterKey: true })
+      .then((g) => {
+        const chat = g.get('chat');
+        const code = g.get('code');
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+        g.set('active', false);
+        g.save({}, { useMasterKey: true });
 
-      const gameQ = new Parse.Query('Game');
+        chat
+          .fetch({ useMasterKey: true })
+          .then((c) => {
+            c.moderationAction({
+              action: 'CLOSE GAME',
+              content: `Game #${code} has been closed.`,
+              username,
+              target,
+              comment,
+            });
+          })
+          .catch((err) => console.log(err));
 
-      gameQ
-        .get(target, { useMasterKey: true })
-        .then((g) => {
-          const chat = g.get('chat');
+        return success;
+      })
+      .catch((err) => {
+        console.log(err);
+        return notfound;
+      });
+  } else {
+    return unauthorized;
+  }
+};
 
-          const roles = g.get('roleList');
+const learnRoles = async (request) => {
+  const { user } = request;
 
-          g.add('privateKnowledgeNew', {
-            username,
-            knowledge: roles,
-          });
-          g.save({}, { useMasterKey: true });
+  if (!user) return false;
 
-          chat
-            .fetch({ useMasterKey: true })
-            .then((c) => {
-              c.moderationAction({
-                action: 'LEARNT ROLES',
-                content: `A moderator has learnt the roles for this game.`,
-                username,
-                target,
-                comment,
-              });
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-              socket.emit(getResponse(isGeneral), success);
-            })
-            .catch((err) => console.log(err));
-        })
-        .catch((err) => {
-          socket.emit(getResponse(isGeneral), notfound);
-          console.log(err);
-        });
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
-}
 
-module.exports = gameCommands;
+    const gameQ = new Parse.Query('Game');
+    gameQ.fromLocalDatastore();
+
+    return await gameQ
+      .get(target, { useMasterKey: true })
+      .then((g) => {
+        const chat = g.get('chat');
+
+        const roles = g.get('roleList');
+
+        g.add('privateKnowledgeNew', {
+          username,
+          knowledge: roles,
+        });
+        g.save({}, { useMasterKey: true });
+
+        chat
+          .fetch({ useMasterKey: true })
+          .then((c) => {
+            c.moderationAction({
+              action: 'LEARNT ROLES',
+              content: `A moderator has learnt the roles for this game.`,
+              username,
+              target,
+              comment,
+            });
+          })
+          .catch((err) => console.log(err));
+
+        return success;
+      })
+      .catch((err) => {
+        console.log(err);
+        return notfound;
+      });
+  } else {
+    return unauthorized;
+  }
+};
+
+module.exports = { pauseGame, unpauseGame, endGame, closeGame, learnRoles };

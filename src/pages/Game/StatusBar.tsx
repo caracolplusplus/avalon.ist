@@ -3,6 +3,7 @@
 import React, { createRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import Parse from '../../parse/parse';
 
 // Internal
 
@@ -71,20 +72,36 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   formRef = createRef<GameForm>();
 
   componentDidMount = () => {
-    // socket.on('gameResponse', this.responseReceived);
-    // socket.on('askForReady', this.popUpReady);
+    msgBuilder.username = this.props.username;
   };
 
-  componentWillUnmount = () => {
-    // socket.off('gameResponse', this.responseReceived);
-    // socket.off('askForReady', this.popUpReady);
-  };
+  componentDidUpdate = (prevProps: StatusBarProps) => {
+    const { askedToBeReady, stage, started, code } = this.props;
+    const {
+      askedToBeReady: _askedToBeReady,
+      stage: _stage,
+      started: _started,
+      code: _code,
+    } = prevProps;
 
-  sendServerMessage = (data: any) => {
-    msgBuilder.sendServerMessage({
-      ch: data.ch,
-      content: data.content,
-    });
+    if (stage !== _stage || !started) {
+      this.responseReceived({ stage });
+    }
+
+    if (askedToBeReady !== _askedToBeReady && askedToBeReady) {
+      this.popUpReady();
+    }
+
+    if (started !== _started && started && _code !== '-1') {
+      Soundboard.notification.play();
+
+      // eslint-disable-next-line no-undef
+      new Notification(`Room ${code} has started.`, {
+        body: ``,
+        icon: 'https://i.ibb.co/JqQM735/login-logo.png',
+        dir: 'ltr',
+      });
+    }
   };
 
   popUpReady = () => {
@@ -121,59 +138,62 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   };
 
   sitAndStand = () => {
-    // socket.emit('joinLeaveGame');
+    const { gameId: id } = this.props;
+
+    Parse.Cloud.run('gameCommands', { call: 'joinLeaveGame', id });
     this.setState({ waitingResponse: true });
   };
 
   startGame = () => {
-    // socket.emit('startGame');
+    const { gameId: id } = this.props;
+
+    Parse.Cloud.run('gameCommands', { call: 'startGame', id });
     this.setState({ waitingResponse: true });
   };
 
   pickTeam = () => {
-    /* socket.emit('pickTeam', {
-      team: this.props.selected,
-    }); */
+    const { gameId: id, selected: picks } = this.props;
+
+    Parse.Cloud.run('gameCommands', { call: 'pickTeam', id, picks });
     this.setState({ waitingResponse: true });
   };
 
   voteForMission = (vote: number) => {
-    /* socket.emit('voteForMission', {
-      vote,
-    }); */
+    const { gameId: id } = this.props;
+
+    Parse.Cloud.run('gameCommands', { call: 'voteForMission', id, vote });
     this.setState({ hasVoted: true });
   };
 
   voteForSuccess = (vote: number) => {
-    /* socket.emit('voteForSuccess', {
-      vote,
-    }); */
+    const { gameId: id } = this.props;
+
+    Parse.Cloud.run('gameCommands', { call: 'voteForSuccess', id, vote });
     this.setState({ hasVoted: true });
   };
 
   cardPlayer = () => {
-    /* socket.emit('ladyOfTheLake', {
-      carded: this.props.selected[0],
-    }); */
+    const { gameId: id, selected } = this.props;
+
+    Parse.Cloud.run('gameCommands', { call: 'ladyOfTheLake', id, carded: selected[0] });
     this.setState({ waitingResponse: true });
   };
 
   shootPlayer = () => {
-    /* socket.emit('shootPlayer', {
-      shot: this.props.selected[0],
-    }); */
+    const { gameId: id, selected } = this.props;
+
+    Parse.Cloud.run('gameCommands', { call: 'shootPlayer', id, shot: selected[0] });
     this.setState({ waitingResponse: true });
   };
 
   kickPlayer = (player: string) => {
-    const { username } = this.props;
+    const { username, gameId: id } = this.props;
 
-    /* socket.emit('kickPlayer', {
-      kick: player,
-    }); */
+    Parse.Cloud.run('gameCommands', { call: 'kickPlayer', id, kick: player });
 
     msgBuilder.sendServerMessage({
       ch: 2,
+      code: id,
       content: `${player} has been kicked by ${username}.`,
     });
 
@@ -181,7 +201,9 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
   };
 
   reportPlayer = (data: any) => {
-    // socket.emit('reportPlayer', data);
+    const { gameId: id } = this.props;
+
+    Parse.Cloud.run('gameCommands', { call: 'reportPlayer', id, ...data });
   };
 
   onWaiting = (message: Message) => {
@@ -439,6 +461,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
 
   render() {
     const {
+      gameId,
       code,
       started,
       frozen,
@@ -448,6 +471,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
       playerMax,
       roleSettings,
       active,
+      clients,
     } = this.props;
     const { showForm, waitingResponse } = this.state;
 
@@ -495,6 +519,7 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
           <GameForm
             title="MODIFY GAME SETTINGS"
             createsGame={false}
+            gameId={gameId}
             initialRoleSettings={roleSettings}
             initialPlayerMax={playerMax}
             onExit={this.hideForm}
@@ -511,11 +536,11 @@ class StatusBar extends React.PureComponent<StatusBarProps, StatusBarState> {
         );
       }
       if (showForm === FormType.Ready) {
-        form = <ReadyForm onExit={this.hideForm} isPlaying={seat > -1} />;
+        form = <ReadyForm onExit={this.hideForm} gameId={gameId} isPlaying={seat > -1} />;
       }
     }
     if (showForm === FormType.Report) {
-      const arr = [...players];
+      const arr = [...clients];
       if (seat > -1) arr.splice(seat, 1);
 
       form = (

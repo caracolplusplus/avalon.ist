@@ -12,19 +12,8 @@ module.exports = async (request) => {
 
     if (s) {
       const u = await s.get('user').fetch({ useMasterKey: true });
-      const username = u.get('username');
-
-      console.log(username, 'left presence');
 
       u.leavePresence();
-
-      // eslint-disable-next-line no-undef
-      const gameQ = new Parse.Query('Game');
-      gameQ.equalTo('spectatorListNew', u.get('username'));
-
-      const gList = await gameQ.find({ useMasterKey: true });
-
-      gList.forEach((g) => g.removeClient({ username }));
     }
   }
 };

@@ -16,7 +16,7 @@ const pickTeam = async (request) => {
   // If no game dont perform operation
   if (!game) return;
 
-  // Ready button pops up
+  // Picks team
   game.pickTeam({ username, picks });
 
   return true;

@@ -140,6 +140,9 @@ class App extends React.PureComponent<appProps, appState> {
     userSub.on('update', (user: any) => {
       console.log(user.get('username'));
 
+      if (!user.get('isOnline'))
+        Parse.Cloud.run('generalCommands', { call: 'joinPresence' });
+
       Parse.Cloud.run('generalCommands', { call: 'checkForBans' })
         .catch(async (err) => {
           await Parse.Cloud.run('generalCommands', { call: 'leavePresence' });
@@ -187,6 +190,7 @@ class App extends React.PureComponent<appProps, appState> {
     const username = currentUser ? currentUser.getUsername()! : '';
 
     const messageQ = new Parse.Query('Message');
+    messageQ.equalTo('type', 'direct');
     messageQ.equalTo('to', username);
     messageQ.equalTo('public', false);
 
@@ -195,7 +199,7 @@ class App extends React.PureComponent<appProps, appState> {
     messageSub.on('create', (message: any) => {
       const global = message.get('global');
       const code = message.get('code');
-      const room = global ? 'General Chat' : `Room ${code}`;
+      const room = global ? 'General Chat' : `Game /${code}`;
       const from = message.get('from');
       const content = message.get('content');
 

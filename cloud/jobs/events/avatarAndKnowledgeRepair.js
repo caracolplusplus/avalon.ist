@@ -5,7 +5,7 @@ module.exports = (request) => {
   function avatarAndKnowledgeRepair() {
     const gameQ = new Parse.Query('Game');
 
-    gameQ.limit(10000);
+    gameQ.limit(2500);
 
     // Queries Parse Database
     gameQ

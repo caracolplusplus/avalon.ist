@@ -15,7 +15,7 @@ const joinRoom = async (game, user) => {
     avatars,
   });
 
-  return true;
+  return game;
 };
 
 const gameLeave = async (request) => {
@@ -50,20 +50,9 @@ const gameRequest = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
-  let game = await gameQ.get(id, { useMasterKey: true });
-
-  if (!game) {
-    // eslint-disable-next-line no-undef
-    const replayQ = new Parse.Query('Game');
-
-    game = await replayQ.get(id, { useMasterKey: true });
-
-    if (!game) return false;
-
-    game.pin();
-  }
+  const game = await gameQ.get(id, { useMasterKey: true });
+  await game.pin();
 
   return await joinRoom(game, user);
 };
