@@ -1,330 +1,353 @@
 const Environment = require('../../constructors/environment');
 const Moderation = require('../../constructors/moderation');
 
-function moderationCommands(io, socket) {
-  const { user } = socket;
+const warning = 'You must fill all the required variables for this command to work.';
+const unauthorized = 'You are not authorized to use this command.';
+
+const suspendPlayer = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
   const username = user.get('username');
-  const allowed = user.get('isMod') || user.get('isAdmin');
 
-  const getResponse = (isGeneral) => {
-    return isGeneral ? 'generalCommandResponse' : 'gameCommandResponse';
-  };
+  if (isAllowed) {
+    const { target, hours, comment } = request.params;
 
-  const warning = 'You must fill all the required variables for this command to work.';
-  const unauthorized = 'You are not authorized to use this command.';
-
-  socket.on('suspendPlayer', (data) => {
-    const { isGeneral } = data;
-
-    if (allowed) {
-      const { target, hours, comment } = data;
-
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
-
-      Moderation.suspendPlayer({
-        username,
-        target,
-        hours,
-        comment,
-      })
-        .then((result) => {
-          socket.emit(getResponse(isGeneral), result);
-
-          console.log(result);
-        })
-        .catch((err) => console.log(err));
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('revokeSuspension', (data) => {
-    const { isGeneral } = data;
+    return await Moderation.suspendPlayer({
+      username,
+      target,
+      hours,
+      comment,
+    });
+  } else {
+    return unauthorized;
+  }
+};
 
-    if (allowed) {
-      const { target, comment } = data;
+const revokeSuspension = async (request) => {
+  const { user } = request;
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+  if (!user) return false;
 
-      Moderation.revokeSuspension({
-        username,
-        target,
-        comment,
-      })
-        .then((result) => {
-          socket.emit(getResponse(isGeneral), result);
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-          console.log(result);
-        })
-        .catch((err) => console.log(err));
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('verifyPlayer', (data) => {
-    const { isGeneral } = data;
+    return await Moderation.revokeSuspension({
+      username,
+      target,
+      comment,
+    });
+  } else {
+    return unauthorized;
+  }
+};
 
-    if (allowed) {
-      const { target, comment } = data;
+const verifyPlayer = async (request) => {
+  const { user } = request;
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+  if (!user) return false;
 
-      Moderation.verifyPlayer({
-        username,
-        target,
-        comment,
-      })
-        .then((result) => {
-          socket.emit(getResponse(isGeneral), result);
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-          console.log(result);
-        })
-        .catch((err) => console.log(err));
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('banPlayer', (data) => {
-    const { isGeneral } = data;
+    return await Moderation.verifyPlayer({
+      username,
+      target,
+      comment,
+    });
+  } else {
+    return unauthorized;
+  }
+};
 
-    if (allowed) {
-      const { target, comment } = data;
+const banPlayer = async (request) => {
+  const { user } = request;
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+  if (!user) return false;
 
-      Moderation.banPlayer({
-        username,
-        target,
-        comment,
-      })
-        .then((result) => {
-          socket.emit(getResponse(isGeneral), result);
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-          console.log(result);
-        })
-        .catch((err) => console.log(err));
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('revokeBan', (data) => {
-    const { isGeneral } = data;
+    return await Moderation.banPlayer({
+      username,
+      target,
+      comment,
+    });
+  } else {
+    return unauthorized;
+  }
+};
 
-    if (allowed) {
-      const { target, comment } = data;
+const revokeBan = async (request) => {
+  const { user } = request;
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+  if (!user) return false;
 
-      Moderation.revokeBan({
-        username,
-        target,
-        comment,
-      })
-        .then((result) => {
-          socket.emit(getResponse(isGeneral), result);
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-          console.log(result);
-        })
-        .catch((err) => console.log(err));
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('banPlayerIP', (data) => {
-    const { isGeneral } = data;
+    return await Moderation.revokeBan({
+      username,
+      target,
+      comment,
+    });
+  } else {
+    return unauthorized;
+  }
+};
 
-    if (allowed) {
-      const { target, comment } = data;
+const banPlayerIP = async (request) => {
+  const { user } = request;
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+  if (!user) return false;
 
-      Moderation.banPlayerIP({
-        username,
-        target,
-        comment,
-      })
-        .then((result) => {
-          socket.emit(getResponse(isGeneral), result);
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-          console.log(result);
-        })
-        .catch((err) => console.log(err));
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('revokeIPBan', (data) => {
-    const { isGeneral } = data;
+    return await Moderation.banPlayerIP({
+      username,
+      target,
+      comment,
+    });
+  } else {
+    return unauthorized;
+  }
+};
 
-    if (allowed) {
-      const { target, comment } = data;
+const revokeIPBan = async (request) => {
+  const { user } = request;
 
-      if (typeof target !== 'string') {
-        socket.emit(getResponse(isGeneral), warning);
-        return;
-      }
+  if (!user) return false;
 
-      const content = Moderation.revokeIPBan({
-        username,
-        ips: [target],
-        comment,
-      });
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-      socket.emit(getResponse(isGeneral), content);
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
+  if (isAllowed) {
+    const { target, comment } = request.params;
+
+    if (!target) {
+      return warning;
     }
-  });
 
-  socket.on('getLogs', (data) => {
-    const { isGeneral } = data;
+    return Moderation.revokeIPBan({
+      username,
+      ips: [target],
+      comment,
+    });
+  } else {
+    return unauthorized;
+  }
+};
 
-    if (allowed) {
-      const environment = Environment.getGlobal();
-      const logs = environment.get('moderationLogs');
+const getLogs = async (request) => {
+  const { user } = request;
 
-      const content = `Moderation Logs Received. Open Browser Console.`;
+  if (!user) return false;
 
-      socket.emit(getResponse(isGeneral), content).emit('printLogs', logs);
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
-    }
-  });
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
 
-  socket.on('toggleMaintenance', (data) => {
-    const { isGeneral } = data;
+  if (isAllowed) {
+    // eslint-disable-next-line no-undef
+    const logQ = new Parse.Query('Logs');
+    logQ.limit(100);
+    logQ.ascending('timestamp');
 
-    if (allowed) {
-      const environment = Environment.getGlobal();
-      environment.toggleMaintenance();
+    const logList = await logQ.find({ useMasterKey: true });
 
-      const content = `Maintenance mode was toggled.`;
+    const logs = logList.map((l) => l.toJSON());
 
-      socket.emit(getResponse(isGeneral), content);
-      io.emit('reloadPage');
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
-    }
-  });
+    return { content: 'Logs printed to the browser console.', logs };
+  } else {
+    return { content: unauthorized, logs: [] };
+  }
+};
 
-  socket.on('toggleLockdown', (data) => {
-    const { isGeneral } = data;
+const toggleMaintenance = async (request) => {
+  const { user } = request;
 
-    if (allowed) {
-      const environment = Environment.getGlobal();
-      const onLockdown = environment.toggleLockdown();
+  if (!user) return false;
 
-      const content = `Lockdown mode is ${onLockdown ? 'on' : 'off'}.`;
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
 
-      socket.emit(getResponse(isGeneral), content);
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
-    }
-  });
+  if (isAllowed) {
+    const environment = await Environment.getGlobal();
+    environment.toggleMaintenance();
 
-  socket.on('createAnnouncement', (data) => {
-    if (allowed) {
-      const environment = Environment.getGlobal();
+    return `Maintenance mode was toggled.`;
+  } else {
+    return unauthorized;
+  }
+};
 
-      environment.addAnnouncement({
-        ...data,
-        author: username,
-      });
+const toggleLockdown = async (request) => {
+  const { user } = request;
 
-      const chat = environment.get('chat');
-      chat
-        .fetch({ useMasterKey: true })
-        .then((c) => {
-          c.newAnnouncement(`New announcement: "${data.title}".`);
+  if (!user) return false;
 
-          io.emit('announcementResponse', environment.get('announcementLogs').slice(-5));
-        })
-        .catch((err) => console.log(err));
-    }
-  });
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
 
-  socket.on('avatarSet', (data) => {
-    if (allowed) {
-      // eslint-disable-next-line no-undef
-      const userQ = new Parse.Query('_User');
-      userQ.equalTo('username', data.user);
+  if (isAllowed) {
+    const environment = await Environment.getGlobal();
+    const onLockdown = environment.toggleLockdown();
 
-      userQ
-        .first({
-          useMasterKey: true,
-        })
-        .then((u) => {
-          if (u) {
-            u.set('avatars', {
-              res: data.res,
-              spy: data.spy,
-            });
+    return `Lockdown mode is ${onLockdown ? 'on' : 'off'}.`;
+  } else {
+    return unauthorized;
+  }
+};
 
-            u.save({}, { useMasterKey: true });
+const newAnnouncement = async (request) => {
+  const { user } = request;
 
-            const environment = Environment.getGlobal();
-            environment.addAvatarLog(data);
-          }
-        })
-        .catch((err) => console.log(err));
-    }
-  });
+  if (!user) return false;
 
-  socket.on('requestPasswordReset', (data) => {
-    const { isGeneral, email } = data;
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+  const username = user.get('username');
 
-    if (allowed) {
-      // eslint-disable-next-line no-undef
-      Parse.User.requestPasswordReset(email);
+  if (isAllowed) {
+    const { id, title, content } = request.params;
 
-      socket.emit(getResponse(isGeneral), 'Password Reset Sent.');
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
-    }
-  });
+    Environment.addAnnouncement({
+      id,
+      title,
+      content,
+      author: username,
+    });
 
-  socket.on('discordSet', (data) => {
-    const { isGeneral, url } = data;
+    const environment = await Environment.getGlobal();
 
-    if (allowed) {
-      const environment = Environment.getGlobal();
+    const chat = environment.get('chat');
 
-      environment.set('discordWebhookURL', url);
-      environment
-        .save({}, { useMasterKey: true })
-        .then((e) => {
-          e.setDiscordHook();
+    await chat.fetch({ useMasterKey: true });
+    chat.newAnnouncement(`New announcement: "${title}".`);
+  }
 
-          socket.emit(getResponse(isGeneral), 'Discord Webhook Set.');
-        })
-        .catch((err) => console.log(err));
-    } else {
-      socket.emit(getResponse(isGeneral), unauthorized);
-    }
-  });
-}
+  return true;
+};
 
-module.exports = moderationCommands;
+const avatarSet = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+
+  if (isAllowed) {
+    const { target, res, spy } = request.params;
+
+    // eslint-disable-next-line no-undef
+    const userQ = new Parse.Query('_User');
+    userQ.equalTo('username', target);
+
+    const u = await userQ.first({ useMasterKey: true });
+
+    u.set('avatars', {
+      res,
+      spy,
+    });
+
+    u.save({}, { useMasterKey: true });
+
+    Environment.addAvatarLog({ target, res, spy });
+  }
+
+  return true;
+};
+
+const requestPasswordReset = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+
+  if (isAllowed) {
+    // eslint-disable-next-line no-undef
+    Parse.User.requestPasswordReset(email);
+
+    return 'Password Reset Sent';
+  } else {
+    return unauthorized;
+  }
+};
+
+const discordSet = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const isAllowed = user.get('isMod') || user.get('isAdmin');
+
+  if (isAllowed) {
+    const { url } = request.params;
+
+    const environment = await Environment.getGlobal();
+
+    environment.set('discordWebhookURL', url);
+    environment.setDiscordHook();
+
+    environment.save({}, { useMasterKey: true });
+
+    return 'Discord Webhook Set';
+  } else {
+    return unauthorized;
+  }
+};
+
+module.exports = {
+  suspendPlayer,
+  revokeSuspension,
+  verifyPlayer,
+  banPlayer,
+  revokeBan,
+  banPlayerIP,
+  revokeIPBan,
+  getLogs,
+  toggleLockdown,
+  toggleMaintenance,
+  newAnnouncement,
+  avatarSet,
+  requestPasswordReset,
+  discordSet,
+};

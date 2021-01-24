@@ -115,18 +115,15 @@ class User extends Parse.User {
   }
 
   async checkForBans(data) {
-    this.setACL(new Parse.ACL(this), { useMasterKey: true });
-
     const environment = await Environment.getGlobal();
 
-    const { address } = data;
-    const addressList = this.get('addressList') || [];
+    const { address, skip } = data;
 
-    const commonUser = !this.get('isMod') && !this.get('isAdmin');
+    const isMod = this.get('isMod') || this.get('isAdmin');
     const suspensionDate = this.get('suspensionDate');
     const currentDate = Date.now();
 
-    if (!commonUser) return false;
+    if (isMod) return false;
 
     const banned = this.get('isBanned');
     const suspended = suspensionDate > currentDate;
@@ -159,10 +156,11 @@ class User extends Parse.User {
       throw new Error(errors['blacklisted']);
     }
 
-    if (!addressList.includes(address)) addressList.push(address);
-
-    this.set('addressList', addressList);
-    this.save({}, { useMasterKey: true });
+    if (!skip) {
+      this.setACL(new Parse.ACL(this));
+      this.addUnique('addressList', address);
+      this.save({}, { useMasterKey: true });
+    }
 
     return true;
   }

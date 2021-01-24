@@ -91,6 +91,15 @@ class App extends React.PureComponent<appProps, appState> {
     window.removeEventListener('resize', updateDimensions);
   };
 
+  handleParseError = (err: any) => {
+    switch (err.code) {
+      case Parse.Error.INVALID_SESSION_TOKEN:
+        Parse.User.logOut();
+        window.location.reload();
+        break;
+    }
+  };
+
   getAuthenticated = async () => {
     const { dispatch } = this.props;
 
@@ -99,9 +108,9 @@ class App extends React.PureComponent<appProps, appState> {
 
     const userQ = new Parse.Query('_User');
 
-    this.userSub = await userQ.subscribe();
+    const userSub = await userQ.subscribe();
 
-    this.userSub.on('open', () => {
+    userSub.on('open', () => {
       Parse.Cloud.run('generalCommands', { call: 'themeRequest' }).then(this.updateTheme);
 
       Parse.Cloud.run('getAuthenticated')
@@ -123,22 +132,53 @@ class App extends React.PureComponent<appProps, appState> {
           console.log(err);
 
           Parse.User.logOut().then(() => {
-            window.location.reload(true);
+            window.location.reload();
           });
         });
     });
 
-    this.userSub.on('update', (user: any) => {
-      const isBanned = user.get('isBanned');
-      const suspensionTime = user.get('suspensionTime');
+    userSub.on('update', (user: any) => {
+      console.log(user.get('username'));
 
-      if (isBanned || suspensionTime > Date.now()) {
-        Parse.User.logOut().then(() => {
-          window.location.reload(true);
-        });
+      Parse.Cloud.run('generalCommands', { call: 'checkForBans' })
+        .catch(async (err) => {
+          await Parse.Cloud.run('generalCommands', { call: 'leavePresence' });
+
+          await Parse.User.logOut();
+
+          window.location.reload();
+        })
+        .catch(this.handleParseError);
+
+      Parse.Cloud.run('generalCommands', { call: 'themeRequest' })
+        .then(this.updateTheme)
+        .catch(this.handleParseError);
+    });
+
+    const listsQ = new Parse.Query('Lists');
+
+    const listSub = await listsQ.subscribe();
+
+    listSub.on('update', (list: any) => {
+      if (!currentUser) return;
+
+      const globalActions: any = list.get('globalActions') || [[]];
+      const lastGlobalAction = globalActions[globalActions.length - 1];
+
+      if (
+        lastGlobalAction.includes(username) ||
+        lastGlobalAction.includes('$maintenance')
+      ) {
+        Parse.Cloud.run('generalCommands', { call: 'checkForBans' })
+          .catch(async (err) => {
+            await Parse.Cloud.run('generalCommands', { call: 'leavePresence' });
+
+            await Parse.User.logOut();
+
+            window.location.reload(true);
+          })
+          .catch(this.handleParseError);
       }
-
-      Parse.Cloud.run('generalCommands', { call: 'themeRequest' }).then(this.updateTheme);
     });
   };
 

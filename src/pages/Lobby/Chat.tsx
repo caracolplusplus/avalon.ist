@@ -307,11 +307,21 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
   };
 
   createAnnouncement = (data: any) => {
-    // socket.emit('createAnnouncement', data);
+    Parse.Cloud.run('chatCommands', {
+      call: 'newAnnouncement',
+      id: data.id,
+      title: data.title,
+      content: data.content,
+    });
   };
 
   avatarSet = (data: any) => {
-    // socket.emit('avatarSet', data);
+    Parse.Cloud.run('chatCommands', {
+      call: 'avatarSet',
+      target: data.user,
+      res: data.res,
+      spy: data.spy,
+    });
   };
 
   activateTooFast = () => {
@@ -334,13 +344,6 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
     if (content.startsWith('/')) {
       const split = content.split(' ');
-
-      /* const commandDefault = {
-        isGeneral: !code,
-        username,
-        target: split[1],
-        comment: split[2] ? content.slice(content.indexOf(split[2])) : 'No comment.',
-      }; */
 
       switch (split[0]) {
         case '/help':
@@ -385,44 +388,118 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
               return [];
             });
           break;
-        /*
-        case '/ss':
-          socket.emit('suspendPlayer', {
-            isGeneral: !code,
-            username,
+        case '/timeout':
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'suspendPlayer',
             target: split[1],
             hours: split[2],
-            comment: split[3] ? content.slice(content.indexOf(split[3])) : 'No comment.',
-          });
+            comment: split[3],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
-        case '/unss':
-          socket.emit('revokeSuspension', commandDefault);
+        case '/untimeout':
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'revokeSuspension',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/verify':
-          socket.emit('verifyPlayer', commandDefault);
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'verifyPlayer',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/ban':
-          socket.emit('banPlayer', commandDefault);
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'banPlayer',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/unban':
-          socket.emit('revokeBan', commandDefault);
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'revokeBan',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/banip':
-          socket.emit('banPlayerIP', commandDefault);
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'banPlayerIP',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/unbanip':
-          socket.emit('revokeIPBan', commandDefault);
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'revokeIPBan',
+            target: split[1],
+            comment: split[2],
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/logs':
-          socket.emit('getLogs', { isGeneral: !code });
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'getLogs',
+            target: split[1],
+            comment: split[2],
+          })
+            .then((data) => {
+              console.log(data.logs);
+
+              return msgBuilder.commandResponseMessage(data.content);
+            })
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/maintenance':
-          socket.emit('toggleMaintenance', { isGeneral: !code });
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'toggleMaintenance',
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/lockdown':
-          socket.emit('toggleLockdown', { isGeneral: !code });
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'toggleLockdown',
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
-        case '/pause':
+        /* case '/pause':
           socket.emit('pauseGame', commandDefault);
           break;
         case '/unpause':
@@ -442,18 +519,22 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
           break;
         case '/learnroles':
           socket.emit('learnRoles', commandDefault);
-          break;
+          break; */
         case '/passwordreset':
-          socket.emit('requestPasswordReset', {
-            isGeneral: !code,
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'requestPasswordReset',
             email: split[1],
-          });
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         case '/roll':
-          output = msgBuilder.rollDie({ username, split });
+          output = msgBuilder.rollDie({ username, split, code });
           break;
         case '/flip':
-          output = msgBuilder.flipCoin({ username });
+          output = msgBuilder.flipCoin({ username, code });
           break;
         case '/announce':
           this.setState({ form: FormType.Announce });
@@ -462,14 +543,18 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
           this.setState({ form: FormType.Avatar });
           return;
         case '/discordset':
-          socket.emit('discordSet', {
-            isGeneral: !code,
+          output = await Parse.Cloud.run('chatCommands', {
+            call: 'discordset',
             url: split[1],
-          });
+          })
+            .then(msgBuilder.commandResponseMessage)
+            .catch((err) => {
+              return [];
+            });
           break;
         default:
           output = msgBuilder.defaultMessage(username);
-          break; */
+          break;
       }
     } else if (quote.test(content)) {
       output = msgBuilder.findQuote({

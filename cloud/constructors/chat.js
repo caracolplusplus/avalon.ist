@@ -120,8 +120,6 @@ class Chat extends Parse.Object {
       })
       .filter((m) => m !== null);
 
-    console.log(newMessages);
-
     const savedMessages = await Parse.Object.saveAll(newMessages, { useMasterKey: true });
 
     c.relation('messagesNew').add(savedMessages);

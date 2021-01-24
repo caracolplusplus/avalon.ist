@@ -35,8 +35,9 @@ const helpPages: helpPage = {
   ],
   3: [
     'Moderation Actions',
-    "/ss {player} {hours?} - Enacts a temporary suspension on the given player's account.",
-    "/unss {player} - Lifts a temporary suspension from the given player's account.",
+    "/timeout {player} {hours?} - Enacts a temporary suspension on the given player's account.",
+    "/untimeout {player} - Lifts a temporary suspension from the given player's account.",
+
     "/ban {player} - Enacts a permanent ban on the given player's account.",
     "/unban {player} - Lifts a permanent ban from the given player's account.",
     "/banip {player} - Enacts a permanent ban on the given player's account and its correspondent IPs.",
@@ -44,6 +45,7 @@ const helpPages: helpPage = {
     '/logs - Retrieves moderation logs and prints them in browser console.',
     '/maintenance - Toggles the maintenance feature of the site. It will disconnect everyone if its currently on maintenance.',
     '/lockdown - Toggles the lockdown feature of the site. It will prevent anyone from creating verified accounts. The new accounts made in this period require verification from the moderators.',
+    '/verify {player} - Allows a player to enter the site when the site is on lockdown.',
     '/passwordreset {email} - Sends a mail to the specified email, allowing for a password reset.',
   ],
   4: [
@@ -130,7 +132,7 @@ class MessageBuilder implements MessageBuilderType {
   };
 
   sendServerMessage = (data: any) => {
-    const { ch, content } = data;
+    const { ch, content, code } = data;
     const { SERVER, POSITIVE, NEGATIVE } = messageTypes;
     const type = [SERVER, POSITIVE, NEGATIVE][ch];
 
@@ -141,7 +143,7 @@ class MessageBuilder implements MessageBuilderType {
       }),
     ];
 
-    // socket.emit(this.emission, output);
+    Parse.Cloud.run('chatCommands', { call: 'messageTo', code, messages: output });
 
     return output;
   };
@@ -247,7 +249,7 @@ class MessageBuilder implements MessageBuilderType {
   };
 
   rollDie(data: any) {
-    const { username, split } = data;
+    const { username, split, code } = data;
 
     let die: any = Math.min(Math.max(parseInt(split[1]), 3), 10000);
 
@@ -257,17 +259,19 @@ class MessageBuilder implements MessageBuilderType {
     return this.sendServerMessage({
       content: `${username} has rolled ${roll} out of ${die}!`,
       ch: 0,
+      code,
     });
   }
 
   flipCoin(data: any) {
-    const { username } = data;
+    const { username, code } = data;
     const result = Math.random() > 0.5;
     const coin = result ? 'heads' : 'tails';
 
     return this.sendServerMessage({
       content: `${username} flipped a coin and landed on ${coin}!`,
       ch: result ? 1 : 2,
+      code,
     });
   }
 
@@ -306,7 +310,9 @@ class MessageBuilder implements MessageBuilderType {
           quotesExist = true;
         }
 
-        const quote = { from, content: _content, timestamp, type: QUOTE };
+        const parsedType = `${QUOTE}${type === CLIENT ? '' : ` ${type}`}`;
+
+        const quote = { from, content: _content, timestamp, type: parsedType };
 
         output.push(addMessage(quote));
       }
@@ -350,248 +356,6 @@ class MessageBuilder implements MessageBuilderType {
       })
     );
   };
-
-  /* suspendPlayer = (data) => {
-    const { COMMAND } = messageTypes;
-    const { username, target, hours, comment } = data;
-
-    const userQ = new Parse.Query('_User');
-    userQ.equalTo('username', target);
-
-    userQ
-      .first({ useMasterKey: true })
-      .then((u) => {
-        if (u) {
-          const environment = require('./environment').getGlobal();
-          const h = u.setSuspension({ hours });
-
-          this.addMessage({
-            type: COMMAND,
-            public: false,
-            content: `${target} has been suspended for ${h} hour${h === 1 ? '' : 's'}.`,
-            to: [username],
-          });
-
-          environment.addModerationLog({
-            duration: h,
-            action: 'SUSPENSION',
-            from: username,
-            to: target,
-            comment,
-          });
-
-          this.save({}, { useMasterKey: true });
-        }
-      })
-      .catch((e) => console.log(e));
-  }
-
-  revokeSuspension(data) {
-    const { COMMAND } = messageTypes;
-    const { username, target, comment } = data;
-
-    const userQ = new Parse.Query('_User');
-    userQ.equalTo('username', target);
-
-    userQ
-      .first({ useMasterKey: true })
-      .then((u) => {
-        if (u) {
-          const environment = require('./environment').getGlobal();
-          u.revokeSuspension();
-
-          this.addMessage({
-            type: COMMAND,
-            public: false,
-            content: `${target} has been unsuspended.`,
-            to: [username],
-          });
-
-          environment.addModerationLog({
-            action: 'REVOKE SUSPENSION',
-            from: username,
-            to: target,
-            comment,
-          });
-
-          this.save({}, { useMasterKey: true });
-        }
-      })
-      .catch((e) => console.log(e));
-  }
-
-  banPlayer(data) {
-    const { COMMAND } = messageTypes;
-    const { username, target, comment } = data;
-
-    const userQ = new Parse.Query('_User');
-    userQ.equalTo('username', target);
-
-    userQ
-      .first({ useMasterKey: true })
-      .then((u) => {
-        if (u) {
-          const environment = require('./environment').getGlobal();
-          u.toggleBan(true);
-
-          this.addMessage({
-            type: COMMAND,
-            public: false,
-            content: `${target} has been banned.`,
-            to: [username],
-          });
-
-          environment.addModerationLog({
-            action: 'BAN',
-            from: username,
-            to: target,
-            comment,
-          });
-
-          this.save({}, { useMasterKey: true });
-        }
-      })
-      .catch((e) => console.log(e));
-  }
-
-  revokeBan(data) {
-    const { COMMAND } = messageTypes;
-    const { username, target, comment } = data;
-
-    const userQ = new Parse.Query('_User');
-    userQ.equalTo('username', target);
-
-    userQ
-      .first({ useMasterKey: true })
-      .then((u) => {
-        if (u) {
-          const environment = require('./environment').getGlobal();
-          u.toggleBan(false);
-
-          this.addMessage({
-            type: COMMAND,
-            public: false,
-            content: `${target} has been unbanned.`,
-            to: [username],
-          });
-
-          environment.addModerationLog({
-            action: 'REVOKE BAN',
-            from: username,
-            to: target,
-            comment,
-          });
-
-          this.save({}, { useMasterKey: true });
-        }
-      })
-      .catch((e) => console.log(e));
-  }
-
-  banPlayerIP(data) {
-    const { COMMAND } = messageTypes;
-    const { username, target, comment } = data;
-
-    const userQ = new Parse.Query('_User');
-    userQ.equalTo('username', target);
-
-    userQ
-      .first({ useMasterKey: true })
-      .then((u) => {
-        if (u) {
-          const environment = require('./environment').getGlobal();
-          const ips = u.get('addressList');
-          u.toggleBan(false);
-
-          this.addMessage({
-            type: COMMAND,
-            public: false,
-            content: `${target} has been banned and all their IP adresses are blacklisted.`,
-            to: [username],
-          });
-
-          environment.toggleIps({ ips, add: true });
-
-          environment.addModerationLog({
-            action: 'BAN IP',
-            from: username,
-            to: target,
-            comment,
-            info: {
-              ips,
-            },
-          });
-
-          this.save({}, { useMasterKey: true });
-        }
-      })
-      .catch((e) => console.log(e));
-  }
-
-  revokeIPBan(data) {
-    const { COMMAND } = messageTypes;
-    const { username, ips, comment } = data;
-
-    const environment = require('./environment').getGlobal();
-
-    this.addMessage({
-      type: COMMAND,
-      public: false,
-      content: `Addresses ${ips.join(', ')} has been whitelisted.`,
-      to: [username],
-    });
-
-    environment.toggleIps({ ips, add: false });
-
-    environment.addModerationLog({
-      action: 'REVOKE IP BAN',
-      from: username,
-      comment,
-      info: {
-        ips,
-      },
-    });
-
-    this.save({}, { useMasterKey: true });
-
-    return true;
-  }
-
-  getLogs(data) {
-    const { COMMAND } = messageTypes;
-    const { username } = data;
-    const environment = require('./environment').getGlobal();
-
-    this.addMessage({
-      type: COMMAND,
-      public: false,
-      content: `Moderation Logs Received. Open Browser Console.`,
-      to: [username],
-    });
-
-    this.save({}, { useMasterKey: true });
-
-    return environment.get('moderationLogs');
-  }
-
-  toggleMaintenance(data) {
-    const { COMMAND } = messageTypes;
-    const { username } = data;
-    const environment = require('./environment').getGlobal();
-
-    this.addMessage({
-      type: COMMAND,
-      public: false,
-      content: `Maintenance mode was toggled.`,
-      to: [username],
-    });
-
-    environment.toggleMaintenance();
-
-    this.save({}, { useMasterKey: true });
-
-    return true;
-  } */
 }
 
 export default MessageBuilder;

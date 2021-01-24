@@ -10,6 +10,8 @@ const index = {};
   'afterUserSave',
   'afterGameSave',
   'afterChatSave',
+  'afterEnvSave',
+  'afterLogout',
 ].forEach((e) => {
   index[e] = require(`./${e}`);
 });

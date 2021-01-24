@@ -12,10 +12,9 @@ class Moderation {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = Environment.getGlobal();
           const h = u.setSuspension({ hours });
 
-          environment.addModerationLog({
+          Environment.addModerationLog({
             duration: h,
             action: 'SUSPENSION',
             from: username,
@@ -41,10 +40,9 @@ class Moderation {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = Environment.getGlobal();
           u.revokeSuspension();
 
-          environment.addModerationLog({
+          Environment.addModerationLog({
             action: 'REVOKE SUSPENSION',
             from: username,
             to: target,
@@ -69,10 +67,9 @@ class Moderation {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = Environment.getGlobal();
           u.toggleLock();
 
-          environment.addModerationLog({
+          Environment.addModerationLog({
             action: 'TOGGLE PLAYER LOCK',
             from: username,
             to: target,
@@ -97,10 +94,9 @@ class Moderation {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = Environment.getGlobal();
           u.toggleBan(true);
 
-          environment.addModerationLog({
+          Environment.addModerationLog({
             action: 'BAN',
             from: username,
             to: target,
@@ -125,10 +121,9 @@ class Moderation {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = Environment.getGlobal();
           u.toggleBan(false);
 
-          environment.addModerationLog({
+          Environment.addModerationLog({
             action: 'REVOKE BAN',
             from: username,
             to: target,
@@ -153,13 +148,12 @@ class Moderation {
       .first({ useMasterKey: true })
       .then((u) => {
         if (u) {
-          const environment = Environment.getGlobal();
           const ips = u.get('addressList');
           u.toggleBan(false);
 
-          environment.toggleIps({ ips, add: true });
+          Environment.toggleIps({ ips, add: true });
 
-          environment.addModerationLog({
+          Environment.addModerationLog({
             action: 'BAN IP',
             from: username,
             to: target,
@@ -169,7 +163,9 @@ class Moderation {
             },
           });
 
-          return `${target} has been banned and all their IP adresses are blacklisted.`;
+          return `${target} has been banned and all IP addresses: [${ips.join(
+            ', '
+          )}] are blacklisted.`;
         }
 
         return `No player exists with username "${target}".`;
@@ -180,11 +176,9 @@ class Moderation {
   revokeIPBan(data) {
     const { username, ips, comment } = data;
 
-    const environment = Environment.getGlobal();
+    Environment.toggleIps({ ips, add: false });
 
-    environment.toggleIps({ ips, add: false });
-
-    environment.addModerationLog({
+    Environment.addModerationLog({
       action: 'REVOKE IP BAN',
       from: username,
       comment,
@@ -193,7 +187,7 @@ class Moderation {
       },
     });
 
-    return `Addresses ${ips.join(', ')} has been whitelisted.`;
+    return `Addresses [${ips.join(', ')}] have been whitelisted.`;
   }
 }
 

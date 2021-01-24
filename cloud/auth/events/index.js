@@ -3,6 +3,7 @@ const index = {};
 [
   'joinPresence',
   'leavePresence',
+  'checkForBans',
   'onDisconnect',
   'playerListRequest',
   'editProfile',

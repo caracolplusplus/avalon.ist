@@ -1,5 +1,21 @@
 /* global Parse */
-const { chatRequest, messageTo, sendTaunt } = require('./events');
+const { chatRequest, messageTo, sendTaunt, moderationCommands } = require('./events');
+const {
+  suspendPlayer,
+  revokeSuspension,
+  verifyPlayer,
+  banPlayer,
+  revokeBan,
+  banPlayerIP,
+  revokeIPBan,
+  getLogs,
+  toggleLockdown,
+  toggleMaintenance,
+  newAnnouncement,
+  avatarSet,
+  requestPasswordReset,
+  discordSet,
+} = moderationCommands;
 
 Parse.Cloud.define('chatCommands', async (request) => {
   const { call } = request.params;
@@ -8,6 +24,20 @@ Parse.Cloud.define('chatCommands', async (request) => {
     chatRequest,
     sendTaunt,
     messageTo,
+    suspendPlayer,
+    revokeSuspension,
+    verifyPlayer,
+    banPlayer,
+    revokeBan,
+    banPlayerIP,
+    revokeIPBan,
+    getLogs,
+    toggleLockdown,
+    toggleMaintenance,
+    newAnnouncement,
+    avatarSet,
+    requestPasswordReset,
+    discordSet,
   };
 
   return await callList[call](request);

@@ -53,7 +53,7 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
     this.avatarsSub = await avatarsQ.subscribe();
 
     this.avatarsSub.on('open', this.latestAvatarsRequest);
-    this.avatarsSub.on('create', this.latestAvatarsRequest);
+    this.avatarsSub.on('create', this.newAvatar);
   };
 
   latestAvatarsRequest = () => {
@@ -67,6 +67,17 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
       this.avatarsSub.unsubscribe();
       return;
     }
+
+    this.setState({ avatarList });
+  };
+
+  newAvatar = (avatar: any) => {
+    if (!this.mounted) {
+      this.avatarsSub.unsubscribe();
+      return;
+    }
+
+    const avatarList = [avatar.toJSON(), ...this.state.avatarList].slice(0, 3);
 
     this.setState({ avatarList });
   };

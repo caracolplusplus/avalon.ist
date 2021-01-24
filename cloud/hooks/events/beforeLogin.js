@@ -19,6 +19,6 @@ module.exports = async (request) => {
   /* Check Bans */
   const user = request.object;
 
-  user.checkForBans({ address });
+  await user.checkForBans({ address, skip: false });
   return true;
 };

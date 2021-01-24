@@ -44,10 +44,10 @@ class Environment extends Parse.Object {
           g = Environment.spawn();
         }
 
+        Environment.updateTrees(g);
+
         Environment.setGlobal(g).then(() => {
           g.setDiscordHook();
-
-          g.updateTrees();
 
           Parse.Cloud.startJob('cleanAllPresence');
         });
@@ -58,7 +58,7 @@ class Environment extends Parse.Object {
   }
 
   static async setGlobal(g) {
-    g.save({}, { useMasterKey: true });
+    await g.save({}, { useMasterKey: true });
     await g.pin();
   }
 
@@ -67,35 +67,6 @@ class Environment extends Parse.Object {
     envQ.fromLocalDatastore();
 
     return await envQ.first({ useMasterKey: true });
-  }
-
-  setDiscordHook() {
-    discordReports.newHook(this.get('discordWebhookURL'));
-  }
-
-  validateSignupData(data) {
-    const { address } = data;
-
-    const errors = {
-      blacklisted: `Access denied.
-		 You are trying to access the site from a blacklisted IP adress. 
-		 Contact the moderation team if you think this is a mistake.`,
-      maintenance: `Access denied.
-		 The server is currently on maintenance.`,
-    };
-
-    const maintenance = this.get('onMaintenance');
-    const blacklisted = ipTree.testIp(address);
-
-    if (blacklisted) {
-      throw new Error(errors['blacklisted']);
-    }
-
-    if (maintenance) {
-      throw new Error(errors['maintenance']);
-    }
-
-    return true;
   }
 
   static async checkOnlinePlayers(data) {
@@ -143,9 +114,9 @@ class Environment extends Parse.Object {
     return true;
   }
 
-  updateTrees() {
-    const ipBlacklist = this.get('ipBlacklist');
-    const emailWhitelist = this.get('emailWhitelist');
+  static updateTrees(env) {
+    const ipBlacklist = env.get('ipBlacklist');
+    const emailWhitelist = env.get('emailWhitelist');
 
     ipTree.setTree(ipBlacklist);
     emailTree.setTree(emailWhitelist);
@@ -153,56 +124,40 @@ class Environment extends Parse.Object {
     return true;
   }
 
-  toggleIps(data) {
+  static async toggleIps(data) {
+    const env = await Environment.getGlobal();
+
     const { ips, add } = data;
 
     ips.forEach((e) => {
       if (add) {
-        this.addUnique('ipBlacklist', e);
+        env.addUnique('ipBlacklist', e);
       } else {
-        this.remove('ipBlacklist', e);
+        env.remove('ipBlacklist', e);
       }
     });
 
-    this.save({}, { useMasterKey: true, context: { kick: add, ips } });
+    env.save({}, { useMasterKey: true, context: { kick: add, ips } });
 
     return true;
   }
 
-  toggleEmails(data) {
+  static async toggleEmails(data) {
+    const env = await Environment.getGlobal();
+
     const { emails, add } = data;
 
     emails.forEach((e) => {
       if (add) {
-        this.addUnique('emailWhitelist', e);
+        env.addUnique('emailWhitelist', e);
       } else {
-        this.remove('emailWhitelist', e);
+        env.remove('emailWhitelist', e);
       }
     });
 
-    this.save({}, { useMasterKey: true });
+    env.save({}, { useMasterKey: true });
 
     return true;
-  }
-
-  toggleMaintenance() {
-    const onMaintenance = this.get('onMaintenance');
-
-    this.set('onMaintenance', !onMaintenance);
-
-    this.save({}, { useMasterKey: true });
-
-    return true;
-  }
-
-  toggleLockdown() {
-    const onLockdown = this.get('onLockdown');
-
-    this.set('onLockdown', !onLockdown);
-
-    this.save({}, { useMasterKey: true });
-
-    return !onLockdown;
   }
 
   static addAvatarLog(data) {
@@ -210,9 +165,9 @@ class Environment extends Parse.Object {
 
     const e = new Avatar();
 
-    e.set('user', data.user);
+    e.set('user', data.target);
     e.set('avatar', data.res);
-    e.set('timestamp', data.now);
+    e.set('timestamp', Date.now());
 
     e.save({}, { useMasterKey: true });
 
@@ -246,7 +201,7 @@ class Environment extends Parse.Object {
     e.set('action', data.action);
     e.set('from', data.from);
     e.set('to', data.to);
-    e.set('comment', data.comment);
+    e.set('comment', data.comment || 'No comment.');
     e.set('info', data.info || {});
     e.set('duration', data.duration || 0);
     e.set('timestamp', Date.now());
@@ -257,9 +212,9 @@ class Environment extends Parse.Object {
   }
 
   static addErrorLog(data) {
-    const Logs = Parse.Object.extend('Logs');
+    const Err = Parse.Object.extend('Error');
 
-    const e = new Logs();
+    const e = new Err();
 
     e.set('message', data.message);
     e.set('stack', data.stack);
@@ -268,6 +223,55 @@ class Environment extends Parse.Object {
     e.save({}, { useMasterKey: true });
 
     discordReports.newError(data);
+
+    return true;
+  }
+
+  toggleMaintenance() {
+    const onMaintenance = this.get('onMaintenance');
+
+    this.set('onMaintenance', !onMaintenance);
+
+    this.save({}, { useMasterKey: true, context: { global: true } });
+
+    return true;
+  }
+
+  toggleLockdown() {
+    const onLockdown = this.get('onLockdown');
+
+    this.set('onLockdown', !onLockdown);
+
+    this.save({}, { useMasterKey: true });
+
+    return !onLockdown;
+  }
+
+  setDiscordHook() {
+    discordReports.newHook(this.get('discordWebhookURL'));
+  }
+
+  validateSignupData(data) {
+    const { address } = data;
+
+    const errors = {
+      blacklisted: `Access denied.
+		 You are trying to access the site from a blacklisted IP adress. 
+		 Contact the moderation team if you think this is a mistake.`,
+      maintenance: `Access denied.
+		 The server is currently on maintenance.`,
+    };
+
+    const maintenance = this.get('onMaintenance');
+    const blacklisted = ipTree.testIp(address);
+
+    if (blacklisted) {
+      throw new Error(errors['blacklisted']);
+    }
+
+    if (maintenance) {
+      throw new Error(errors['maintenance']);
+    }
 
     return true;
   }

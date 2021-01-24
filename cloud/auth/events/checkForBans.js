@@ -1,8 +1,6 @@
-const Environment = require('../../constructors/environment');
-
 module.exports = async (request) => {
-  /* Get IP */
-  const { username } = request.params;
+  const { user } = request;
+
   let address = null;
 
   try {
@@ -19,13 +17,5 @@ module.exports = async (request) => {
     address = address.split(',')[0];
   }
 
-  const DiscordReports = require('../../security/discordReports');
-  DiscordReports.newSignUp({ username, address });
-
-  const environment = await Environment.getGlobal();
-
-  /* Test if environment allows it */
-  environment.validateSignupData({ address });
-
-  return true;
+  return await user.checkForBans({ address, skip: true });
 };

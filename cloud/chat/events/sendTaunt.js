@@ -39,8 +39,6 @@ module.exports = async (request) => {
   const target = await userQ.first({ useMasterKey: true });
 
   if (!target) {
-    console.log('hai');
-
     return `No user found with username "${to}".`;
   }
 

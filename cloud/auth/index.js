@@ -10,6 +10,7 @@ const {
   saveTheme,
   themeRequest,
   articleRequest,
+  checkForBans,
 } = require('./events');
 
 Parse.Cloud.define('generalCommands', async (request) => {
@@ -25,6 +26,7 @@ Parse.Cloud.define('generalCommands', async (request) => {
     themeRequest,
     saveTheme,
     articleRequest,
+    checkForBans,
   };
 
   return await callList[call](request);

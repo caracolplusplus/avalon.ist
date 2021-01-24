@@ -5,8 +5,7 @@ d.on('error', function (err) {
   const { message, stack } = err;
   console.log(err);
 
-  const environment = require('./cloud/constructors/environment').getGlobal();
-  environment.addErrorLog({ message, stack });
+  require('./cloud/constructors/environment').addErrorLog({ message, stack });
 });
 
 d.run(function () {
@@ -25,7 +24,7 @@ d.run(function () {
         '_User',
         'Games',
         'Chat',
-        'Avatars',
+        'Avatar',
         'Announcement',
         'Message',
         'Lists',
