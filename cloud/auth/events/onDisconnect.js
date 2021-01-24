@@ -8,19 +8,23 @@ module.exports = async (request) => {
     const userQ = new Parse.Query('_Session');
     userQ.equalTo('sessionToken', sessionToken);
 
-    userQ
-      .first({ useMasterKey: true })
-      .then((s) => {
-        if (s) {
-          s.get('user')
-            .fetch({ useMasterKey: true })
-            .then((u) => {
-              console.log(u.get('username'), 'left presence');
+    const s = await userQ.first({ useMasterKey: true });
 
-              u.leavePresence();
-            });
-        }
-      })
-      .catch((err) => console.log(err));
+    if (s) {
+      const u = await s.get('user').fetch({ useMasterKey: true });
+      const username = u.get('username');
+
+      console.log(username, 'left presence');
+
+      u.leavePresence();
+
+      // eslint-disable-next-line no-undef
+      const gameQ = new Parse.Query('Game');
+      gameQ.equalTo('spectatorListNew', u.get('username'));
+
+      const gList = await gameQ.find({ useMasterKey: true });
+
+      gList.forEach((g) => g.removeClient({ username }));
+    }
   }
 };

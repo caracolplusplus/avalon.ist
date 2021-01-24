@@ -1,191 +1,234 @@
 const Game = require('../../constructors/game');
 const Environment = require('../../constructors/environment');
 
-function beforeGame(io, socket) {
-  const { user } = socket;
+const createGame = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
   const username = user.get('username');
-  // eslint-disable-next-line no-unused-vars
-  const { game } = socket;
 
-  // Creates a game with a unique ID
-  socket.on('createGame', (data) => {
-    // Gets data from client
-    const { roleSettings, playerMax, listed } = data;
+  // Gets data from client
+  const { roleSettings, playerMax, listed } = request.params;
 
-    // Gets environment global variables
-    const environment = Environment.getGlobal();
+  // Gets environment global variables
+  const environment = Environment.getGlobal();
 
-    // Gets the game count of session variable
-    environment.increment('games');
+  // Gets the game count of session variable
+  environment.increment('games');
 
-    environment
-      .save({}, { useMasterKey: true })
-      .then((e) => {
-        const code = e.get('games').toString();
+  const e = await environment.save({}, { useMasterKey: true });
 
-        // Creates the game object
-        const game = Game.spawn({ code });
-        game.set('listed', listed);
+  const code = e.get('games').toString();
 
-        // Set initial game settings
-        game.editSettings({ roleSettings, playerMax });
+  // Creates the game object
+  const game = Game.spawn({ code });
+  game.set('listed', listed);
 
-        game
-          .save({}, { useMasterKey: true })
-          .then((g) => {
-            // Pins it to local datastore
-            g.pin();
-            // Build chat
-            g.buildChat();
-            // Redirect to room with game id
-            socket.emit('createGameSuccess', g.id);
-            // Toggle seat for this player
-            g.togglePlayer({ username, add: true });
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+  // Set initial game settings
+  game.editSettings({ roleSettings, playerMax });
 
-        // Gets the general chat from environment
-        const chat = e.get('chat');
-        chat
-          .fetch({ useMasterKey: true })
-          .then((c) => {
-            // Sends message to general chat
-            // Room was created
-            c.roomCreated({ username, code });
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      })
-      .catch((err) => console.log(err));
+  await game.save({}, { useMasterKey: true });
+
+  game.pin();
+  // Build chat
+  game.buildChat();
+  // Toggle seat for this player
+  game.togglePlayer({ username, add: true });
+
+  // Gets the general chat from environment
+  const chat = e.get('chat');
+
+  const c = await chat.fetch({ useMasterKey: true });
+  // Sends message to general chat
+  // Room was created
+  c.roomCreated({ username, code });
+
+  return game.id;
+};
+
+const reportPlayer = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const username = user.get('username');
+
+  const { id, selected, cause, description } = request.params;
+
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
+
+  const game = await gameQ.get(id, { useMasterKey: true });
+
+  // If no game dont perform operation
+  if (!game) return;
+
+  // Ask for discord webhook
+  const DiscordReports = require('../../security/discordReports');
+
+  // Adds report
+  DiscordReports.newReport({
+    user: username,
+    target: selected,
+    room: game.get('code'),
+    motive: cause,
+    description,
   });
 
-  // Reports a player through discord webhook
-  socket.on('reportPlayer', (data) => {
-    // Retrieve game from socket
-    const { game } = socket;
+  return true;
+};
 
-    // If this socket is not in a game is an error
-    if (!game) return;
+const editGame = async (request) => {
+  const { user } = request;
 
-    // Gets the code of the room
-    const room = game.get('code');
+  if (!user) return false;
 
-    // Unpacks data
-    const { selected, cause, description } = data;
-    // Ask for discord webhook
-    const DiscordReports = require('../../security/discordReports');
+  const { id, roleSettings, playerMax } = request.params;
 
-    // Adds report
-    DiscordReports.newReport({
-      user: username,
-      target: selected,
-      room,
-      motive: cause,
-      description,
-    });
-  });
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
 
-  // Edits game settings
-  socket.on('editGame', (data) => {
-    // Unpacks data
-    const { roleSettings, playerMax } = data;
-    // Retrieve game from socket
-    const { game } = socket;
+  const game = await gameQ.get(id, { useMasterKey: true });
 
-    // If no game dont perform operation
-    if (!game) return;
+  // If no game dont perform operation
+  if (!game) return;
 
-    // Fetch from database
-    game.fetchFromLocalDatastore({ useMasterKey: true }).then((g) => {
-      // Edit settings
-      g.editSettings({ roleSettings, playerMax });
-      // Save settings
-      g.save({}, { useMasterKey: true });
-    });
-  });
+  // Edit settings
+  game.editSettings({ roleSettings, playerMax });
+  // Save settings
+  game.save({}, { useMasterKey: true });
 
-  // Sit or stand up from game
-  socket.on('joinLeaveGame', () => {
-    // Retrieve game from socket
-    const { game } = socket;
+  return true;
+};
 
-    // If no game return
-    if (!game) return;
+const joinLeaveGame = async (request) => {
+  const { user } = request;
 
-    // Fetch from database
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => {
-        // Sit or stand up
-        g.togglePlayer({ username, add: true });
-      })
-      .catch((err) => console.log(err));
-  });
+  if (!user) return false;
 
-  // Toggle claims symbol on player who made the request
-  socket.on('toggleClaim', () => {
-    // Retrieve game from socket
-    const { game } = socket;
+  const username = user.get('username');
 
-    // If no game return
-    if (!game) return;
+  const { id } = request.params;
 
-    // Fetch from database
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => {
-        // Toggle the claim symbol for this player
-        g.toggleClaim(username);
-      })
-      .catch((err) => console.log(err));
-  });
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
 
-  // Host kicks player from game
-  socket.on('kickPlayer', (data) => {
-    const { game } = socket;
+  const game = await gameQ.get(id, { useMasterKey: true });
 
-    if (!game) return;
+  // If no game dont perform operation
+  if (!game) return;
 
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => {
-        g.addToKick(data);
-      })
-      .catch((err) => console.log(err));
-  });
+  // Sit or stand up
+  game.togglePlayer({ username, add: true });
 
-  // Starts the game
-  socket.on('startGame', () => {
-    const { game } = socket;
+  return true;
+};
 
-    if (!game) return;
+const toggleClaim = async (request) => {
+  const { user } = request;
 
-    // Fetch from database
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => {
-        // If player is not host, ignore this request
-        const host = g.get('host');
+  if (!user) return false;
 
-        if (host !== username) return;
+  const username = user.get('username');
 
-        // Ready button pops up
-        g.askToBeReady({ username });
-      })
-      .catch((err) => console.log(err));
-  });
+  const { id } = request.params;
 
-  // Tells the game that this player is ready
-  socket.on('readyState', (ready) => {
-    const { game } = socket;
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
 
-    if (!game) return;
+  const game = await gameQ.get(id, { useMasterKey: true });
 
-    game.toggleReady({ username, ready });
-  });
-}
+  // If no game dont perform operation
+  if (!game) return;
 
-module.exports = beforeGame;
+  // Toggle the claim symbol for this player
+  game.toggleClaim(username);
+
+  return true;
+};
+
+const kickPlayer = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const { id, kick } = request.params;
+
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
+
+  const game = await gameQ.get(id, { useMasterKey: true });
+
+  // If no game dont perform operation
+  if (!game) return;
+
+  // Kick player
+  game.addToKick({ kick });
+
+  return true;
+};
+
+const startGame = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const username = user.get('username');
+
+  const { id } = request.params;
+
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
+
+  const game = await gameQ.get(id, { useMasterKey: true });
+
+  // If no game dont perform operation
+  if (!game) return;
+
+  // Ready button pops up
+  game.askToBeReady({ username });
+
+  return true;
+};
+
+const readyState = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const username = user.get('username');
+
+  const { id, ready } = request.params;
+
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
+
+  const game = await gameQ.get(id, { useMasterKey: true });
+
+  // If no game dont perform operation
+  if (!game) return;
+
+  // Ready button pops up
+  game.toggleReady({ username, ready });
+
+  return true;
+};
+
+module.exports = {
+  createGame,
+  reportPlayer,
+  editGame,
+  joinLeaveGame,
+  toggleClaim,
+  kickPlayer,
+  startGame,
+  readyState,
+};

@@ -33,7 +33,7 @@ module.exports = (request) => {
       .find({ useMasterKey: true })
       .then((gList) => {
         gList = gList.map((g) => {
-          g.set('instanceList', []);
+          g.set('spectatorListNew', []);
 
           return g;
         });

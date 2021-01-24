@@ -1,8 +1,6 @@
 /* global Parse */
 const Environment = require('./environment');
 
-const defaultCallback = () => null;
-
 const Chat = require('./chat');
 // const _ = require('lodash');
 
@@ -255,49 +253,30 @@ class Game extends Parse.Object {
     return true;
   }
 
-  addClient(data, callback) {
-    const { username, id, avatars } = data;
+  async addClient(data) {
+    const { username, avatars } = data;
 
     this.addUnique('avatarListNew', {
       username,
       avatars,
     });
-    this.addUnique('instanceList', {
-      username,
-      id,
-    });
+    this.addUnique('spectatorListNew', username);
 
-    this.save({}, { useMasterKey: true })
-      .then((g) => {
-        const spectatorList = g.get('instanceList').map((i) => i.username);
-        // eslint-disable-next-line no-undef
-        const listToSet = new Set(spectatorList);
-
-        g.set('spectatorListNew', [...listToSet]);
-        g.save({}, { useMasterKey: true });
-
-        return g;
-      })
-      .then(callback || defaultCallback)
-      .catch((err) => console.log(err));
+    await this.save({}, { useMasterKey: true });
 
     return true;
   }
 
   removeClient(data) {
-    const { username, id } = data;
+    const { username } = data;
 
-    this.remove('instanceList', { username, id });
+    this.remove('spectatorListNew', username);
 
     this.save({}, { useMasterKey: true })
       .then((g) => {
         const ended = g.get('ended');
         const started = g.get('started');
-        const spectatorList = g.get('instanceList').map((i) => i.username);
-        // eslint-disable-next-line no-undef
-        const listToSet = new Set(spectatorList);
-
-        g.set('spectatorListNew', [...listToSet]);
+        const clients = g.get('spectatorListNew');
 
         // If no more clients, then delete the room.
         if (g.get('spectatorListNew').length === 0) {
@@ -320,7 +299,7 @@ class Game extends Parse.Object {
             g.save({}, { useMasterKey: true });
           }
           // If there are still clients, check to delete this seat if no instances from this user found
-        } else if (!started && !listToSet.has(username)) {
+        } else if (!started && !clients.includes(username)) {
           console.log('remove from player list');
 
           g.togglePlayer({ username, add: false });

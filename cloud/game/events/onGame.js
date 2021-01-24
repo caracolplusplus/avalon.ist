@@ -1,66 +1,127 @@
-function onGame(io, socket) {
-  const { user } = socket;
+const pickTeam = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
   const username = user.get('username');
 
-  socket.on('pickTeam', (data) => {
-    const { game } = socket;
-    const { team: picks } = data;
+  const { id, picks } = request.params;
 
-    if (!game) return;
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
 
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => g.pickTeam({ username, picks }))
-      .catch((err) => console.log(err));
-  });
+  const game = await gameQ.get(id, { useMasterKey: true });
 
-  socket.on('voteForMission', (data) => {
-    const { game } = socket;
-    const { vote } = data;
+  // If no game dont perform operation
+  if (!game) return;
 
-    if (!game) return;
+  // Ready button pops up
+  game.pickTeam({ username, picks });
 
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => g.voteForMission({ username, vote }))
-      .catch((err) => console.log(err));
-  });
+  return true;
+};
 
-  socket.on('voteForSuccess', (data) => {
-    const { game } = socket;
-    const { vote } = data;
+const voteForMission = async (request) => {
+  const { user } = request;
 
-    if (!game) return;
+  if (!user) return false;
 
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => g.voteForSuccess({ username, vote }))
-      .catch((err) => console.log(err));
-  });
+  const username = user.get('username');
 
-  socket.on('ladyOfTheLake', (data) => {
-    const { game } = socket;
-    const { carded } = data;
+  const { id, vote } = request.params;
 
-    if (!game) return;
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
 
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => g.ladyOfTheLake({ username, target: carded }))
-      .catch((err) => console.log(err));
-  });
+  const game = await gameQ.get(id, { useMasterKey: true });
 
-  socket.on('shootPlayer', (data) => {
-    const { game } = socket;
-    const { shot } = data;
+  // If no game dont perform operation
+  if (!game) return;
 
-    if (!game) return;
+  // Ready button pops up
+  game.voteForMission({ username, vote });
 
-    game
-      .fetchFromLocalDatastore({ useMasterKey: true })
-      .then((g) => g.shootPlayer({ username, shot }))
-      .catch((err) => console.log(err));
-  });
-}
+  return true;
+};
 
-module.exports = onGame;
+const voteForSuccess = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const username = user.get('username');
+
+  const { id, vote } = request.params;
+
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
+
+  const game = await gameQ.get(id, { useMasterKey: true });
+
+  // If no game dont perform operation
+  if (!game) return;
+
+  // Ready button pops up
+  game.voteForSuccess({ username, vote });
+
+  return true;
+};
+
+const ladyOfTheLake = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const username = user.get('username');
+
+  const { id, carded } = request.params;
+
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
+
+  const game = await gameQ.get(id, { useMasterKey: true });
+
+  // If no game dont perform operation
+  if (!game) return;
+
+  // Ready button pops up
+  game.ladyOfTheLake({ username, target: carded });
+
+  return true;
+};
+
+const shootPlayer = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const username = user.get('username');
+
+  const { id, shot } = request.params;
+
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
+
+  const game = await gameQ.get(id, { useMasterKey: true });
+
+  // If no game dont perform operation
+  if (!game) return;
+
+  // Ready button pops up
+  game.shootPlayer({ username, shot });
+
+  return true;
+};
+
+module.exports = {
+  pickTeam,
+  voteForMission,
+  voteForSuccess,
+  ladyOfTheLake,
+  shootPlayer,
+};
