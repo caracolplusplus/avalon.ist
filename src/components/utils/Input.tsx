@@ -10,9 +10,11 @@ import {
   faUser,
   faEnvelope,
   faPaperPlane,
+  faEye,
+  faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons';
 
-library.add(faHome, faLock, faUser, faEnvelope, faPaperPlane);
+library.add(faHome, faLock, faUser, faEnvelope, faPaperPlane, faEye, faEyeSlash);
 
 // Declaration
 
@@ -41,6 +43,8 @@ export const Input = (props: InputProps) => {
 
 interface ChatInputProps {
   autoComplete: string[];
+  toggleShowAllMessages: () => void;
+  showAllMessages: boolean;
 }
 
 interface ChatInputState {
@@ -122,6 +126,11 @@ export class ChatInput extends React.PureComponent<ChatInputProps, ChatInputStat
           placeholder="Enter your message here."
           value={this.state.content}
         ></input>
+        <button
+          onClick={() => this.props.toggleShowAllMessages()}
+        >
+          <FontAwesomeIcon icon={this.props.showAllMessages ? faEye : faEyeSlash} />
+        </button>
         <button type="submit">
           <FontAwesomeIcon icon={['fas', 'paper-plane']} />
         </button>

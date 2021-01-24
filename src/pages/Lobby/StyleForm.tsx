@@ -77,6 +77,12 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
     this.props.onExit();
   };
 
+  handleNumberOfMessages = (event: ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      numberOfMessages: parseInt(event.target.value),
+    });
+  };
+
   playAreaSizes = ['Min', 'Tiny', 'Big', 'Max', 'Max'];
 
   render() {
@@ -149,6 +155,17 @@ class StyleForm extends React.PureComponent<StyleFormProps, any> {
                 max={100}
                 value={this.state.playArea * 100}
                 onChange={this.handlePlayArea}
+              />
+            </div>
+            <div className="input-container">
+              <p className="handle">Chat Messages</p>
+              <RangeSlider
+                currentDisplay={this.state.numberOfMessages}
+                maxDisplay={'Max'}
+                min={5}
+                max={100}
+                value={this.state.numberOfMessages}
+                onChange={this.handleNumberOfMessages}
               />
             </div>
 
