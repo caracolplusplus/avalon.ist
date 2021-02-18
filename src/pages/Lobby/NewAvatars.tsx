@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import queryClient from '../../parse/queryClient';
 
 // Internal
 
 // Styles
 
-import Parse from '../../parse/parse';
+import Parse from 'parse';
 import '../../styles/Lobby/NewAvatars.scss';
 
 // Declaration
@@ -44,13 +45,13 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
 
   componentWillUnmount = () => {
     this.mounted = false;
-    if (this.avatarsSub) this.avatarsSub.unsubscribe();
+    if (this.avatarsSub) queryClient.unsubscribe(this.avatarsSub);
   };
 
-  setSubscription = async () => {
+  setSubscription = () => {
     const avatarsQ = new Parse.Query('Avatar');
 
-    this.avatarsSub = await avatarsQ.subscribe();
+    this.avatarsSub = queryClient.subscribe(avatarsQ);
 
     this.avatarsSub.on('open', this.latestAvatarsRequest);
     this.avatarsSub.on('create', this.newAvatar);
@@ -64,7 +65,7 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
 
   latestAvatarsResponse = (avatarList: any) => {
     if (!this.mounted) {
-      this.avatarsSub.unsubscribe();
+      queryClient.unsubscribe(this.avatarsSub);
       return;
     }
 
@@ -73,7 +74,7 @@ class NewAvatars extends React.PureComponent<{}, NewAvatarsState> {
 
   newAvatar = (avatar: any) => {
     if (!this.mounted) {
-      this.avatarsSub.unsubscribe();
+      queryClient.unsubscribe(this.avatarsSub);
       return;
     }
 

@@ -5,7 +5,7 @@ import React, { FormEvent, ChangeEvent } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { updateStyle } from '../../redux/actions';
-import Parse from '../../parse/parse';
+import Parse from 'parse';
 
 // Internal
 

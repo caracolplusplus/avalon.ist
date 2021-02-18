@@ -1,3 +1,4 @@
+/* global JSX */
 // External
 
 // eslint-disable-next-line no-unused-vars
@@ -6,7 +7,7 @@ import { Redirect } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { Dispatch } from 'redux';
 import { connect } from 'react-redux';
-import Parse from '../../parse/parse';
+import Parse from 'parse';
 
 // Internal
 
@@ -125,8 +126,11 @@ export class Table extends React.PureComponent<
     redirect: boolean;
   }
 > {
+  // eslint-disable-next-line no-undef
   tableRef = createRef<HTMLDivElement>();
+  // eslint-disable-next-line no-undef
   centerRef = createRef<HTMLDivElement>();
+  // eslint-disable-next-line no-undef
   seatRef: RefObject<HTMLDivElement>[] = [];
   avatarRef: RefObject<AvatarUI>[] = [];
 
@@ -261,6 +265,7 @@ export class Table extends React.PureComponent<
       const p = players[i];
       const ave = this.state.avatars[i];
 
+      // eslint-disable-next-line no-undef
       this.seatRef.push(createRef<HTMLDivElement>());
       this.avatarRef.push(createRef<AvatarUI>());
 

@@ -7,12 +7,12 @@ import { RouteComponentProps } from 'react-router';
 import { connect } from 'react-redux';
 // eslint-disable-next-line no-unused-vars
 import { rootType } from '../redux/reducers';
-import Parse from '../parse/parse';
+import Parse from 'parse';
 
 // Internal
 
 import AvalonScrollbars from '../components/utils/AvalonScrollbars';
-
+import queryClient from '../parse/queryClient';
 import Navbar from './Navbar';
 import Tabs from './Game/Tabs';
 // eslint-disable-next-line no-unused-vars
@@ -127,7 +127,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
     const { active } = this.state;
 
     this.mounted = false;
-    if (this.gameSub) this.gameSub.unsubscribe();
+    if (this.gameSub) queryClient.unsubscribe(this.gameSub);
     if (active) Parse.Cloud.run('gameCommands', { call: 'gameLeave', id });
   };
 
@@ -140,19 +140,19 @@ class Game extends React.PureComponent<PageProps, GameState> {
     }
   };
 
-  gameRequest = async () => {
+  gameRequest = () => {
     const { gameId: id } = this.props.match.params;
 
     const gameQ = new Parse.Query('Game');
     gameQ.equalTo('objectId', id);
 
-    this.gameSub = await gameQ.subscribe();
+    this.gameSub = queryClient.subscribe(gameQ);
 
     this.gameSub.on('open', () => {
       Parse.Cloud.run('gameCommands', { call: 'gameRequest', id })
         .then((game) => {
           if (!this.mounted) {
-            this.gameSub.unsubscribe();
+            queryClient.unsubscribe(this.gameSub);
             return;
           }
 
@@ -173,7 +173,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
       }
 
       if (!this.mounted) {
-        this.gameSub.unsubscribe();
+        queryClient.unsubscribe(this.gameSub);
         return;
       }
 
@@ -209,6 +209,7 @@ class Game extends React.PureComponent<PageProps, GameState> {
     // This function parses the game from the server to the client
     // Gets the username from props, which is on redux
     const { username } = this.props;
+    const { gameId: id } = this.props.match.params;
 
     // Gets these variables from the game
     const {
@@ -252,6 +253,10 @@ class Game extends React.PureComponent<PageProps, GameState> {
 
     // Gets the spectator list for the rest of components
     const clients = data.spectatorListNew;
+
+    if (!clients.includes(username)) {
+      Parse.Cloud.run('gameCommands', { call: 'rejoinRequest', id });
+    }
 
     // Gets the seat of the player and if the game has assassin
     const seat = playerList.indexOf(username);

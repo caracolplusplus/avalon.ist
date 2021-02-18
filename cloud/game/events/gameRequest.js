@@ -18,6 +18,28 @@ const joinRoom = async (game, user) => {
   return game;
 };
 
+const rejoinRequest = async (request) => {
+  const { user } = request;
+
+  if (!user) return false;
+
+  const { id } = request.params;
+
+  // eslint-disable-next-line no-undef
+  const gameQ = new Parse.Query('Game');
+  gameQ.fromLocalDatastore();
+
+  const game = await gameQ.get(id, { useMasterKey: true });
+
+  // If no game dont perform operation
+  if (!game) return;
+
+  // Edit settings
+  joinRoom(game, user);
+
+  return true;
+};
+
 const gameLeave = async (request) => {
   const { user } = request;
 
@@ -57,4 +79,4 @@ const gameRequest = async (request) => {
   return await joinRoom(game, user);
 };
 
-module.exports = { gameRequest, gameLeave };
+module.exports = { gameRequest, gameLeave, rejoinRequest };

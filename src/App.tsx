@@ -1,6 +1,7 @@
 // External
 
 import React from 'react';
+import Parse from 'parse';
 import { Route, BrowserRouter as Router, Switch } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { Dispatch } from 'redux';
@@ -8,7 +9,7 @@ import { connect } from 'react-redux';
 
 // Routes
 
-import Parse from './parse/parse';
+import queryClient from './parse/queryClient';
 import LoggedInOnly from './components/routes/LoggedInOnly';
 import LoggedOutOnly from './components/routes/LoggedOutOnly';
 import UnverifiedOnly from './components/routes/UnverifiedOnly';
@@ -33,6 +34,7 @@ import Soundboard from './sounds/audio';
 // Types
 
 declare global {
+  // eslint-disable-next-line no-unused-vars
   interface Window {
     msRequestAnimationFrame: any;
     mozRequestAnimationFrame: any;
@@ -67,7 +69,7 @@ class App extends React.PureComponent<appProps, appState> {
   userSub: any = null;
 
   componentDidMount = () => {
-    const { getAuthenticated, updateDimensions, setNotifications, listenToTaunts } = this;
+    const { getAuthenticated, updateDimensions } = this;
 
     window.addEventListener('resize', updateDimensions);
 
@@ -79,25 +81,21 @@ class App extends React.PureComponent<appProps, appState> {
     }
 
     getAuthenticated();
-    setNotifications();
-    listenToTaunts();
   };
 
   componentWillUnmount = () => {
     const { updateDimensions } = this;
 
-    this.userSub.unsubscribe();
+    queryClient.close();
 
     window.removeEventListener('resize', updateDimensions);
   };
 
   handleParseError = (err: any) => {
-    switch (err.code) {
-      case Parse.Error.INVALID_SESSION_TOKEN:
-        Parse.User.logOut();
-        window.location.reload();
-        break;
-    }
+    Parse.User.logOut();
+    window.location.reload();
+
+    return false;
   };
 
   getAuthenticated = async () => {
@@ -106,65 +104,58 @@ class App extends React.PureComponent<appProps, appState> {
     const currentUser = Parse.User.current();
     const username = currentUser ? currentUser.getUsername()! : '';
 
+    if (currentUser) {
+      dispatch(setUsername(username));
+      dispatch(setOnline(true));
+
+      await Parse.Cloud.run('generalCommands', { call: 'themeRequest' }).then(
+        this.updateTheme
+      );
+
+      const a = await Parse.Cloud.run('generalCommands', { call: 'joinPresence' });
+
+      console.log(a);
+
+      this.setState({
+        authenticated: true,
+        verified: await Parse.Cloud.run('getAuthenticated').catch(this.handleParseError),
+        loading: false,
+      });
+
+      this.userSocket(username);
+      this.setNotifications();
+      this.listenToTaunts();
+    } else {
+      dispatch(setOnline(false));
+
+      this.setState({
+        authenticated: false,
+        verified: false,
+        loading: false,
+      });
+    }
+  };
+
+  userSocket = (username: string) => {
     const userQ = new Parse.Query('_User');
-
-    const userSub = await userQ.subscribe();
-
-    userSub.on('open', () => {
-      Parse.Cloud.run('generalCommands', { call: 'themeRequest' }).then(this.updateTheme);
-
-      Parse.Cloud.run('getAuthenticated')
-        .then((state: appState) => {
-          const { authenticated } = state;
-
-          if (authenticated) {
-            dispatch(setUsername(username));
-            dispatch(setOnline(true));
-
-            this.setState(state);
-          } else {
-            dispatch(setOnline(false));
-
-            this.setState(state);
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-
-          Parse.User.logOut().then(() => {
-            window.location.reload();
-          });
-        });
-    });
+    const userSub = queryClient.subscribe(userQ);
 
     userSub.on('update', (user: any) => {
-      console.log(user.get('username'));
-
       if (!user.get('isOnline'))
         Parse.Cloud.run('generalCommands', { call: 'joinPresence' });
 
-      Parse.Cloud.run('generalCommands', { call: 'checkForBans' })
-        .catch(async (err) => {
-          await Parse.Cloud.run('generalCommands', { call: 'leavePresence' });
+      Parse.Cloud.run('generalCommands', { call: 'checkForBans' }).catch(
+        this.handleParseError
+      );
 
-          await Parse.User.logOut();
-
-          window.location.reload();
-        })
-        .catch(this.handleParseError);
-
-      Parse.Cloud.run('generalCommands', { call: 'themeRequest' })
-        .then(this.updateTheme)
-        .catch(this.handleParseError);
+      Parse.Cloud.run('generalCommands', { call: 'themeRequest' }).then(this.updateTheme);
     });
 
     const listsQ = new Parse.Query('Lists');
 
-    const listSub = await listsQ.subscribe();
+    const listSub = queryClient.subscribe(listsQ);
 
     listSub.on('update', (list: any) => {
-      if (!currentUser) return;
-
       const globalActions: any = list.get('globalActions') || [[]];
       const lastGlobalAction = globalActions[globalActions.length - 1];
 
@@ -172,20 +163,14 @@ class App extends React.PureComponent<appProps, appState> {
         lastGlobalAction.includes(username) ||
         lastGlobalAction.includes('$maintenance')
       ) {
-        Parse.Cloud.run('generalCommands', { call: 'checkForBans' })
-          .catch(async (err) => {
-            await Parse.Cloud.run('generalCommands', { call: 'leavePresence' });
-
-            await Parse.User.logOut();
-
-            window.location.reload(true);
-          })
-          .catch(this.handleParseError);
+        Parse.Cloud.run('generalCommands', { call: 'checkForBans' }).catch(
+          this.handleParseError
+        );
       }
     });
   };
 
-  setNotifications = async () => {
+  setNotifications = () => {
     const currentUser = Parse.User.current();
     const username = currentUser ? currentUser.getUsername()! : '';
 
@@ -194,7 +179,7 @@ class App extends React.PureComponent<appProps, appState> {
     messageQ.equalTo('to', username);
     messageQ.equalTo('public', false);
 
-    const messageSub = await messageQ.subscribe();
+    const messageSub = queryClient.subscribe(messageQ);
 
     messageSub.on('create', (message: any) => {
       const global = message.get('global');
@@ -214,14 +199,14 @@ class App extends React.PureComponent<appProps, appState> {
     });
   };
 
-  listenToTaunts = async () => {
+  listenToTaunts = () => {
     const currentUser = Parse.User.current();
     const username = currentUser ? currentUser.getUsername()! : '';
 
     const tauntQ = new Parse.Query('Taunt');
     tauntQ.equalTo('to', username);
 
-    const tauntSub = await tauntQ.subscribe();
+    const tauntSub = queryClient.subscribe(tauntQ);
 
     tauntSub.on('create', (taunt: any) => {
       const global = taunt.get('global');

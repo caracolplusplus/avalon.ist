@@ -17,5 +17,7 @@ module.exports = async (request) => {
     address = address.split(',')[0];
   }
 
+  if (!user) return;
+
   return await user.checkForBans({ address, skip: true });
 };

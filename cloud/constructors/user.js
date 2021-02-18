@@ -5,22 +5,6 @@ const ipTree = require('../security/trees/ip-tree');
 
 Parse.User.allowCustomUserClass(true);
 
-const isUserOnline = (u) => {
-  const instanceCount = u.get('instanceCount');
-
-  const online = instanceCount > 0;
-
-  u.set('isOnline', online);
-
-  if (online) {
-    u.pin();
-  } else {
-    u.unPin();
-  }
-
-  u.save({}, { useMasterKey: true, context: { presence: true } });
-};
-
 class User extends Parse.User {
   constructor(attributes) {
     super(attributes);
@@ -166,17 +150,21 @@ class User extends Parse.User {
   }
 
   joinPresence(data) {
-    this.increment('instanceCount', 1);
+    this.set('isOnline', true);
 
-    this.save({}, { useMasterKey: true }).then(isUserOnline);
+    this.save({}, { useMasterKey: true, context: { presence: true } }).then((u) =>
+      u.pin()
+    );
 
     return true;
   }
 
   leavePresence(data) {
-    this.set('instanceCount', 0);
+    this.set('isOnline', false);
 
-    this.save({}, { useMasterKey: true }).then(isUserOnline);
+    this.save({}, { useMasterKey: true, context: { presence: true } }).then((u) =>
+      u.unPin()
+    );
 
     return true;
   }

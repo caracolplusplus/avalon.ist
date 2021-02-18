@@ -3,7 +3,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faExclamation, faCheck } from '@fortawesome/free-solid-svg-icons';
-import Parse from '../../parse/parse';
+import Parse from 'parse';
 
 // Internal
 

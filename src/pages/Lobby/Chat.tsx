@@ -1,8 +1,7 @@
-/* globals Set */
-
 // eslint-disable-next-line no-unused-vars
 import React, { FormEvent, createRef } from 'react';
-import Parse from '../../parse/parse';
+import Parse from 'parse';
+import queryClient from '../../parse/queryClient';
 // eslint-disable-next-line no-unused-vars
 import { rootType } from '../../redux/reducers';
 import { setMessageDelay } from '../../redux/actions';
@@ -19,6 +18,7 @@ import '../../styles/Lobby/Chat.scss';
 
 const userShow = new Set(['client', 'help', 'quote', 'direct']);
 
+// eslint-disable-next-line no-unused-vars
 enum FormType {
   // eslint-disable-next-line no-unused-vars
   None = 0,
@@ -104,8 +104,8 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
   componentWillUnmount = () => {
     this.mounted = false;
-    if (this.messageSub) this.messageSub.unsubscribe();
-    if (this.listSub) this.listSub.unsubscribe();
+    if (this.messageSub) queryClient.unsubscribe(this.messageSub);
+    if (this.listSub) queryClient.unsubscribe(this.listSub);
   };
 
   componentDidUpdate = (prevProps: ChatProps) => {
@@ -113,7 +113,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     const { code: _code } = prevProps;
 
     if (code !== _code) {
-      if (this.messageSub) this.messageSub.unsubscribe();
+      if (this.messageSub) queryClient.unsubscribe(this.messageSub);
       this.startChat();
     }
   };
@@ -130,10 +130,10 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.sendMessage();
   };
 
-  playerListSubscription = async () => {
+  playerListSubscription = () => {
     const listQ = new Parse.Query('Lists');
 
-    this.listSub = await listQ.subscribe();
+    this.listSub = queryClient.subscribe(listQ);
 
     this.listSub.on('open', this.playerListRequest);
     this.listSub.on('update', (lists: any) => {
@@ -149,7 +149,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
   playerListResponse = (players: any) => {
     if (!this.mounted) {
-      this.listSub.unsubscribe();
+      queryClient.unsubscribe(this.listSub);
       return;
     }
 
@@ -170,7 +170,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     this.setState({ playerList, adminList, modList, contribList });
   };
 
-  startChat = async () => {
+  startChat = () => {
     const { code, username } = this.props;
 
     const publicMessages = new Parse.Query('Message');
@@ -190,13 +190,13 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       messageQ.equalTo('global', true);
     }
 
-    this.messageSub = await messageQ.subscribe();
+    console.log('hai');
+
+    this.messageSub = queryClient.subscribe(messageQ);
 
     this.messageSub.on('open', () => {
-      this.setState({ messages: [] });
-
       Parse.Cloud.run('chatCommands', { call: 'chatRequest', code })
-        .then(this.parseMessages)
+        .then(this.parseOldMessages)
         .then(this.loadChat)
         .catch((err) => console.log(err));
     });
@@ -216,11 +216,9 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
           return;
         }
 
-        this.parseMessages([mNew]);
+        this.parseNewMessages([mNew]);
       }
     });
-
-    this.setState({ messages: [] });
   };
 
   loadChat = () => {
@@ -288,6 +286,8 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     return from in highlights && code ? highlights[from] : '';
   };
 
+  messageIds: string[] = [];
+
   readMessage = (snap: ChatSnapshot): ChatSnapshotRead => {
     const { public: _public, content, type, from, to, timestamp, objectId: id } = snap;
 
@@ -302,6 +302,8 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       type,
       public: _public,
     };
+
+    this.messageIds.push(id);
 
     return output;
   };
@@ -612,7 +614,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
 
     dispatch(setMessageDelay());
     this.sentMessages.push(...output);
-    this.parseMessages(output);
+    this.parseNewMessages(output);
   };
 
   commandResponseMessage = (content: string) => {
@@ -623,7 +625,7 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
       content,
     });
 
-    this.parseMessages(output);
+    this.parseNewMessages(output);
   };
 
   sendMessage = () => {
@@ -650,20 +652,33 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
     refInput.setState({ content: '' });
   };
 
-  parseMessages = (messages: ChatSnapshot[]) => {
+  parseOldMessages = (messages: ChatSnapshot[]) => {
     if (!this.mounted) {
-      this.messageSub.unsubscribe();
+      queryClient.unsubscribe(this.messageSub);
       return;
     }
 
     const newMessages = messages.map(this.readMessage);
+
+    this.setState({ messages: newMessages }, this.scrollChat);
+  };
+
+  parseNewMessages = (messages: ChatSnapshot[]) => {
+    if (!this.mounted) {
+      queryClient.unsubscribe(this.messageSub);
+      return;
+    }
+
+    const newMessages = messages
+      .filter((m) => !this.messageIds.includes(m.objectId))
+      .map(this.readMessage);
 
     const messagesToState = [...this.state.messages, ...newMessages];
 
     this.setState({ messages: messagesToState }, this.scrollChat);
   };
 
-  messageMapper = (snap: ChatSnapshotRead) => {
+  messageMapper = (snap: ChatSnapshotRead, i: number) => {
     const { adminList, modList, contribList } = this.state;
     const color = this.getColor(snap.from);
     const highlight = this.getHighlight(snap.from);

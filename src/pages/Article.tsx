@@ -8,7 +8,7 @@ import { RouteComponentProps } from 'react-router';
 // eslint-disable-next-line no-unused-vars
 import { rootType } from '../redux/reducers';
 import ReactMarkdown from 'react-markdown';
-import Parse from '../parse/parse';
+import Parse from 'parse';
 
 // Internal
 

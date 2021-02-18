@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom';
 
 // Internal
 
-import Parse from '../../parse/parse';
+import Parse from 'parse';
+import queryClient from '../../parse/queryClient';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
 // Styles
@@ -49,19 +50,19 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
   mounted: boolean = true;
   announcementSub: any = null;
 
-  componentDidMount = async () => {
+  componentDidMount = () => {
     this.setSubscription();
   };
 
   componentWillUnmount = () => {
     this.mounted = false;
-    if (this.announcementSub) this.announcementSub.unsubscribe();
+    if (this.announcementSub) queryClient.unsubscribe(this.announcementSub);
   };
 
-  setSubscription = async () => {
+  setSubscription = () => {
     const announcementQ = new Parse.Query('Announcement');
 
-    this.announcementSub = await announcementQ.subscribe();
+    this.announcementSub = queryClient.subscribe(announcementQ);
 
     this.announcementSub.on('open', this.latestAnnouncementsRequest);
     this.announcementSub.on('update', this.latestAnnouncementsRequest);
@@ -76,7 +77,7 @@ class Announcements extends React.PureComponent<{}, AnnouncementsState> {
 
   latestAnnouncementsResponse = (articles: any[]) => {
     if (!this.mounted) {
-      this.announcementSub.unsubscribe();
+      queryClient.unsubscribe(this.announcementSub);
       return;
     }
 

@@ -1,5 +1,4 @@
-/* global Set */
-import Parse from '../../parse/parse';
+import Parse from 'parse';
 
 interface helpPage {
   [x: number]: string[];

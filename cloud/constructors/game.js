@@ -2,7 +2,6 @@
 const Environment = require('./environment');
 
 const Chat = require('./chat');
-// const _ = require('lodash');
 
 const playerMatrix = [
   [2, 3, 2, 3, 3],
@@ -270,44 +269,29 @@ class Game extends Parse.Object {
 
     this.remove('spectatorListNew', username);
 
-    this.save({}, { useMasterKey: true })
-      .then((g) => {
-        const ended = g.get('ended');
-        const started = g.get('started');
-        const clients = g.get('spectatorListNew');
+    this.save({}, { useMasterKey: true });
 
-        // If no more clients, then delete the room.
-        if (g.get('spectatorListNew').length === 0) {
-          console.log('no clients');
+    setTimeout(async () => {
+      const g = await this.fetch({ useMasterKey: true });
 
-          g.unPin();
+      const started = g.get('started');
+      const clients = g.get('spectatorListNew');
 
-          if (!ended) {
-            console.log('not ended');
+      // If no more clients, then delete the room.
+      if (g.get('spectatorListNew').length === 0) {
+        console.log('no clients');
 
-            const chat = g.get('chat');
-            chat
-              .destroy({ useMasterKey: true })
-              .then(() => g.destroy({ useMasterKey: true }))
-              .catch((err) => console.log(err));
-          } else {
-            console.log('ended');
+        g.set('active', false);
+        g.save({}, { useMasterKey: true });
+        g.unPin();
+      } else if (!started && !clients.includes(username)) {
+        console.log('remove from player list');
 
-            g.set('active', false);
-            g.save({}, { useMasterKey: true });
-          }
-          // If there are still clients, check to delete this seat if no instances from this user found
-        } else if (!started && !clients.includes(username)) {
-          console.log('remove from player list');
-
-          g.togglePlayer({ username, add: false });
-        } else {
-          console.log('dont remove at all');
-
-          g.save({}, { useMasterKey: true });
-        }
-      })
-      .catch((err) => console.log(err));
+        g.togglePlayer({ username, add: false });
+      } else {
+        console.log('dont remove at all');
+      }
+    }, 1500);
 
     return true;
   }
@@ -666,7 +650,7 @@ class Game extends Parse.Object {
       this.remove('votesPending', username);
       this.add('votesRound', vote ? '-' : username);
 
-      console.log('after save picking', this.get('votesRound'));
+      console.log('before save picking', this.get('votesRound'));
 
       this.save({}, { useMasterKey: true })
         .then((g) => {
@@ -752,7 +736,7 @@ class Game extends Parse.Object {
       this.remove('picksYetToVote', username);
       this.add('votesMission', vote ? '-' : username);
 
-      console.log('after save mission', this.get('votesMission'));
+      console.log('before save mission', this.get('votesMission'));
 
       this.save({}, { useMasterKey: true })
         .then((g) => {

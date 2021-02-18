@@ -47,9 +47,10 @@ class Tabs extends React.PureComponent<TabContainerProps, TabContainerState> {
     this.state = {
       tab: props.initialTab,
     };
+    this.Tab = this.Tab.bind(this);
   }
 
-  Tab = (props: TabProps) => {
+  Tab(props: TabProps) {
     const highlighted = props.highlighted ? 'highlighted' : '';
     const selected = this.state.tab === props.no;
 
@@ -63,11 +64,12 @@ class Tabs extends React.PureComponent<TabContainerProps, TabContainerState> {
         <p>{props.text}</p>
       </button>
     );
-  };
+  }
 
   render() {
     const { game, code, players, clients, highlighted } = this.props;
     const { tab } = this.state;
+    const { Tab } = this;
 
     const routes = [
       <Chat
@@ -93,11 +95,11 @@ class Tabs extends React.PureComponent<TabContainerProps, TabContainerState> {
     return (
       <div id="Tabs" className="tab">
         <div className="tab-row">
-          <this.Tab text="ALL CHAT" no={0} highlighted={highlighted[0]} />
-          <this.Tab text="GAME CHAT" no={1} highlighted={highlighted[1]} />
-          <this.Tab text="NOTES" no={2} highlighted={false} />
-          <this.Tab text="VOTES" no={3} highlighted={false} />
-          <this.Tab text="PLAYERS" no={4} highlighted={false} />
+          <Tab text="ALL CHAT" no={0} highlighted={highlighted[0]} />
+          <Tab text="GAME CHAT" no={1} highlighted={highlighted[1]} />
+          <Tab text="NOTES" no={2} highlighted={false} />
+          <Tab text="VOTES" no={3} highlighted={false} />
+          <Tab text="PLAYERS" no={4} highlighted={false} />
         </div>
         {routes[tab]}
       </div>

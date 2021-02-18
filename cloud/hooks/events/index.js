@@ -5,11 +5,7 @@ const index = {};
   'beforeSignup',
   'beforeLogin',
   'beforeUserSave',
-  'beforeGameSave',
-  'beforeGameDelete',
-  'afterUserSave',
   'afterGameSave',
-  'afterChatSave',
   'afterEnvSave',
   'afterLogout',
 ].forEach((e) => {

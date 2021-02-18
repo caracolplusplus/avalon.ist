@@ -45,8 +45,6 @@ class Environment extends Parse.Object {
 
         Environment.setGlobal(g).then(() => {
           g.setDiscordHook();
-
-          Parse.Cloud.startJob('cleanAllPresence');
         });
       })
       .catch((err) => {
@@ -68,7 +66,7 @@ class Environment extends Parse.Object {
 
   static async checkOnlinePlayers(data) {
     const userQ = new Parse.Query('_User');
-    userQ.greaterThan('instanceCount', 0);
+    userQ.equalTo('isOnline', true);
     userQ.limit(500);
 
     const listsQ = new Parse.Query('Lists');

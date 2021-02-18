@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom';
 
 // Internal
 
-import Parse from '../../parse/parse';
+import Parse from 'parse';
+import queryClient from '../../parse/queryClient';
 import AvalonScrollbars from '../../components/utils/AvalonScrollbars';
 
 // Styles
@@ -118,13 +119,13 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
 
   componentWillUnmount = () => {
     this.mounted = false;
-    if (this.listSub) this.listSub.unsubscribe();
+    if (this.listSub) queryClient.unsubscribe(this.listSub);
   };
 
-  setSubscription = async () => {
+  setSubscription = () => {
     const listQ = new Parse.Query('Lists');
 
-    this.listSub = await listQ.subscribe();
+    this.listSub = queryClient.subscribe(listQ);
 
     this.listSub.on('open', this.playerListRequest);
     this.listSub.on('update', (lists: any) => {
@@ -140,7 +141,7 @@ class PlayerList extends React.PureComponent<PlayerListProps, PlayerListState> {
 
   playerListResponse = (players: PlayerProps[]) => {
     if (!this.mounted) {
-      this.listSub.unsubscribe();
+      queryClient.unsubscribe(this.listSub);
       return;
     }
 

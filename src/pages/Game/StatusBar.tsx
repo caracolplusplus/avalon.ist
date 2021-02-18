@@ -3,7 +3,7 @@
 import React, { createRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-import Parse from '../../parse/parse';
+import Parse from 'parse';
 
 // Internal
 
@@ -20,6 +20,7 @@ import MessageBuilder from '../Lobby/MessageBuilder';
 
 // Types
 
+// eslint-disable-next-line no-unused-vars
 enum FormType {
   // eslint-disable-next-line no-unused-vars
   None = 0,

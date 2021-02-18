@@ -1,4 +1,4 @@
-import Parse from '../../parse/parse';
+import Parse from 'parse';
 
 export async function signup(
   email: string,

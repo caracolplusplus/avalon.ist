@@ -1,3 +1,4 @@
+/* global JSX */
 // External
 
 import React from 'react';
@@ -26,12 +27,12 @@ interface VoteHistoryProps {
 class VoteHistory extends React.PureComponent<VoteHistoryProps> {
   constructor(props: VoteHistoryProps) {
     super(props);
-    this.SetHeaders = this.SetHeaders.bind(this);
-    this.SetPlayers = this.SetPlayers.bind(this);
-    this.DisplayCardHolders = this.DisplayCardHolders.bind(this);
+    this.Headers = this.Headers.bind(this);
+    this.Player = this.Player.bind(this);
+    this.CardHolders = this.CardHolders.bind(this);
   }
 
-  SetHeaders() {
+  Headers() {
     const items: JSX.Element[] = [];
 
     const game = this.props.game;
@@ -57,7 +58,7 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps> {
     );
   }
 
-  SetPlayers(props: { p: string; ip: number }) {
+  Player(props: { p: string; ip: number }) {
     let items: JSX.Element[] = [];
 
     const game = this.props.game;
@@ -91,7 +92,7 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps> {
     );
   }
 
-  DisplayCardHolders() {
+  CardHolders() {
     const game = this.props.game;
     const holders = [...game.cardHolders];
 
@@ -128,18 +129,20 @@ class VoteHistory extends React.PureComponent<VoteHistoryProps> {
   }
 
   render() {
+    const { Headers, Player, CardHolders } = this;
+
     return (
       <AvalonScrollbars>
         <div id="Vote-History" className="row">
           {this.props.game.code === '-1' ? null : (
             <table id="vh-cont" className="vh-cont">
               <tbody>
-                <this.SetHeaders />
+                <Headers />
                 {this.props.game.players.map((p, i_p) => (
-                  <this.SetPlayers ip={i_p} p={p} key={p} />
+                  <Player ip={i_p} p={p} key={p} />
                 ))}
                 {this.props.game.started && this.props.game.card > -1 ? (
-                  <this.DisplayCardHolders />
+                  <CardHolders />
                 ) : null}
               </tbody>
             </table>

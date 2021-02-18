@@ -20,18 +20,8 @@ module.exports = async (request) => {
   if (user) {
     await user.checkForBans({ address, skip: false });
 
-    user.joinPresence({ id: request.installationId });
-
-    return {
-      authenticated: true,
-      verified: !(user.get('lockedOut') || false),
-      loading: false,
-    };
+    return !(user.get('lockedOut') || false);
   }
 
-  return {
-    authenticated: false,
-    verified: false,
-    loading: false,
-  };
+  return false;
 };

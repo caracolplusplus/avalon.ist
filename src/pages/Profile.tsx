@@ -1,5 +1,3 @@
-/* global Set */
-
 // eslint-disable-next-line no-unused-vars
 import { RouteComponentProps } from 'react-router';
 import { Redirect, Link } from 'react-router-dom';
@@ -7,7 +5,7 @@ import { Redirect, Link } from 'react-router-dom';
 import { rootType } from '../redux/reducers';
 import { connect } from 'react-redux';
 import React from 'react';
-import Parse from '../parse/parse';
+import Parse from 'parse';
 import Flag from 'react-world-flags';
 import {
   ResponsiveContainer,
@@ -278,7 +276,6 @@ class Profile extends React.PureComponent<
                   <ReactMarkdown
                     className="markdown"
                     allowedTypes={[
-                      'root',
                       'text',
                       'paragraph',
                       'emphasis',

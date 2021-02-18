@@ -20,7 +20,7 @@ module.exports = async (request) => {
 
         Environment.checkOnlinePlayers();
 
-        if (u.get('instanceCount') < 1) {
+        if (!u.get('isOnline')) {
           // eslint-disable-next-line no-undef
           const gameQ = new Parse.Query('Game');
           gameQ.equalTo('spectatorListNew', username);
