@@ -54,12 +54,10 @@ class Environment extends Parse.Object {
 
   static async setGlobal(g) {
     await g.save({}, { useMasterKey: true });
-    await g.pin();
   }
 
   static async getGlobal() {
     const envQ = new Parse.Query('Environment');
-    envQ.fromLocalDatastore();
 
     return await envQ.first({ useMasterKey: true });
   }

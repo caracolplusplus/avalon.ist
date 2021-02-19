@@ -7,8 +7,9 @@ WORKDIR /parse
 
 RUN yarn install
 RUN npm install pm2 -g
+RUN yarn start-production
 
 EXPOSE 1337
 VOLUME /parse/cloud               
 
-CMD [ "yarn", "start-server-node" ]
+CMD [ "pm2", "logs" ]

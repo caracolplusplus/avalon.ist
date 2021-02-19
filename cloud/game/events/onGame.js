@@ -9,7 +9,6 @@ const pickTeam = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -33,7 +32,6 @@ const voteForMission = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -57,7 +55,6 @@ const voteForSuccess = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -81,7 +78,6 @@ const ladyOfTheLake = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -105,7 +101,6 @@ const shootPlayer = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 

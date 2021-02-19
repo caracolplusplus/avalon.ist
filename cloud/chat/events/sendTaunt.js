@@ -21,7 +21,6 @@ module.exports = async (request) => {
 
   if (code) {
     const gameQ = new Parse.Query('Game');
-    gameQ.fromLocalDatastore();
 
     const game = await gameQ.get(code, { useMasterKey: true });
 
@@ -34,7 +33,6 @@ module.exports = async (request) => {
 
   const userQ = new Parse.Query('_User');
   userQ.equalTo('username', to);
-  userQ.fromLocalDatastore();
 
   const target = await userQ.first({ useMasterKey: true });
 

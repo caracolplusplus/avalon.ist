@@ -8,7 +8,6 @@ module.exports = async (request) => {
 
   if (code) {
     const gameQ = new Parse.Query('Game');
-    gameQ.fromLocalDatastore();
 
     const game = await gameQ.get(code, { useMasterKey: true });
 

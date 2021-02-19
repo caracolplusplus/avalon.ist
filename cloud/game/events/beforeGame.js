@@ -30,7 +30,6 @@ const createGame = async (request) => {
 
   await game.save({}, { useMasterKey: true });
 
-  await game.pin();
   // Build chat
   game.buildChat();
   // Toggle seat for this player
@@ -58,7 +57,6 @@ const reportPlayer = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -89,7 +87,6 @@ const editGame = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -115,7 +112,6 @@ const joinLeaveGame = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -139,7 +135,6 @@ const toggleClaim = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -161,7 +156,6 @@ const kickPlayer = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -185,7 +179,6 @@ const startGame = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -209,8 +202,6 @@ const readyState = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
-
   const game = await gameQ.get(id, { useMasterKey: true });
 
   // If no game dont perform operation

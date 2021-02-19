@@ -94,7 +94,7 @@
     "start": "concurrently --kill-others --names \"SERVER,REACT\" -c \"bgBlue.bold,bgMagenta.bold\" \"yarn start-server\" \"yarn start-client\"",
     "start-client": "react-scripts start",
     "start-server": "nodemon --inspect app.js",
-    "start-server-node": "pm2 start cluster",
+    "start-production": "pm2 start cluster.js --node-args=\"--max-old-space-size=768\"",
     "database": "parse-dashboard --dev --appId AVALONIST --masterKey avalonist_key --serverURL \"http://localhost:1337/parse\" --appName Avalon.ist",
     "build": "react-scripts build",
     "test": "react-scripts test",

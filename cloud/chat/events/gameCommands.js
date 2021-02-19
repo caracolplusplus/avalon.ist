@@ -21,7 +21,6 @@ const pauseGame = async (request) => {
     }
 
     const gameQ = new Parse.Query('Game');
-    gameQ.fromLocalDatastore();
 
     return await gameQ
       .get(target, { useMasterKey: true })
@@ -72,7 +71,6 @@ const unpauseGame = async (request) => {
     }
 
     const gameQ = new Parse.Query('Game');
-    gameQ.fromLocalDatastore();
 
     return await gameQ
       .get(target, { useMasterKey: true })
@@ -123,7 +121,6 @@ const endGame = async (request) => {
     }
 
     const gameQ = new Parse.Query('Game');
-    gameQ.fromLocalDatastore();
 
     return await gameQ
       .get(target, { useMasterKey: true })
@@ -179,7 +176,6 @@ const closeGame = async (request) => {
     }
 
     const gameQ = new Parse.Query('Game');
-    gameQ.fromLocalDatastore();
 
     return await gameQ
       .get(target, { useMasterKey: true })
@@ -230,7 +226,6 @@ const learnRoles = async (request) => {
     }
 
     const gameQ = new Parse.Query('Game');
-    gameQ.fromLocalDatastore();
 
     return await gameQ
       .get(target, { useMasterKey: true })

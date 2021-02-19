@@ -18,6 +18,7 @@ const api = new ParseServer({
       'Lists',
       'Taunt',
     ],
+    redisURL: 'redis://localhost:6379',
   },
 });
 
@@ -60,13 +61,12 @@ app.get('*', (req, res) => {
 const port = process.env.PORT || 1337;
 const server = require('http').createServer(app);
 
-// eslint-disable-next-line no-undef
-Parse.enableLocalDatastore();
-
 // Listen
 server.listen(port, () => {
   console.log(`Avalon.ist running on port ${port}.`);
 });
 
 // This will enable the Live Query real-time server
-ParseServer.createLiveQueryServer(server);
+ParseServer.createLiveQueryServer(server, {
+  redisURL: 'redis://localhost:6379',
+});

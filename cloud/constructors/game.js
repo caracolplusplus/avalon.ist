@@ -283,7 +283,6 @@ class Game extends Parse.Object {
 
         g.set('active', false);
         g.save({}, { useMasterKey: true });
-        g.unPin();
       } else if (!started && !clients.includes(username)) {
         console.log('remove from player list');
 

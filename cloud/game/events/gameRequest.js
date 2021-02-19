@@ -27,7 +27,6 @@ const rejoinRequest = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -50,7 +49,6 @@ const gameLeave = async (request) => {
 
   // eslint-disable-next-line no-undef
   const gameQ = new Parse.Query('Game');
-  gameQ.fromLocalDatastore();
 
   const game = await gameQ.get(id, { useMasterKey: true });
 
@@ -74,7 +72,6 @@ const gameRequest = async (request) => {
   const gameQ = new Parse.Query('Game');
 
   const game = await gameQ.get(id, { useMasterKey: true });
-  await game.pin();
 
   return await joinRoom(game, user);
 };
