@@ -320,11 +320,19 @@ const discordSet = async (request) => {
   const isAllowed = user.get('isMod') || user.get('isAdmin');
 
   if (isAllowed) {
-    const { url } = request.params;
+    const { url, hook } = request.params;
+
+    if (!url || !hook) {
+      return warning;
+    }
 
     const environment = await Environment.getGlobal();
 
-    environment.set('discordWebhookURL', url);
+    const hooks = environment.get('discordHooks') || {};
+
+    hooks[hook] = url;
+
+    environment.set('discordHooks', hooks);
     environment.setDiscordHook();
 
     environment.save({}, { useMasterKey: true });

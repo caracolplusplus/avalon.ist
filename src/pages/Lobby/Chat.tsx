@@ -586,7 +586,8 @@ class Chat extends React.PureComponent<ChatProps, ChatState> {
         case '/discordset':
           output = await Parse.Cloud.run('chatCommands', {
             call: 'discordSet',
-            url: split[1],
+            hook: split[1],
+            url: split[2],
           })
             .then(msgBuilder.commandResponseMessage)
             .catch((err) => {

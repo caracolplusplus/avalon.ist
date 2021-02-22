@@ -147,8 +147,6 @@ class App extends React.PureComponent<appProps, appState> {
       Parse.Cloud.run('generalCommands', { call: 'checkForBans' }).catch(
         this.handleParseError
       );
-
-      Parse.Cloud.run('generalCommands', { call: 'themeRequest' }).then(this.updateTheme);
     });
 
     const listsQ = new Parse.Query('Lists');

@@ -253,7 +253,9 @@ class Environment extends Parse.Object {
   }
 
   setDiscordHook() {
-    discordReports.newHook(this.get('discordWebhookURL'));
+    const hooks = this.get('discordHooks') || {};
+
+    discordReports.setHooks(hooks);
   }
 
   validateSignupData(data) {
