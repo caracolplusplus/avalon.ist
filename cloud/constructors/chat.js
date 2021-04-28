@@ -16,6 +16,7 @@ const addMessage = (data) => {
   const timestamp = Date.now();
   const objectId = timestamp.toString();
 
+  //Create base messege
   const message = {
     public: typeof data.public === 'boolean' ? data.public : true,
     type: data.type || SERVER,
@@ -185,7 +186,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Called when current match is ended
+   * @param  {} data
+   */ 
   roomFinished(data) {
     const { POSITIVE, NEGATIVE } = messageTypes;
     const { code, winner } = data;
