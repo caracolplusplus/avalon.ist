@@ -56,13 +56,18 @@ class Moderation {
       })
       .catch((e) => console.log(e));
   }
-
+  /** Method used to set lock status to player with target username
+   * @param  {} data - admin moderator, target username, comment from moderator
+   */
   verifyPlayer(data) {
     const { username, target, comment } = data;
 
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', target);
 
+    //For every player in user list, if user with target name exists, he will have
+    //a lock status enabled. If such player has not been found, an error will be 
+    //thrown
     return userQ
       .first({ useMasterKey: true })
       .then((u) => {
@@ -84,12 +89,18 @@ class Moderation {
       .catch((e) => console.log(e));
   }
 
+  /** Method used to ban player with target username
+   * @param  {} data - admin moderator, target username, comment from moderator
+   */
   banPlayer(data) {
     const { username, target, comment } = data;
 
     const userQ = new Parse.Query('_User');
     userQ.equalTo('username', target);
 
+    //For every player in user list, if user with target name exists, he will
+    //be banned. If such player has not been found, an error will be 
+    //thrown
     return userQ
       .first({ useMasterKey: true })
       .then((u) => {
@@ -110,7 +121,9 @@ class Moderation {
       })
       .catch((e) => console.log(e));
   }
-
+  /** Method used to remove ban from user with given username
+   * @param  {} data - admin moderator, target username, comment from moderator
+   */ 
   revokeBan(data) {
     const { username, target, comment } = data;
 
@@ -137,7 +150,9 @@ class Moderation {
       })
       .catch((e) => console.log(e));
   }
-
+  /** Method used to ban an IP address associated  with target username
+   * @param  {} data - admin moderator, target username, comment from moderator
+   */
   banPlayerIP(data) {
     const { username, target, comment } = data;
 
@@ -173,6 +188,9 @@ class Moderation {
       .catch((e) => console.log(e));
   }
 
+  /** Method used to remove ban from IP address associated with player with given username
+   * @param  {} data - admin moderator, target username, comment from moderator
+   */ 
   revokeIPBan(data) {
     const { username, ips, comment } = data;
 

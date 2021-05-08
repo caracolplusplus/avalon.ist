@@ -16,7 +16,10 @@ class Game extends Parse.Object {
   constructor() {
     super('Game');
   }
-
+  /**Main method used to initialize a game. Includes setting up default options for 
+   * every game aspect.
+   * @param  {} props - current game id code
+   */
   static spawn(props) {
     const { code } = props;
     const game = new Game();
@@ -101,14 +104,17 @@ class Game extends Parse.Object {
 
     return game;
   }
-
+  /**Called to initialize chat
+   */
   buildChat() {
     const chat = this.get('chat');
 
     chat.set('game', this);
     chat.save({}, { useMasterKey: true });
   }
-
+  /**Method used to shuffle given array
+   * @param  {} array - array to be shuffled
+   */
   shuffleArray(array) {
     let currentIndex = array.length;
 
@@ -128,7 +134,9 @@ class Game extends Parse.Object {
 
     return array;
   }
-
+  /**Called to set player roles and settings
+   * @param  {} data - role settings and max number of players
+   */
   editSettings(data) {
     const { roleSettings, playerMax } = data;
 
@@ -240,7 +248,9 @@ class Game extends Parse.Object {
 
     return true;
   }
-
+  /**Add player to list of kicked players
+   * @param  {} data - player to be kicked data
+   */
   addToKick(data) {
     const { kick } = data;
 
