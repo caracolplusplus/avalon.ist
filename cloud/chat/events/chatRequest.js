@@ -30,7 +30,9 @@ module.exports = async (request) => {
 
   const messages = await messageQ.find({ useMasterKey: true });
 
+  //if message is empty return []
   if (!messages.length) return [];
 
+  //return message as JSON
   return messages.reverse().map((m) => m.toJSON());
 };

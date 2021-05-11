@@ -7,7 +7,7 @@ const unauthorized = 'You are not authorized to use this command.';
 
 const pauseGame = async (request) => {
   const { user } = request;
-
+  //no user in request return false
   if (!user) return false;
 
   const isAllowed = user.get('isMod') || user.get('isAdmin');
@@ -27,10 +27,10 @@ const pauseGame = async (request) => {
       .then((g) => {
         const chat = g.get('chat');
         const code = g.get('code');
-
+        //freeze game
         g.set('frozen', true);
         g.save({}, { useMasterKey: true });
-
+        //send notification to players
         chat
           .fetch({ useMasterKey: true })
           .then((c) => {
@@ -77,10 +77,10 @@ const unpauseGame = async (request) => {
       .then((g) => {
         const chat = g.get('chat');
         const code = g.get('code');
-
+        //unpause game
         g.set('frozen', false);
         g.save({}, { useMasterKey: true });
-
+        //send notification to players
         chat
           .fetch({ useMasterKey: true })
           .then((c) => {
@@ -127,7 +127,7 @@ const endGame = async (request) => {
       .then((g) => {
         const chat = g.get('chat');
         const code = g.get('code');
-
+        //check outcome and void/terminate game accordingly
         if (outcome) {
           g.gameEnd(outcome === '1' ? 4 : 2);
         } else {
@@ -135,7 +135,7 @@ const endGame = async (request) => {
         }
 
         g.save({}, { useMasterKey: true });
-
+        //send notification to players about whether game has been voided or terminated
         chat
           .fetch({ useMasterKey: true })
           .then((c) => {
@@ -182,10 +182,10 @@ const closeGame = async (request) => {
       .then((g) => {
         const chat = g.get('chat');
         const code = g.get('code');
-
+        //close game
         g.set('active', false);
         g.save({}, { useMasterKey: true });
-
+        //send notification to players
         chat
           .fetch({ useMasterKey: true })
           .then((c) => {
@@ -233,13 +233,13 @@ const learnRoles = async (request) => {
         const chat = g.get('chat');
 
         const roles = g.get('roleList');
-
+        //send roles to moderator
         g.add('privateKnowledgeNew', {
           username,
           knowledge: roles,
         });
         g.save({}, { useMasterKey: true });
-
+        //send notification to players that moderator learnt roles
         chat
           .fetch({ useMasterKey: true })
           .then((c) => {
