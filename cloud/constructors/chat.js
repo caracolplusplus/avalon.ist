@@ -39,8 +39,8 @@ class Chat extends Parse.Object {
 
   
   /** Creates new instance of Chat object containing empty list of messeges
-   * @param  {} {code code number
-   * @param  {} game} game number
+   * @param  {} code code number
+   * @param  {} game game number
    */
   static spawn({ code, game }) {
     const chat = new Chat();
