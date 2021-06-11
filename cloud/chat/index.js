@@ -9,7 +9,7 @@ const {
 
 Parse.Cloud.define('chatCommands', async (request) => {
   const { call } = request.params;
-
+  // possible chat features
   const callList = {
     chatRequest,
     sendTaunt,

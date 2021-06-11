@@ -3,7 +3,9 @@ const Moderation = require('../../constructors/moderation');
 
 const warning = 'You must fill all the required variables for this command to work.';
 const unauthorized = 'You are not authorized to use this command.';
-
+/*
+  Every function in this file has to verify if user is either mod or admin
+*/
 const suspendPlayer = async (request) => {
   const { user } = request;
 
@@ -189,6 +191,7 @@ const getLogs = async (request) => {
 
   if (isAllowed) {
     // eslint-disable-next-line no-undef
+    // get last 100 newest log entries
     const logQ = new Parse.Query('Logs');
     logQ.limit(100);
     logQ.ascending('timestamp');
