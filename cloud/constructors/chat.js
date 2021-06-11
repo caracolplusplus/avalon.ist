@@ -13,9 +13,11 @@ const addMessage = (data) => {
 
   const { SERVER } = messageTypes;
 
+  //Store current time and date and append it to base server messege
   const timestamp = Date.now();
   const objectId = timestamp.toString();
 
+  //Create base messege
   const message = {
     public: typeof data.public === 'boolean' ? data.public : true,
     type: data.type || SERVER,
@@ -35,6 +37,11 @@ class Chat extends Parse.Object {
     this.addMessage = addMessage;
   }
 
+  
+  /** Creates new instance of Chat object containing empty list of messeges
+   * @param  {} code code number
+   * @param  {} game game number
+   */
   static spawn({ code, game }) {
     const chat = new Chat();
 
@@ -44,7 +51,9 @@ class Chat extends Parse.Object {
 
     return chat;
   }
-
+  /** Method used to create a new taunt
+   * @param  {} data containing data neccessery to create new Taunt object
+   */
   async saveTaunt(data) {
     const Taunt = Parse.Object.extend('Taunt');
 
@@ -71,7 +80,10 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Async method, used to add new messages to chat (message list).
+   * Tis method is called everytime a message is to be saved.
+   * @param  {} newMessages - a list of new message to be added
+   */
   async saveMessages(newMessages) {
     const listsQ = new Parse.Query('Lists');
 
@@ -85,6 +97,7 @@ class Chat extends Parse.Object {
     const id = game ? game.id : '';
     const moderatorList = lists.get('moderatorList');
 
+    //Anonymous mapping method that uses flat message list from client.
     newMessages = newMessages
       .map((m, i) => {
         const { public: _public, type, to, from, content, timestamp } = m;
@@ -124,7 +137,9 @@ class Chat extends Parse.Object {
 
     c.save({}, { useMasterKey: true });
   }
-
+  /** This method will add a message from a moderator
+   * @param  {} data - data used to create a message
+   */
   moderationAction(data) {
     const { content, username, target, comment, action } = data;
 
@@ -153,7 +168,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** This method will add new taunt to chat
+   * @param  {} data - data used to create a message
+   */
   newTaunt(data) {
     const { from, to, audio } = data;
 
@@ -173,7 +190,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** This method will create announcement about new room
+   * @param  {} data - data used to create a message
+   */
   roomCreated(data) {
     const { username, code } = data;
 
@@ -185,7 +204,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Called when current match is ended
+   * @param  {} data
+   */ 
   roomFinished(data) {
     const { POSITIVE, NEGATIVE } = messageTypes;
     const { code, winner } = data;
@@ -201,7 +222,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called on match start 
+   * @param  {} data - settings and session code
+   */
   onStart(data) {
     const { settings, code } = data;
 
@@ -218,6 +241,7 @@ class Chat extends Parse.Object {
       empty: 'No special roles',
     };
 
+    //For every active setting, a message to server will be send
     for (const r in settings) {
       const active = settings[r];
 
@@ -234,7 +258,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called when leader is selecting a team
+   * @param  {} data
+   */
   onPick(data) {
     const { leader } = data;
 
@@ -246,7 +272,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called after leader selected a team
+   * @param  {} data - mission name, round number, players' passes
+   */
   afterPick(data) {
     const { mission, round, picks } = data;
 
@@ -261,7 +289,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called after all players has made a vote. 
+   * @param  {} data - mission name, round number, result of voting
+   */
   afterVote(data) {
     const { mission, round, passes } = data;
 
@@ -275,7 +305,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called after passing
+   * @param  {} data - players' picks
+   */
   afterPassing(data) {
     const { picks } = data;
 
@@ -287,7 +319,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called after a mission is ended
+   * @param  {} data - mission name, number of failes, players' picks
+   */
   afterMission(data) {
     const { NEGATIVE, POSITIVE } = messageTypes;
     const { mission, fails, passes } = data;
@@ -307,7 +341,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called when assassin player is making a turn
+   * @param  {} data - assasin info
+   */
   waitingForShot(data) {
     const { assassin } = data;
 
@@ -319,7 +355,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called when lady player is making a turn 
+   * @param  {} data
+   */
   waitingForLady(data) {
     const { lady } = data;
 
@@ -333,7 +371,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+   /** Handler called after lady player has made a turn 
+   * @param  {} data
+   */
   afterCard(data) {
     const { NEGATIVE, POSITIVE } = messageTypes;
     const { username, target, spy } = data;
@@ -355,6 +395,9 @@ class Chat extends Parse.Object {
     return true;
   }
 
+   /** Handler called after assassin player has made a turn 
+   * @param  {} data
+   */
   afterShot(data) {
     const { target } = data;
 
@@ -366,7 +409,9 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Hanlder called at the end of game.
+   * @param  {} data
+   */
   onEnd(data) {
     const { NEGATIVE, POSITIVE } = messageTypes;
     const { ending, winner, code } = data;
@@ -381,6 +426,7 @@ class Chat extends Parse.Object {
       'Three missions have succeeded! The Resistance wins.',
     ][ending];
 
+    //After determining a result, it is annouenced to players
     this.saveMessages([
       addMessage({
         type,
@@ -394,7 +440,8 @@ class Chat extends Parse.Object {
 
     return true;
   }
-
+  /** Handler called when a room has been voided
+   */
   onVoid() {
     const code = this.get('code');
 
@@ -407,7 +454,7 @@ class Chat extends Parse.Object {
     return true;
   }
 }
-
+//Chat object is registered as a new subclass to Parse api module
 Parse.Object.registerSubclass('Chat', Chat);
 
 module.exports = Chat;

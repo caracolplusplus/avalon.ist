@@ -8,7 +8,8 @@ class Environment extends Parse.Object {
   constructor() {
     super('Environment');
   }
-
+  /** Creates new instance of Environment class. Includes calling spawn() for chat.
+   */
   static spawn() {
     const env = new Environment();
     const chat = require('./chat').spawn({ code: 'Global' });
@@ -52,16 +53,23 @@ class Environment extends Parse.Object {
       });
   }
 
+  
+  /** Async method used to set current Environment data as new to the server
+   * @param  {} g
+   */
   static async setGlobal(g) {
     await g.save({}, { useMasterKey: true });
   }
-
+  /** Async metho used to get current Environment settings from the server
+   */
   static async getGlobal() {
     const envQ = new Parse.Query('Environment');
 
     return await envQ.first({ useMasterKey: true });
   }
-
+  /** Async method used to collect list of players.
+   * @param  {} data - not used currently
+   */
   static async checkOnlinePlayers(data) {
     const userQ = new Parse.Query('_User');
     userQ.equalTo('isOnline', true);
@@ -73,6 +81,7 @@ class Environment extends Parse.Object {
     const playerList = await userQ.find({ useMasterKey: true });
 
     const moderatorList = [];
+    //Players with moderator or administrator privalleges will to added to seperate list
     const playerListMap = playerList.map((p) => {
       if (p.get('isMod') || p.get('isAdmin')) moderatorList.push(p.get('username'));
 
@@ -86,7 +95,9 @@ class Environment extends Parse.Object {
 
     return true;
   }
-
+  /** Async method used to collect list of active games and save it into lists variable
+   * @param  {} data - not used currently
+   */
   static async checkActiveGames(data) {
     const gameQ = new Parse.Query('Game');
     gameQ.equalTo('active', true);
@@ -106,7 +117,9 @@ class Environment extends Parse.Object {
 
     return true;
   }
-
+  /** Method used to update online data trees 
+   * @param  {} env - Environment object
+   */
   static updateTrees(env) {
     const ipBlacklist = env.get('ipBlacklist');
     const emailWhitelist = env.get('emailWhitelist');
@@ -116,7 +129,9 @@ class Environment extends Parse.Object {
 
     return true;
   }
-
+  /** Async method used to switch certain ip addresses from blacklisted to not
+   * @param  {} data - list of ip addreses to be assesed with corresponding variables
+   */
   static async toggleIps(data) {
     const env = await Environment.getGlobal();
 
@@ -134,7 +149,9 @@ class Environment extends Parse.Object {
 
     return true;
   }
-
+  /** Async method used to switch certain email addresses from blacklisted to not
+   * @param  {} data - list of email addreses to be assesed with corresponding variables
+   */
   static async toggleEmails(data) {
     const env = await Environment.getGlobal();
 
@@ -152,7 +169,9 @@ class Environment extends Parse.Object {
 
     return true;
   }
-
+  /** Method used to add new Avatar object
+   * @param  {} data - data neccessary to create new Avatar object
+   */
   static addAvatarLog(data) {
     const Avatar = Parse.Object.extend('Avatar');
 
@@ -173,6 +192,9 @@ class Environment extends Parse.Object {
     return true;
   }
 
+  /** Method used to add new Announcement object
+   * @param  {} data - data neccessary to create new Announcement object
+   */
   static async addAnnouncement(data) {
     const annQ = new Parse.Query('Announcement');
     annQ.equalTo('url', data.id);
@@ -198,6 +220,9 @@ class Environment extends Parse.Object {
     return true;
   }
 
+  /** Method used to add new Logs object
+   * @param  {} data - data neccessary to create new Logs object
+   */
   static addModerationLog(data) {
     const Logs = Parse.Object.extend('Logs');
 
@@ -216,6 +241,9 @@ class Environment extends Parse.Object {
     return true;
   }
 
+  /** Method used to add new Error object
+   * @param  {} data - data neccessary to create new Error object
+   */
   static addErrorLog(data) {
     const Err = Parse.Object.extend('Error');
 
@@ -231,7 +259,8 @@ class Environment extends Parse.Object {
 
     return true;
   }
-
+  /** Method called when switching maintance mode on/off
+   */
   toggleMaintenance() {
     const onMaintenance = this.get('onMaintenance');
 
@@ -242,6 +271,8 @@ class Environment extends Parse.Object {
     return true;
   }
 
+  /** Method called when switching lockdown mode on/off
+   */
   toggleLockdown() {
     const onLockdown = this.get('onLockdown');
 
@@ -251,13 +282,17 @@ class Environment extends Parse.Object {
 
     return !onLockdown;
   }
-
+  /** Method used to update/set up discord hooks
+   */
   setDiscordHook() {
     const hooks = this.get('discordHooks') || {};
 
     discordReports.setHooks(hooks);
   }
-
+  /** Called when user tries to sign up to the site.
+   * Returns true when sign up procces has been successful
+   * @param  {} data - ip address used when trying to sign up
+   */
   validateSignupData(data) {
     const { address } = data;
 
@@ -284,6 +319,7 @@ class Environment extends Parse.Object {
   }
 }
 
+//Registering Environment class as new Parse subclass
 Parse.Object.registerSubclass('Environment', Environment);
 
 module.exports = Environment;

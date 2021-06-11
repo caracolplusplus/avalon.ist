@@ -60,7 +60,9 @@ class User extends Parse.User {
 
     this.set('validUser', true);
   }
-
+  /**Called to validate user login data
+   * @param  {} data
+   */
   validateLoginData(data) {
     const { onLockdown } = data;
 
@@ -97,7 +99,10 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Async method called to check if user has been banned, suspended or is connecting
+   * from blacklisted ip address.
+   * @param  {} data -ip address, skip (control variable)
+   */
   async checkForBans(data) {
     const environment = await Environment.getGlobal();
 
@@ -148,7 +153,9 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Change online status to online
+   * @param  {} data
+   */
   joinPresence(data) {
     this.set('isOnline', true);
 
@@ -156,7 +163,9 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Change online status to offline
+   * @param  {} data
+   */
   leavePresence(data) {
     this.set('isOnline', false);
 
@@ -164,7 +173,8 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Change lock status
+   */
   toggleLock() {
     this.set('lockedOut', false);
 
@@ -172,7 +182,9 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Change ban status
+   * @param  {} data - true/false
+   */
   toggleBan(data) {
     this.set('isBanned', data);
 
@@ -180,7 +192,9 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Called to block player for a set amount of time
+   * @param  {} data - amount of time to lock user (in hours)
+   */
   setSuspension(data) {
     let { hours } = data;
 
@@ -193,7 +207,8 @@ class User extends Parse.User {
 
     return hours;
   }
-
+  /**Called to remove suspension status
+   */
   revokeSuspension() {
     this.set('suspensionDate', Date.now());
 
@@ -201,7 +216,9 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Called to set profile data for a user
+   * @param  {} data - data to be set
+   */
   setProfile(data) {
     const { bio, nationality } = data;
 
@@ -212,7 +229,9 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Called to set avator for a user
+   * @param  {} data - avatar to be set
+   */
   setAvatars(data) {
     this.set('avatars', data);
 
@@ -220,7 +239,9 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Called to set the stage up
+   * @param  {} data - neccessery info (look below)
+   */
   setTheme(data) {
     const {
       playArea,
@@ -246,7 +267,10 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Add game sesion to user profile. Update user game history, increase numbers of
+   * games played and selected roles.
+   * @param  {} data - neccessery data
+   */
   addGameToProfile(data) {
     const { code, role, winner, cause, date, size, id } = data;
 
@@ -297,7 +321,8 @@ class User extends Parse.User {
 
     return true;
   }
-
+  /**Called to generate user profile page
+   */
   toProfilePage() {
     const client = {};
 
@@ -321,7 +346,8 @@ class User extends Parse.User {
 
     return client;
   }
-
+  /**Called to generate current player list
+   */
   toPlayerList() {
     const client = {};
 
@@ -335,7 +361,8 @@ class User extends Parse.User {
 
     return client;
   }
-
+  /**Called to generate stage
+   */
   toStyle() {
     const client = {};
 
