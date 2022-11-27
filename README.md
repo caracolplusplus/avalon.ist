@@ -1,3 +1,5 @@
+**WARNING: THIS PROJECT IS CURRENTLY UNSUPPORTED AND ANY FUTURE ISSUES MAY NOT BE ANSWERED.** 
+
 # Avalon.ist Development Server
 
 This repository hosts the development build of **Avalon.ist: The Resistance: Avalon online.**
