@@ -69,7 +69,7 @@ class User extends Parse.User {
     if (this.has('validUser')) return;
 
     const usernameRegex = /^[0-9a-zA-Z\-_.]{3,15}$/;
-    const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]+$/;
 
     const username = this.get('username');
     const email = this.get('email');
